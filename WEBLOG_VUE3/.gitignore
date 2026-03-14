@@ -1,0 +1,26 @@
+# Git 会忽略的文件
+
+.DS_Store
+node_modules
+dist
+dist-ssr
+.eslintcache
+.qoder
+
+
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/*.code-snippets
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Use the PNPM
+package-lock.json
+yarn.lock

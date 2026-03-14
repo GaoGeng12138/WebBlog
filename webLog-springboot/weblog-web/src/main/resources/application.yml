@@ -1,0 +1,13 @@
+spring:
+  profiles:
+    # 默认激活 dev 环境
+    active: @profile.active@
+
+
+jwt:
+  # 签发人
+  issuer: gaog
+  # 秘钥
+  secret: IUK/BG1I1eL5Wm0ZC9zqfa2QUu8b5qAIWLwIW6pCnIQTGTZt2PItoDW1OCqGj7ri5yqQKI4bpGHWA3+HoIS+7A==
+  #过期时间
+  expiration: 24

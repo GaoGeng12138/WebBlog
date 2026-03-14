@@ -1,0 +1,10 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import './admin.css';
+
+/* Element Plus 输入框组件的样式混含了 flowbite 的样式  所以通过加入下面的代码重铸样式 */
+[type='text']:focus, [type='email']:focus, [type='url']:focus, [type='password']:focus, [type='number']:focus, [type='date']:focus, [type='datetime-local']:focus, [type='month']:focus, [type='search']:focus, [type='tel']:focus, [type='time']:focus, [type='week']:focus, [multiple]:focus, select:focus {
+  box-shadow: 0 0 0 1px transparent inset!important;
+}
