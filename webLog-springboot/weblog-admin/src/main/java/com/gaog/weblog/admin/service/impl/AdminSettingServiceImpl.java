@@ -29,6 +29,7 @@ public class AdminSettingServiceImpl implements AdminSettingService {
                     .title("我的博客")
                     .slogan("记录与分享")
                     .description("")
+                    .frontendArticlePageSize(12)
                     .githubEnabled(false)
                     .githubShowFront(false)
                     .githubShowRegister(false)
@@ -66,6 +67,7 @@ public class AdminSettingServiceImpl implements AdminSettingService {
         setting.setSlogan(reqVO.getSlogan());
         setting.setDescription(reqVO.getDescription());
         setting.setLogoUrl(reqVO.getLogoUrl());
+        setting.setFrontendArticlePageSize(reqVO.getFrontendArticlePageSize() == null ? 12 : reqVO.getFrontendArticlePageSize());
         setting.setGithubEnabled(reqVO.getGithubEnabled());
         setting.setGithubShowFront(reqVO.getGithubShowFront());
         setting.setGithubShowRegister(reqVO.getGithubShowRegister());

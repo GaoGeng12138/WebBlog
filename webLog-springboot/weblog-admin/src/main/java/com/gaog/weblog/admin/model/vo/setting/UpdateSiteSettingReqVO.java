@@ -4,6 +4,8 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.Size;
 
 @Data
@@ -24,6 +26,11 @@ public class UpdateSiteSettingReqVO {
 
     @ApiModelProperty("网站图标URL")
     private String logoUrl;
+
+    @ApiModelProperty("前台文章列表每页数量")
+    @Min(value = 4, message = "前台文章列表每页数量不能小于4")
+    @Max(value = 60, message = "前台文章列表每页数量不能大于60")
+    private Integer frontendArticlePageSize;
 
     @ApiModelProperty("是否启用GitHub功能")
     private Boolean githubEnabled;

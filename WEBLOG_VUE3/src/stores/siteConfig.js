@@ -9,6 +9,7 @@ export const useSiteConfigStore = defineStore('siteConfig', () => {
         slogan: '',
         description: '',
         logoUrl: '',
+        frontendArticlePageSize: 12,
         githubEnabled: false,
         githubShowFront: false,
         githubShowRegister: false,
@@ -22,20 +23,18 @@ export const useSiteConfigStore = defineStore('siteConfig', () => {
 
     // 网站权限配置
     const permissions = ref({
-        commentEnabled: true,           // 允许评论
-        likeEnabled: true,              // 允许点赞
-        favoriteEnabled: true,          // 允许收藏
-        userRegisterEnabled: false,     // 允许用户注册
-        userPublishEnabled: false,      // 允许用户发布文章
-        articleReviewRequired: false,   // 文章需要审核
-        commentReviewRequired: false,   // 评论需要审核
-        anonymousCommentEnabled: false  // 允许匿名评论
+        commentEnabled: true,
+        likeEnabled: true,
+        favoriteEnabled: true,
+        userRegisterEnabled: false,
+        userPublishEnabled: false,
+        articleReviewRequired: false,
+        commentReviewRequired: false,
+        anonymousCommentEnabled: false
     })
 
-    // 加载状态
     const loading = ref(false)
 
-    // 获取网站基本信息
     const fetchSiteInfo = async () => {
         try {
             const response = await axios.get('/site/info')
@@ -45,6 +44,7 @@ export const useSiteConfigStore = defineStore('siteConfig', () => {
                     slogan: response.data.slogan || '',
                     description: response.data.description || '',
                     logoUrl: response.data.logoUrl || '',
+                    frontendArticlePageSize: response.data.frontendArticlePageSize || 12,
                     githubEnabled: response.data.githubEnabled || false,
                     githubShowFront: response.data.githubShowFront || false,
                     githubShowRegister: response.data.githubShowRegister || false,
@@ -61,15 +61,10 @@ export const useSiteConfigStore = defineStore('siteConfig', () => {
         }
     }
 
-    // 获取网站权限配置
     const fetchPermissions = async () => {
         try {
-            console.log('开始获取网站权限配置...')
             const response = await axios.post('/site/permissions')
-            console.log('权限配置接口返回:', response)
-            
             if (response.success && response.data) {
-                console.log('权限配置数据:', response.data)
                 permissions.value = {
                     commentEnabled: response.data.commentEnabled !== undefined ? response.data.commentEnabled : true,
                     likeEnabled: response.data.likeEnabled !== undefined ? response.data.likeEnabled : true,
@@ -80,16 +75,12 @@ export const useSiteConfigStore = defineStore('siteConfig', () => {
                     commentReviewRequired: response.data.commentReviewRequired !== undefined ? response.data.commentReviewRequired : false,
                     anonymousCommentEnabled: response.data.anonymousCommentEnabled !== undefined ? response.data.anonymousCommentEnabled : false
                 }
-                console.log('权限配置已更新:', permissions.value)
-            } else {
-                console.warn('权限配置接口返回异常:', response)
             }
         } catch (error) {
             console.error('获取权限配置失败:', error)
         }
     }
 
-    // 初始化配置
     const initConfig = async () => {
         loading.value = true
         await Promise.all([
@@ -99,11 +90,8 @@ export const useSiteConfigStore = defineStore('siteConfig', () => {
         loading.value = false
     }
 
-    // 检查功能是否启用
     const isFeatureEnabled = (featureName) => {
-        const enabled = permissions.value[featureName] === true
-        console.log(`检查功能 [${featureName}]:`, enabled, '当前权限:', permissions.value)
-        return enabled
+        return permissions.value[featureName] === true
     }
 
     return {
@@ -116,5 +104,5 @@ export const useSiteConfigStore = defineStore('siteConfig', () => {
         isFeatureEnabled
     }
 }, {
-    persist: true // 开启持久化
+    persist: true
 })

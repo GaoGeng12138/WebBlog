@@ -68,6 +68,17 @@
                             <span class="font-semibold text-gray-700">📸 网站资源</span>
                         </el-divider>
 
+                        <el-form-item label="前台文章每页" prop="frontendArticlePageSize">
+                            <div class="flex items-center gap-4">
+                                <el-input-number 
+                                    v-model="form.frontendArticlePageSize" 
+                                    :min="4" 
+                                    :max="60" 
+                                    :step="4"
+                                />
+                                <el-text type="info" size="small">前台首页文章列表每页展示数量，仅展示页码分页</el-text>
+                            </div>
+                        </el-form-item>
                         <!-- 网站图标上传 -->
                         <el-form-item label="网站Logo" prop="logoUrl">
                             <div class="flex items-center gap-6">
@@ -343,7 +354,8 @@ const form = reactive({
     twitterShowRegister: false,
     weiboEnabled: false,
     weiboShowFront: false,
-    weiboShowRegister: false
+    weiboShowRegister: false,
+    frontendArticlePageSize: 12
 })
 
 // 权限控制表单数据
@@ -369,6 +381,9 @@ const rules = {
     ],
     description: [
         { max: 200, message: '网站描述长度不超过 200 个字符', trigger: 'blur' }
+    ],
+    frontendArticlePageSize: [
+        { required: true, message: '请输入前台文章每页数量', trigger: 'blur' }
     ]
 }
 
@@ -457,6 +472,7 @@ const onSubmit = () => {
             slogan: form.slogan,
             description: form.description,
             logoUrl: form.logoUrl,
+            frontendArticlePageSize: form.frontendArticlePageSize,
             // 社交链接功能开关
             githubEnabled: form.githubEnabled,
             githubShowFront: form.githubShowFront,
@@ -506,6 +522,7 @@ const loadSettings = () => {
                 slogan: res.data.slogan || '',
                 description: res.data.description || '',
                 logoUrl: res.data.logoUrl || '',
+                frontendArticlePageSize: res.data.frontendArticlePageSize || 12,
                 githubShowFront: res.data.githubShowFront || false,
                 githubShowRegister: res.data.githubShowRegister || false,
                 twitterShowFront: res.data.twitterShowFront || false,
@@ -551,6 +568,7 @@ const onSubmitPermissions = () => {
         slogan: form.slogan,
         description: form.description,
         logoUrl: form.logoUrl,
+        frontendArticlePageSize: form.frontendArticlePageSize,
         // 社交链接功能开关
         githubEnabled: form.githubEnabled,
         githubShowFront: form.githubShowFront,
@@ -724,3 +742,4 @@ onMounted(() => {
     justify-content: center;
 }
 </style>
+

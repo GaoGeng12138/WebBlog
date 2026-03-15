@@ -21,6 +21,9 @@ public class FindSiteSettingRspVO {
     @ApiModelProperty("网站图标URL")
     private String logoUrl;
 
+    @ApiModelProperty("前台文章列表每页数量")
+    private Integer frontendArticlePageSize;
+
     @ApiModelProperty("是否启用GitHub功能")
     private Boolean githubEnabled;
 
@@ -81,6 +84,7 @@ public class FindSiteSettingRspVO {
         vo.setSlogan(settingDO.getSlogan());
         vo.setDescription(settingDO.getDescription());
         vo.setLogoUrl(settingDO.getLogoUrl());
+        vo.setFrontendArticlePageSize(settingDO.getFrontendArticlePageSize());
         vo.setGithubEnabled(settingDO.getGithubEnabled());
         vo.setGithubShowFront(settingDO.getGithubShowFront());
         vo.setGithubShowRegister(settingDO.getGithubShowRegister());
