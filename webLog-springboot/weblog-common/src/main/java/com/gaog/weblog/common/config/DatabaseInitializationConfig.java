@@ -82,6 +82,25 @@ public class DatabaseInitializationConfig {
                     }
                 }
             }
+
+            // Apply lightweight schema patches for old databases that already have the table.
+            ensureColumnExists(
+                    "t_blog_settings",
+                    "frontend_article_page_size",
+                    "ALTER TABLE `t_blog_settings` ADD COLUMN `frontend_article_page_size` int(11) DEFAULT '12' COMMENT '前台文章列表每页数量' AFTER `logo_url`"
+            );
+            ensureColumnExists(
+                    "t_article",
+                    "article_source",
+                    "ALTER TABLE `t_article` ADD COLUMN `article_source` tinyint(1) NOT NULL DEFAULT '1' COMMENT '文章来源：1-后台发布，2-前台发布' AFTER `author`"
+            );
+            ensureColumnExists(
+                    "t_category",
+                    "show_on_front",
+                    "ALTER TABLE `t_category` ADD COLUMN `show_on_front` tinyint(1) NOT NULL DEFAULT '1' COMMENT '是否在前台导航展示：1-是，0-否' AFTER `illustrate`"
+            );
+            removeColumnIfExists("t_blog_settings", "slogan");
+            removeColumnIfExists("t_blog_settings", "contact_email");
             
             // Then, process INSERT statements from both files (if enabled)
             if (executeInserts) {
@@ -204,6 +223,63 @@ public class DatabaseInitializationConfig {
         } catch (SQLException e) {
             log.error("Error checking if table exists: {}", tableName, e);
             return false;
+        }
+    }
+
+    /**
+     * Add a column for legacy databases when it does not yet exist.
+     */
+    private void ensureColumnExists(String tableName, String columnName, String alterSql) {
+        if (!isTableExists(tableName)) {
+            return;
+        }
+
+        if (isColumnExists(tableName, columnName)) {
+            log.info("Column {}.{} already exists, skipping patch", tableName, columnName);
+            return;
+        }
+
+        try {
+            log.info("Column {}.{} does not exist, applying patch...", tableName, columnName);
+            jdbcTemplate.execute(alterSql);
+            log.info("Successfully added column {}.{}", tableName, columnName);
+        } catch (Exception e) {
+            log.error("Failed to add column {}.{}", tableName, columnName, e);
+        }
+    }
+
+    private boolean isColumnExists(String tableName, String columnName) {
+        try (Connection connection = dataSource.getConnection()) {
+            DatabaseMetaData metaData = connection.getMetaData();
+
+            String schema = null;
+            String catalog = null;
+            if (driverClassName.toLowerCase().contains("mysql") || driverClassName.contains("p6spy")) {
+                catalog = connection.getCatalog();
+            } else {
+                schema = connection.getSchema();
+            }
+
+            try (ResultSet resultSet = metaData.getColumns(catalog, schema, tableName, columnName)) {
+                return resultSet.next();
+            }
+        } catch (SQLException e) {
+            log.error("Error checking if column exists: {}.{}", tableName, columnName, e);
+            return false;
+        }
+    }
+
+    private void removeColumnIfExists(String tableName, String columnName) {
+        if (!isTableExists(tableName) || !isColumnExists(tableName, columnName)) {
+            return;
+        }
+
+        try {
+            log.info("Removing unused column {}.{} ...", tableName, columnName);
+            jdbcTemplate.execute(String.format("ALTER TABLE `%s` DROP COLUMN `%s`", tableName, columnName));
+            log.info("Successfully removed unused column {}.{}", tableName, columnName);
+        } catch (Exception e) {
+            log.error("Failed to remove unused column {}.{}", tableName, columnName, e);
         }
     }
 }

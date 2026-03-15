@@ -1,11 +1,25 @@
-INSERT INTO `weblog`.`t_user_role` (`id`, `username`, `role`, `create_time`)
-VALUES (1, 'admin', 'ROLE_ADMIN', '2023-07-07 01:21:15');
-INSERT INTO `weblog`.`t_user_role` (`id`, `username`, `role`, `create_time`)
-VALUES (2, 'test', 'ROLE_VISITOR', '2023-07-07 01:23:33');
-
-
-INSERT INTO `t_role` (`name`, `description`, `is_enabled`, `create_time`, `update_time`, `is_deleted`)
+-- 默认角色
+INSERT IGNORE INTO `t_role` (`id`, `name`, `description`, `is_enabled`, `create_time`, `update_time`, `is_deleted`)
 VALUES
-    ('ROLE_ADMIN', 'Administrator role with full access', 1, NOW(), NOW(), 0),
-    ('ROLE_EDITOR', 'Editor role can publish and edit articles', 1, NOW(), NOW(), 0),
-    ('ROLE_VISITOR', 'Visitor role can only view articles and comment', 1, NOW(), NOW(), 0);
+    (1, 'ROLE_ADMIN', 'Administrator role with full access', 1, NOW(), NOW(), 0),
+    (2, 'ROLE_EDITOR', 'Editor role can publish and edit articles', 1, NOW(), NOW(), 0),
+    (3, 'ROLE_VISITOR', 'Visitor role can only view articles and comment', 1, NOW(), NOW(), 0);
+
+-- 默认管理员账号
+-- 默认用户名：admin
+-- 默认密码：123456
+INSERT IGNORE INTO `t_user`
+(`id`, `username`, `password`, `create_time`, `update_time`, `is_deleted`, `avatar`, `introduction`, `nickname`, `email`, `is_enabled`, `github_url`, `twitter_url`, `weibo_url`)
+VALUES
+    (1, 'admin', '$2a$10$ZpSUQADtql77ZgNJQ6ljMeJY2CKagbLMBdS8Az4YrEVhn46bVoyuy', NOW(), NOW(), 0, NULL, '系统初始化管理员账号', '管理员', 'admin@example.com', 1, NULL, NULL, NULL);
+
+-- 默认管理员角色绑定
+INSERT IGNORE INTO `t_user_role` (`id`, `create_time`, `user_id`, `role_id`)
+VALUES
+    (1, NOW(), 1, 1);
+
+-- 默认站点设置
+INSERT IGNORE INTO `t_blog_settings`
+(`id`, `title`, `description`, `logo_url`, `frontend_article_page_size`, `comment_enabled`, `create_time`, `update_time`, `is_deleted`, `like_enabled`, `favorite_enabled`, `user_register_enabled`, `user_publish_enabled`, `article_review_required`, `comment_review_required`, `anonymous_comment_enabled`, `github_show_front`, `github_show_register`, `twitter_show_front`, `twitter_show_register`, `weibo_show_front`, `weibo_show_register`, `github_enabled`, `twitter_enabled`, `weibo_enabled`)
+VALUES
+    (1, 'ThoughtFlow', '记录思考的流动，沉淀技术文章、开发笔记和项目经验。', NULL, 12, 1, NOW(), NOW(), 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);

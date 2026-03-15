@@ -1,0 +1,31 @@
+version: "3.9"
+
+services:
+  weblog-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: weblog-backend:latest
+    container_name: weblog-backend
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SERVER_PORT: 8080
+      SERVER_SERVLET_CONTEXT_PATH: /webLog
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: com.mysql.cj.jdbc.Driver
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/weblog?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&useSSL=false&zeroDateTimeBehavior=convertToNull&serverTimezone=Asia/Shanghai
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: 123456
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ACCESSKEY: gaog
+      MINIO_SECRETKEY: gaogeng123
+      MINIO_BUCKETNAME: weblog
+      APP_DATABASE_INIT_CREATE: "true"
+      APP_DATABASE_INIT_INSERTS: "true"
+      JAVA_OPTS: -Xms256m -Xmx512m
+
+# 说明：
+# 1. 此编排仅包含后端服务，MySQL 和 MinIO 请使用外部已存在服务。
+# 2. 如需接入其他主机，请把上面的 mysql / minio 主机名改成实际地址。

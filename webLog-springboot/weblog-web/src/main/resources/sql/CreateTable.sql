@@ -12,6 +12,7 @@ CREATE TABLE `t_article`
     `user_id`     bigint(20) NOT NULL COMMENT '用户id',
     `status`      tinyint(1) NOT NULL COMMENT '文章状态：0:待审核 1：审核通过 2：审核未通过 3、未发布 4、已发布 ',
     `author`      varchar(255) NOT NULL COMMENT '作者',
+    `article_source` tinyint(1) NOT NULL DEFAULT '1' COMMENT '文章来源：1-后台发布，2-前台发布',
     PRIMARY KEY (`id`) USING BTREE,
     KEY           `idx_create_time` (`create_time`) USING BTREE
 ) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 ROW_FORMAT=DYNAMIC COMMENT='文章表';
@@ -49,10 +50,9 @@ CREATE TABLE `t_blog_settings`
 (
     `id`                        bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键',
     `title`                     varchar(255) DEFAULT NULL COMMENT '网站标题',
-    `slogan`                    varchar(255) DEFAULT NULL COMMENT '网站标语',
     `description`               text COMMENT '网站描述',
     `logo_url`                  varchar(512) DEFAULT NULL COMMENT 'Logo URL',
-    `contact_email`             varchar(255) DEFAULT NULL COMMENT '联系邮箱',
+    `frontend_article_page_size` int(11) DEFAULT '12' COMMENT '前台文章列表每页数量',
     `comment_enabled`           tinyint(1) DEFAULT '1' COMMENT '是否启用评论功能',
     `create_time`               datetime     DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `update_time`               datetime     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
@@ -80,10 +80,11 @@ CREATE TABLE `t_category`
 (
     `id`          bigint(20) unsigned NOT NULL AUTO_INCREMENT COMMENT '分类id',
     `name`        varchar(60)  NOT NULL DEFAULT '' COMMENT '分类名称',
+    `illustrate`  varchar(120) NOT NULL DEFAULT '' COMMENT '分类描述',
+    `show_on_front` tinyint(1) NOT NULL DEFAULT '1' COMMENT '是否在前台导航展示：1-是，0-否',
     `create_time` datetime     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `update_time` datetime     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '最后一次更新时间',
     `is_deleted`  tinyint(2) NOT NULL DEFAULT '0' COMMENT '逻辑删除标志位：0：未删除 1：已删除',
-    `illustrate`  varchar(120) NOT NULL DEFAULT '' COMMENT '分类描述',
     PRIMARY KEY (`id`) USING BTREE,
     UNIQUE KEY `uk_name` (`name`) USING BTREE,
     KEY           `idx_create_time` (`create_time`) USING BTREE
@@ -163,11 +164,11 @@ CREATE TABLE `t_user`
     `create_time`  datetime     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `update_time`  datetime     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '最后一次更新时间',
     `is_deleted`   tinyint(2) NOT NULL DEFAULT '0' COMMENT '逻辑删除：0：未删除 1：已删除',
-    `avatar`       varchar(255) NOT NULL COMMENT '头像',
+    `avatar`       varchar(255)          DEFAULT NULL COMMENT '头像',
     `introduction` varchar(255)          DEFAULT NULL COMMENT '个性签名',
-    `nickname`     varchar(255)          DEFAULT NULL COMMENT '昵称',
-    `email`        varchar(255)          DEFAULT NULL COMMENT '邮箱',
-    `is_enabled`   tinyint(1) DEFAULT NULL COMMENT '是否启用',
+    `nickname`     varchar(100)          DEFAULT NULL COMMENT '昵称',
+    `email`        varchar(100)          DEFAULT NULL COMMENT '邮箱',
+    `is_enabled`   tinyint(1) NOT NULL DEFAULT '1' COMMENT '账户启用状态：0-未启用 1-已启用',
     `github_url`   varchar(200)          DEFAULT NULL COMMENT 'GitHub链接',
     `twitter_url`  varchar(200)          DEFAULT NULL COMMENT 'Twitter链接',
     `weibo_url`    varchar(200)          DEFAULT NULL COMMENT '微博链接',
@@ -223,7 +224,10 @@ CREATE TABLE `t_user_role`
     `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `user_id`     bigint(20) unsigned DEFAULT NULL,
     `role_id`     bigint(20) unsigned DEFAULT NULL,
-    PRIMARY KEY (`id`) USING BTREE
+    PRIMARY KEY (`id`) USING BTREE,
+    UNIQUE KEY `uk_user_role` (`user_id`,`role_id`) USING BTREE,
+    KEY           `idx_user_id` (`user_id`) USING BTREE,
+    KEY           `idx_role_id` (`role_id`) USING BTREE
 ) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 ROW_FORMAT=DYNAMIC COMMENT='用户角色表';
 -- t_visitor_log ddl
 CREATE TABLE `t_visitor_log`
