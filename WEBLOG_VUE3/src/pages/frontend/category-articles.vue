@@ -1,20 +1,60 @@
 <template>
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <!-- Header -->
-    <AppHeader :keyword="keyword" @update:keyword="keyword = $event" @search="search" />
+  <div class="min-h-screen">
+    <AppHeader :keyword="keyword" @update:keyword="keyword = $event" @search="searchArticles" />
 
-    <!-- Main Content -->
-    <main class="flex flex-col lg:flex-row gap-8 py-8">
-      <!-- Articles Section -->
-      <section class="w-full lg:w-[68%]">
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-          <div class="flex items-center justify-between mb-6">
-            <h2 class="text-2xl font-bold text-gray-900">
-              <span v-if="categoryName">分类: {{ categoryName }}</span>
-              <span v-else>文章列表</span>
-            </h2>
+    <div class="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8">
+    <main class="flex flex-col gap-6 py-6 2xl:flex-row">
+      <aside class="hidden 2xl:block 2xl:w-[230px] 2xl:shrink-0">
+        <DailyNoteSidebar />
+      </aside>
+
+      <section class="w-full 2xl:flex-1">
+        <div class="mb-4 overflow-hidden rounded-[22px] border border-white/70 bg-white/85 p-4 shadow-[0_16px_38px_rgba(15,23,42,0.06)] backdrop-blur-xl sm:p-5">
+          <p class="text-[11px] font-medium uppercase tracking-[0.22em] text-slate-400">
+            Category Articles
+          </p>
+          <div class="mt-2 flex flex-col gap-2.5 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <h1 class="text-[1.95rem] font-semibold tracking-[-0.03em] text-slate-800 sm:text-[2.1rem]">
+                {{ categoryName }}
+              </h1>
+              <p class="mt-1.5 max-w-2xl text-[13px] leading-6 text-slate-500 sm:text-[14px]">
+                {{ categoryDescription }}
+              </p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2 text-[13px] text-slate-500">
+              <span class="rounded-full bg-slate-100 px-3.5 py-1.5 text-[12px] font-medium text-slate-700">
+                共 {{ total }} 篇
+              </span>
+            </div>
           </div>
 
+          <div class="mt-3.5 max-w-[560px]">
+            <label class="hero-search relative flex items-center p-1.5 rounded-full border border-white/60 bg-white/70 shadow-[0_8px_20px_rgba(15,23,42,0.04)] backdrop-blur-xl transition-all duration-300 focus-within:-translate-y-0.5 focus-within:bg-white/95 focus-within:shadow-[0_12px_28px_rgba(59,130,246,0.12)] focus-within:border-blue-200">
+              <span class="pl-4 pr-3 flex items-center justify-center text-slate-400 group-focus-within:text-blue-500 transition-colors">
+                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M10.5 18a7.5 7.5 0 100-15 7.5 7.5 0 000 15z" />
+                </svg>
+              </span>
+              <input
+                v-model="keyword"
+                type="text"
+                class="min-w-0 flex-1 bg-transparent px-1 py-2 text-[14px] text-slate-600 outline-none border-none ring-0 placeholder:text-slate-400 focus:outline-none focus:ring-0"
+                :placeholder="`在 ${categoryName || '当前分类'} 中搜索文章`"
+                @keyup.enter="searchArticles"
+              />
+              <button
+                type="button"
+                class="hero-search-button rounded-full bg-slate-900 px-6 py-2.5 text-[13px] font-medium text-white transition-all duration-300 hover:bg-blue-600 hover:shadow-lg hover:shadow-blue-600/20 active:scale-95 ml-2"
+                @click="searchArticles"
+              >
+                查询
+              </button>
+            </label>
+          </div>
+        </div>
+
+        <div class="rounded-[26px] border border-white/70 bg-white/85 p-5 shadow-[0_18px_42px_rgba(15,23,42,0.06)] backdrop-blur-xl sm:p-6">
           <div v-if="loading" class="py-16 text-center">
             <div class="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
             <p class="mt-2 text-gray-600">加载中...</p>
@@ -30,21 +70,21 @@
             </div>
 
             <div v-else>
-              <!-- Articles Grid -->
-              <div class="grid grid-cols-1 gap-6 mb-8">
+              <div class="mb-7 flex flex-col gap-3.5">
                 <ArticleCard 
                   v-for="article in articles" 
                   :key="article.id" 
                   :article="article"
-                  class="hover:shadow-lg transition-shadow duration-300"
+                  variant="list"
+                  :category-id="categoryId"
                 />
               </div>
 
-              <!-- Pagination -->
               <Pagination 
                 v-model:current-page="page" 
                 v-model:page-size="size" 
                 :total="total"
+                :simple-mode="true"
                 @page-change="loadArticles"
                 @size-change="loadArticles"
               />
@@ -54,21 +94,26 @@
       </section>
 
       <!-- Sidebar -->
-      <aside class="w-full lg:w-[32%]">
-        <Sidebar />
+      <aside class="w-full lg:w-[320px] 2xl:w-[320px] 2xl:shrink-0">
+        <HomeSidebar />
       </aside>
     </main>
+    </div>
+
+    <AppFooter />
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import ArticleCard from '@/pages/frontend/articleCard.vue'
-import Sidebar from '@/pages/frontend/sidebar.vue'
+import HomeSidebar from '@/pages/frontend/HomeSidebar.vue'
+import DailyNoteSidebar from '@/pages/frontend/DailyNoteSidebar.vue'
 import AppHeader from '@/components/frontend/AppHeader.vue'
+import AppFooter from '@/components/frontend/AppFooter.vue'
 import Pagination from '@/components/frontend/Pagination.vue'
-import { getArticlePageList } from '@/api/frontend/article'
+import { getArticlePageListByCategory } from '@/api/frontend/article'
 import { getCategoryList } from '@/api/frontend/category'
 
 const route = useRoute()
@@ -79,10 +124,18 @@ const page = ref(1)
 const size = ref(6)
 const total = ref(0)
 const loading = ref(false)
-const searchKeyword = ref('')
+const keyword = ref('')
 const categoryName = ref('')
 
 const categoryId = route.params.id
+
+const categoryDescription = computed(() => {
+  if (keyword.value) {
+    return `当前展示 ${categoryName.value || '当前分类'} 中与“${keyword.value}”相关的 ${total.value} 篇文章结果。`
+  }
+
+  return `按 ${categoryName.value || '当前分类'} 分类集中浏览文章，保留紧凑列表阅读方式，方便快速扫读和连续查看。`
+})
 
 onMounted(() => {
   if (categoryId) {
@@ -93,7 +146,6 @@ onMounted(() => {
 
 async function loadCategoryInfo() {
   try {
-    // Fetch category details to get the name
     const res = await getCategoryList({ current: 1, size: 1, id: categoryId })
     if (res && res.success && res.data && res.data.length > 0) {
       categoryName.value = res.data[0].name || `分类 ${categoryId}`
@@ -109,21 +161,21 @@ async function loadCategoryInfo() {
 async function loadArticles() {
   loading.value = true
   try {
-    // Pass category ID as a filter parameter
     const params = {
       current: page.value,
       size: size.value,
-      name: searchKeyword.value,
-      categoryId: categoryId // Filter by category ID
+      name: keyword.value,
+      categoryId: Number(categoryId)
     }
-    
-    const res = await getArticlePageList(params)
+
+    const res = await getArticlePageListByCategory(params)
     if (res && res.success) {
       const list = Array.isArray(res.data) ? res.data : []
       articles.value = list.map(a => ({
         id: a.id || a._id,
         cover: a.cover,
         title: a.title,
+        author: a.author,
         createTime: a.createTime,
         summary: a.summary,
         description: a.description,

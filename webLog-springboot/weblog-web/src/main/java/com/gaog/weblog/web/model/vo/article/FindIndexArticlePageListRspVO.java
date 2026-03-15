@@ -26,6 +26,7 @@ public class FindIndexArticlePageListRspVO {
     private String author;
     private Integer status;
     private LocalDateTime createTime;
+    private LocalDateTime updateTime;
     private Long readNum;
     private String summary;
     /**

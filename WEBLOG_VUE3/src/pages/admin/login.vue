@@ -1,51 +1,86 @@
 <template>
-    <!-- 使用 grid 网格布局，并指定列数为 2，高度占满全屏 -->
-    <div class="grid grid-cols-2 h-screen">
+    <div class="grid min-h-screen grid-cols-1 bg-[#fcf6ea] lg:grid-cols-[minmax(0,1.05fr)_minmax(420px,0.95fr)]">
+        <div class="relative order-2 overflow-hidden border-t border-[#eadfca]/70 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.7),transparent_28%),linear-gradient(160deg,#fbf4e6_0%,#f7edd9_48%,#fdf8ef_100%)] px-8 py-12 lg:order-1 lg:border-r lg:border-t-0 lg:px-14 lg:py-16">
+            <div class="absolute inset-0 pointer-events-none">
+                <span class="absolute left-[12%] top-[18%] h-32 w-32 rounded-full bg-amber-200/20 blur-3xl"></span>
+                <span class="absolute right-[10%] top-[12%] h-40 w-40 rounded-full bg-sky-200/18 blur-3xl"></span>
+                <span class="absolute left-[18%] bottom-[16%] h-36 w-36 rounded-full bg-white/45 blur-3xl"></span>
+            </div>
 
-        <!-- 默认占两列，order 用于指定排列顺序，md 用于适配非移动端（PC 端） -->
-        <div class="col-span-2 order-2 p-10 md:col-span-1 md:order-1 bg-slate-900">
-            <!-- 指定为 flex 布局，并设置为屏幕垂直水平居中，高度为 100% -->
-            <div
-                class="flex justify-center items-center h-full flex-col animate__animated animate__backInLeft animate__fast">
-                <h2 class="font-bold text-4xl mb-7 text-white">Weblog 博客登录</h2>
-                <p class="text-white">一款由 Spring Boot + Mybaits Plus + Vue 3.2 + Vite 4 开发的前后端分离博客。</p>
-                <!-- 指定图片宽度为父级元素的 1/2 -->
-                <img src="@/pics/developer.png" class="w-1/2 mt-10">
+            <div class="relative flex h-full flex-col justify-between animate__animated animate__fadeInLeft animate__fast">
+                <div class="max-w-[580px]">
+                    <div class="inline-flex items-center gap-3 rounded-full border border-white/70 bg-white/65 px-4 py-2 text-[11px] font-medium uppercase tracking-[0.22em] text-slate-500 shadow-[0_10px_24px_rgba(15,23,42,0.04)] backdrop-blur">
+                        <span class="h-2 w-2 rounded-full bg-amber-400"></span>
+                        Thought Journal
+                    </div>
+
+                    <div class="mt-8 flex items-center gap-4">
+                        <img src="@/assets/weblog-logo.png" class="h-12 w-auto object-contain lg:h-14" alt="ThoughtFlow" />
+                        <div>
+                            <h2 class="text-[2rem] font-semibold tracking-[-0.04em] text-slate-800 lg:text-[2.4rem]">ThoughtFlow</h2>
+                            <p class="mt-1 text-[14px] leading-6 text-slate-500">记录 · 沉淀 · 让思考持续流动</p>
+                        </div>
+                    </div>
+
+                    <div class="mt-10 max-w-[520px]">
+                        <h3 class="text-[2.2rem] font-semibold leading-[1.18] tracking-[-0.05em] text-slate-800 lg:text-[2.75rem]">
+                            管理你的内容宇宙，
+                            <span class="bg-gradient-to-r from-amber-600 via-orange-500 to-sky-500 bg-clip-text text-transparent">让灵感有序落地。</span>
+                        </h3>
+                        <p class="mt-5 text-[15px] leading-8 text-slate-500">
+                            在 ThoughtFlow 后台中整理文章、发布更新、维护分类与内容节奏。
+                            整体风格保持轻盈、安静、可持续编辑的品牌感。
+                        </p>
+                    </div>
+                </div>
+
+                <div class="relative mt-12 grid gap-4 md:max-w-[560px] md:grid-cols-2">
+                    <div class="rounded-[24px] border border-white/75 bg-white/72 p-5 shadow-[0_18px_40px_rgba(15,23,42,0.05)] backdrop-blur-xl">
+                        <p class="text-[11px] font-medium uppercase tracking-[0.2em] text-slate-400">Flow Note</p>
+                        <p class="mt-3 text-[16px] font-medium leading-7 text-slate-700">
+                            把零散灵感整理成结构化文章，让每次发布都更有节奏。
+                        </p>
+                    </div>
+                    <div class="rounded-[24px] border border-white/75 bg-white/68 p-5 shadow-[0_18px_40px_rgba(15,23,42,0.04)] backdrop-blur-xl">
+                        <p class="text-[11px] font-medium uppercase tracking-[0.2em] text-slate-400">Brand Tone</p>
+                        <p class="mt-3 text-[16px] font-medium leading-7 text-slate-700">
+                            米白背景、轻字体、克制留白，保持属于 ThoughtFlow 的阅读气质。
+                        </p>
+                    </div>
+                </div>
             </div>
         </div>
 
+        <div class="order-1 bg-[#fffdfa] lg:order-2">
+            <div class="flex h-full items-center justify-center px-6 py-12 lg:px-12">
+                <div class="w-full max-w-[460px] animate__animated animate__fadeInRight animate__fast">
+                    <div class="rounded-[32px] border border-white/80 bg-white/88 px-8 py-10 shadow-[0_26px_70px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:px-10">
+                        <h1 class="text-[2.15rem] font-semibold tracking-[-0.04em] text-slate-800">欢迎回来</h1>
+                        <p class="mt-2 text-[14px] leading-6 text-slate-400">登录你的 ThoughtFlow 账号</p>
 
-        <div class="col-span-2 order-1 md:col-span-1 md:order-2 bg-white">
-            <!-- flex-col 是用来 指定子元素垂直排列 -->
-            <div
-                class="flex justify-center items-center h-full flex-col animate__animated animate__backInRight animate__fast">
-                <h1 class="font-bold text-4xl mb-5">欢迎回来</h1>
-                <div v-if="siteConfig.isFeatureEnabled('userRegisterEnabled')" class="flex items-center justify-center mb-7 text-gray-400 space-x-2">
-                    <!-- 左边横线，高度为 1px, 宽度为 16，背景色设置 -->
-                    <span class="h-[1px] w-16 bg-gray-200"></span>
-                    <span class="text-gray-500">还没有账号？</span>
-                    <router-link to="/register" class="text-blue-500 hover:underline">注册一个账号</router-link>
-                    <!-- 右边横线 -->
-                    <span class="h-[1px] w-16 bg-gray-200"></span>
+                        <div v-if="siteConfig.isFeatureEnabled('userRegisterEnabled')" class="mt-7 flex items-center justify-center gap-2 text-[13px] text-slate-400">
+                            <span class="h-px w-12 bg-[#eadfca]"></span>
+                            <span>还没有账号？</span>
+                            <router-link to="/register" class="font-medium text-amber-600 transition-colors hover:text-amber-500">注册一个账号</router-link>
+                            <span class="h-px w-12 bg-[#eadfca]"></span>
+                        </div>
+
+                        <el-form class="mt-8" ref="formRef" :rules="rules" :model="form">
+                            <el-form-item prop="username">
+                                <el-input size="large" v-model="form.username" placeholder="请输入用户名" :prefix-icon="User"
+                                    clearable />
+                            </el-form-item>
+                            <el-form-item prop="password">
+                                <el-input size="large" type="password" v-model="form.password" placeholder="请输入密码"
+                                    :prefix-icon="Lock" clearable show-password />
+                            </el-form-item>
+                            <el-form-item class="mb-0">
+                                <el-button class="w-full !h-[46px] !rounded-2xl !border-0 !bg-slate-900 text-[14px] font-medium tracking-[0.02em] !shadow-[0_14px_30px_rgba(15,23,42,0.12)] transition-all duration-300 hover:!bg-amber-500 hover:!shadow-[0_18px_34px_rgba(245,158,11,0.22)]"
+                                    :loading="loading" type="primary" @click="onSubmit">登录</el-button>
+                            </el-form-item>
+                        </el-form>
+                    </div>
                 </div>
-                <!-- 引入 Element Plus 表单组件，移动端设置宽度为 5/6，PC 端设置为 2/5 -->
-                <el-form class="w-5/6 md:w-2/5" ref="formRef" :rules="rules" :model="form">
-                    <el-form-item prop="username">
-                        <!-- 输入框组件 -->
-                        <el-input size="large" v-model="form.username" placeholder="请输入用户名" :prefix-icon="User"
-                            clearable />
-                    </el-form-item>
-                    <el-form-item prop="password">
-                        <!-- 密码框组件 -->
-                        <el-input size="large" type="password" v-model="form.password" placeholder="请输入密码"
-                            :prefix-icon="Lock" clearable show-password />
-                    </el-form-item>
-                    <el-form-item>
-                        <!-- 登录按钮，宽度设置为 100% -->
-                        <el-button class="w-full mt-2" size="large" :loading="loading" type="primary"
-                            @click="onSubmit">登录</el-button>
-                    </el-form-item>
-                </el-form>
             </div>
         </div>
     </div>

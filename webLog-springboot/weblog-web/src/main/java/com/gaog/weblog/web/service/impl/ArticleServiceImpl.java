@@ -207,6 +207,7 @@ public class ArticleServiceImpl implements ArticleService {
     public PageResponse findArticlePageListByCategoryId(FindArticleByCategoryReqVO findArticleByCategoryReqVO) {
         Long current = findArticleByCategoryReqVO.getCurrent();
         Long size = findArticleByCategoryReqVO.getSize();
+        String keyword = findArticleByCategoryReqVO.getName();
         Long categoryId = findArticleByCategoryReqVO.getCategoryId();
 
         // 先查询该分类下所有的文章ID
@@ -232,6 +233,7 @@ public class ArticleServiceImpl implements ArticleService {
                 new Page<>(current, size),
                 Wrappers.<ArticleDO>lambdaQuery()
                         .in(ArticleDO::getId, articleIds)
+                        .like(org.apache.commons.lang3.StringUtils.isNotBlank(keyword), ArticleDO::getTitle, keyword)
                         .orderByDesc(ArticleDO::getCreateTime)
         );
 
@@ -400,6 +402,7 @@ public class ArticleServiceImpl implements ArticleService {
     public PageResponse findArticlePageListByTagId(FindArticleByTagReqVO findArticleByTagReqVO) {
         Long current = findArticleByTagReqVO.getCurrent();
         Long size = findArticleByTagReqVO.getSize();
+        String keyword = findArticleByTagReqVO.getName();
         Long tagId = findArticleByTagReqVO.getTagId();
 
         // 先查询该标签下所有的文章ID
@@ -425,6 +428,7 @@ public class ArticleServiceImpl implements ArticleService {
                 new Page<>(current, size),
                 Wrappers.<ArticleDO>lambdaQuery()
                         .in(ArticleDO::getId, articleIds)
+                        .like(org.apache.commons.lang3.StringUtils.isNotBlank(keyword), ArticleDO::getTitle, keyword)
                         .orderByDesc(ArticleDO::getCreateTime)
         );
 

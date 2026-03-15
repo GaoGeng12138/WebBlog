@@ -1,26 +1,27 @@
 <template>
-  <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
-    <div class="text-sm font-semibold text-gray-700 flex items-center gap-2">
+  <div :class="wrapperClass">
+    <div v-if="!simpleMode && !pagerOnly" class="text-sm font-semibold text-gray-700 flex items-center gap-2">
       <el-icon class="text-blue-500"><DocumentCopy /></el-icon>
       共 <span class="text-blue-600 font-bold text-lg">{{ total }}</span> 条数据
     </div>
-    <el-pagination 
-      v-model:current-page="internalCurrentPage" 
-      v-model:page-size="internalPageSize" 
-      :page-sizes="[10, 20, 30, 50]" 
-      :small="false" 
-      :background="true" 
-      :layout="'sizes, prev, pager, next, jumper'" 
+
+    <el-pagination
+      v-model:current-page="internalCurrentPage"
+      v-model:page-size="internalCurrentPageSize"
+      :page-sizes="[10, 20, 30, 50]"
+      :small="simpleMode || pagerOnly"
+      :background="true"
+      :layout="layoutValue"
       :total="total"
-      @size-change="handleSizeChange" 
-      @current-change="handleCurrentChange" 
-      class="flex-wrap"
+      @size-change="handleSizeChange"
+      @current-change="handleCurrentChange"
+      :class="paginationClass"
     />
   </div>
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { DocumentCopy } from '@element-plus/icons-vue'
 
 const props = defineProps({
@@ -35,29 +36,49 @@ const props = defineProps({
   total: {
     type: Number,
     required: true
+  },
+  simpleMode: {
+    type: Boolean,
+    default: false
+  },
+  pagerOnly: {
+    type: Boolean,
+    default: false
   }
 })
 
 const emit = defineEmits(['update:currentPage', 'update:pageSize', 'pageChange', 'sizeChange'])
 
 const internalCurrentPage = ref(props.currentPage)
-const internalPageSize = ref(props.pageSize)
+const internalCurrentPageSize = ref(props.pageSize)
 
-// Watch for prop changes
 watch(() => props.currentPage, (newVal) => {
   internalCurrentPage.value = newVal
 })
 
 watch(() => props.pageSize, (newVal) => {
-  internalPageSize.value = newVal
+  internalCurrentPageSize.value = newVal
 })
 
-// Handle page size change
+const layoutValue = computed(() => {
+  if (props.pagerOnly) return 'prev, pager, next'
+  return props.simpleMode ? 'prev, pager, next' : 'sizes, prev, pager, next, jumper'
+})
+
+const wrapperClass = computed(() => {
+  if (props.pagerOnly || props.simpleMode) return 'flex justify-center'
+  return 'flex flex-col sm:flex-row items-center justify-between gap-4'
+})
+
+const paginationClass = computed(() => {
+  if (props.pagerOnly) return 'frontend-pager-only'
+  return props.simpleMode ? 'home-pagination' : 'flex-wrap'
+})
+
 function handleSizeChange(val) {
-  internalPageSize.value = val
+  internalCurrentPageSize.value = val
   emit('update:pageSize', val)
   emit('sizeChange', val)
-  // Reset to page 1 when page size changes
   if (internalCurrentPage.value !== 1) {
     internalCurrentPage.value = 1
     emit('update:currentPage', 1)
@@ -65,10 +86,32 @@ function handleSizeChange(val) {
   }
 }
 
-// Handle current page change
 function handleCurrentChange(val) {
   internalCurrentPage.value = val
   emit('update:currentPage', val)
   emit('pageChange', val)
 }
 </script>
+
+<style scoped>
+.home-pagination :deep(.el-pager li.is-active),
+.frontend-pager-only :deep(.el-pager li.is-active) {
+  background-color: #f59e0b;
+  border-color: #f59e0b;
+  color: #fff;
+}
+
+.home-pagination :deep(.btn-next),
+.home-pagination :deep(.btn-prev),
+.home-pagination :deep(.el-pager li),
+.frontend-pager-only :deep(.btn-next),
+.frontend-pager-only :deep(.btn-prev),
+.frontend-pager-only :deep(.el-pager li) {
+  border-radius: 9999px;
+}
+
+.frontend-pager-only :deep(.btn-prev),
+.frontend-pager-only :deep(.btn-next) {
+  min-width: 34px;
+}
+</style>

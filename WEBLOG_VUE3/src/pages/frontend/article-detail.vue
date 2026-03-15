@@ -1,37 +1,35 @@
 <template>
-  <div>
+  <div class="article-detail-page min-h-screen bg-[#F8FAFC] flex flex-col">
     <!-- Header -->
-    <AppHeader :keyword="keyword" @update:keyword="keyword = $event" @search="search" />
+    <AppHeader :keyword="keyword" @update:keyword="keyword = $event" @search="searchArticles" />
     
     <!-- Main Content -->
-    <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
-      <main class="flex gap-8 py-8">
+    <main class="flex-1 max-w-[1720px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
+      <div class="flex gap-5 lg:gap-6">
         <!-- 左侧导航栏（文章目录） -->
-        <aside v-if="article && headings.length > 0" class="hidden xl:block w-64 shrink-0">
-          <div class="sticky top-20">
-            <div class="bg-white rounded-xl shadow-md border border-gray-200 p-4">
-              <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <el-icon class="text-blue-600"><Menu /></el-icon>
+        <aside v-if="article && headings.length > 0" class="hidden 2xl:block w-56 shrink-0">
+          <div class="sticky top-24">
+            <div class="bg-white/60 backdrop-blur-xl rounded-2xl shadow-sm border border-gray-100 p-5">
+              <h3 class="text-sm font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <el-icon class="text-blue-500"><Menu /></el-icon>
                 文章目录
               </h3>
-              <nav class="space-y-1 max-h-[calc(100vh-200px)] overflow-y-auto">
+              <nav class="space-y-1 max-h-[calc(100vh-200px)] overflow-y-auto pr-2 custom-scrollbar">
                 <a
                   v-for="(heading, index) in headings"
                   :key="index"
                   :href="`#${heading.id}`"
                   @click.prevent="scrollToHeading(heading.id)"
                   :class="[
-                    'block py-2.5 px-3 text-sm rounded-lg transition-all duration-200 border-l-3',
+                    'block py-2 px-3 text-sm rounded-xl transition-all duration-300 relative',
                     heading.level === 2 ? 'pl-3' : heading.level === 3 ? 'pl-6' : 'pl-9',
                     activeHeading === heading.id 
-                      ? 'bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 font-bold border-l-4 border-blue-600 shadow-sm transform scale-105' 
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-blue-600 border-transparent hover:border-gray-300 hover:shadow-sm'
+                      ? 'bg-blue-50 text-blue-700 font-semibold' 
+                      : 'text-gray-600 hover:bg-gray-50/80 hover:text-blue-600'
                   ]"
                 >
-                  <span :class="activeHeading === heading.id ? 'flex items-center gap-2' : ''">
-                    <span v-if="activeHeading === heading.id" class="w-1.5 h-1.5 bg-blue-600 rounded-full animate-pulse"></span>
-                    {{ heading.text }}
-                  </span>
+                  <span v-if="activeHeading === heading.id" class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-4 bg-blue-600 rounded-r-full"></span>
+                  <span class="truncate block">{{ heading.text }}</span>
                 </a>
               </nav>
             </div>
@@ -39,137 +37,145 @@
         </aside>
 
         <!-- 主内容区域 -->
-        <div class="flex-1 flex gap-8 min-w-0">
+        <div class="flex-1 flex flex-col gap-8 min-w-0">
           <!-- Article Detail Section -->
-          <section class="flex-1 max-w-4xl">
-        <div v-if="loading" class="py-16 text-center">
-          <div class="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
-          <p class="mt-2 text-gray-600">加载中...</p>
-        </div>
+          <article class="flex-1 max-w-[1120px] w-full mx-auto md:mx-0">
+            <div v-if="loading" class="py-20 text-center">
+              <div class="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+              <p class="mt-4 text-sm text-gray-500 font-medium">全力加载中 ...</p>
+            </div>
 
-        <div v-else-if="article" class="bg-white rounded-xl shadow-md p-6">
-          <div class="flex justify-between items-start mb-4">
-            <h1 class="text-3xl font-bold text-gray-900">{{ article.title }}</h1>
-            <!-- 收藏按钮 - 仅在功能开启且用户登录时显示 -->
-            <el-button 
-              v-if="siteConfig.isFeatureEnabled('favoriteEnabled') && isLoggedIn"
-              :type="isCollected ? 'danger' : 'default'" 
-              :icon="isCollected ? 'StarFilled' : 'Star'"
-              circle
-              @click="toggleCollect"
-              :loading="collectLoading"
-              class="!border-0"
-            >
-            </el-button>
-            <!-- 未登录用户提示 -->
-            <el-button 
-              v-else-if="siteConfig.isFeatureEnabled('favoriteEnabled') && !isLoggedIn"
-              type="default" 
-              icon="Star"
-              circle
-              @click="handleCollectClickForGuest"
-              class="!border-0"
-            >
-            </el-button>
-          </div>
+            <div v-else-if="article" class="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 sm:p-10 lg:p-14">
+              <!-- 文章头部信息 -->
+              <header class="mb-10">
+                <div class="flex flex-wrap items-center gap-3 text-sm text-gray-500 mb-6">
+                   <div v-if="article.category" class="bg-blue-50 text-blue-600 px-3 py-1 rounded-full font-medium text-xs">
+                     {{ typeof article.category === 'string' ? article.category : article.category.name }}
+                   </div>
+                   <span class="flex items-center gap-1.5">
+                     <svg class="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                     </svg>
+                     {{ formatDate(article.createTime) }}
+                   </span>
+                   <span v-if="article.readNum !== undefined" class="flex items-center gap-1.5 ml-auto">
+                     <svg class="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                     </svg>
+                     {{ article.readNum }} 次阅读
+                   </span>
+                </div>
 
-          <div class="flex items-center gap-4 text-gray-600 mb-6">
-            <span>{{ formatDate(article.createTime) }}</span>
-            <span v-if="article.category">分类: {{ typeof article.category === 'string' ? article.category :
-              article.category.name }}</span>
-            <span v-if="article.readNum !== undefined">阅读: {{ article.readNum }} 次</span>
-          </div>
+                <div class="flex justify-between items-start gap-4">
+                  <h1 class="text-3xl sm:text-4xl font-extrabold text-gray-900 leading-tight">{{ article.title }}</h1>
+                  
+                  <!-- 收藏按钮 - 仅在功能开启且用户登录时显示 -->
+                  <button 
+                    v-if="siteConfig.isFeatureEnabled('favoriteEnabled') && isLoggedIn"
+                    @click="toggleCollect"
+                    :disabled="collectLoading"
+                    class="shrink-0 p-2.5 rounded-full transition-all duration-300 border focus:outline-none"
+                    :class="isCollected ? 'bg-orange-50 border-orange-200 text-orange-500 hover:bg-orange-100 hover:scale-105' : 'bg-white border-gray-200 text-gray-400 hover:text-orange-500 hover:border-orange-200 hover:bg-orange-50'"
+                  >
+                    <el-icon class="text-xl leading-none"><StarFilled v-if="isCollected" /><Star v-else /></el-icon>
+                  </button>
+                  <!-- 未登录用户提示 -->
+                  <button 
+                    v-else-if="siteConfig.isFeatureEnabled('favoriteEnabled') && !isLoggedIn"
+                    @click="handleCollectClickForGuest"
+                    class="shrink-0 p-2.5 rounded-full bg-white border border-gray-200 text-gray-400 hover:text-orange-500 hover:border-orange-200 hover:bg-orange-50 transition-all duration-300 focus:outline-none"
+                  >
+                     <el-icon class="text-xl leading-none"><Star /></el-icon>
+                  </button>
+                </div>
 
-          <div class="flex flex-wrap gap-2 mb-6">
-            <el-tag v-for="tag in article.tags" :key="tag.id || tag.name" type="success" size="small"
-              class="rounded-full px-2 py-1">
-              {{ tag.name || tag }}
-            </el-tag>
-          </div>
+                <div v-if="article.tags && article.tags.length" class="flex flex-wrap gap-2 mt-6">
+                  <span v-for="tag in article.tags" :key="tag.id || tag.name" 
+                    class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors cursor-pointer">
+                    # {{ tag.name || tag }}
+                  </span>
+                </div>
+              </header>
 
-          <div v-if="article.cover" class="mb-6">
-            <img :src="article.cover" :alt="article.title" class="w-full h-auto rounded-lg">
-          </div>
-          <!-- 正文 -->
-          <div ref="articleContentRef" class="prose prose-lg max-w-none mt-5 article-content" v-viewer
-            v-html="article.content">
-          </div>
-
-          <!-- 上一篇/下一篇导航 -->
-          <div class="mt-12 pt-8 border-t border-gray-200">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <!-- 上一篇 -->
-              <div v-if="article.preArticle">
-                <a href="#" @click.prevent="navigateToArticle(article.preArticle.articleId)"
-                  class="block p-4 rounded-lg border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all duration-300 group">
-                  <p class="text-xs text-gray-500 mb-2">上一篇</p>
-                  <p class="text-lg font-semibold text-gray-900 group-hover:text-blue-600 line-clamp-2">
-                    {{ article.preArticle.articleTitle }}
-                  </p>
-                  <p class="text-xs text-gray-400 mt-2">← 阅读</p>
-                </a>
-              </div>
-              <div v-else class="p-4 rounded-lg border border-gray-200 bg-gray-50">
-                <p class="text-xs text-gray-500 mb-2">上一篇</p>
-                <p class="text-gray-400">没有了</p>
+              <!-- 封面图 -->
+              <div v-if="article.cover" class="mb-10 rounded-2xl overflow-hidden bg-gray-50 border border-gray-100 shadow-sm relative group">
+                <img :src="article.cover" :alt="article.title" class="w-full h-auto max-h-[500px] object-cover transition-transform duration-700 group-hover:scale-105">
               </div>
 
-              <!-- 下一篇 -->
-              <div v-if="article.nextArticle" class="md:col-start-2">
-                <a href="#" @click.prevent="navigateToArticle(article.nextArticle.articleId)"
-                  class="block p-4 rounded-lg border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all duration-300 group">
-                  <p class="text-xs text-gray-500 mb-2">下一篇</p>
-                  <p class="text-lg font-semibold text-gray-900 group-hover:text-blue-600 line-clamp-2">
-                    {{ article.nextArticle.articleTitle }}
-                  </p>
-                  <p class="text-xs text-gray-400 mt-2">阅读 →</p>
-                </a>
-              </div>
-              <div v-else class="md:col-start-2 p-4 rounded-lg border border-gray-200 bg-gray-50">
-                <p class="text-xs text-gray-500 mb-2">下一篇</p>
-                <p class="text-gray-400">没有了</p>
+              <!-- 正文内容 -->
+              <div ref="articleContentRef" class="prose prose-blue prose-lg max-w-none article-content" v-viewer v-html="article.content"></div>
+
+              <!-- 上一篇/下一篇导航 -->
+              <div class="mt-16 pt-8 border-t border-gray-100">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                  <!-- 上一篇 -->
+                  <router-link v-if="displayPreArticle" :to="`/article/${displayPreArticle.articleId}`"
+                    class="group flex flex-col p-5 rounded-2xl border border-gray-100 bg-gray-50/50 hover:bg-white hover:border-blue-200 hover:shadow-md transition-all duration-300">
+                    <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 group-hover:text-blue-500 transition-colors">Previous</span>
+                    <span class="text-base font-bold text-gray-900 line-clamp-2 group-hover:text-blue-600">{{ displayPreArticle.articleTitle }}</span>
+                  </router-link>
+                  <div v-else class="flex flex-col p-5 rounded-2xl border border-dashed border-gray-200 bg-gray-50/30">
+                    <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Previous</span>
+                    <span class="text-sm text-gray-400">已经是第一篇了</span>
+                  </div>
+
+                  <!-- 下一篇 -->
+                  <router-link v-if="displayNextArticle" :to="`/article/${displayNextArticle.articleId}`"
+                    class="group flex flex-col md:text-right p-5 rounded-2xl border border-gray-100 bg-gray-50/50 hover:bg-white hover:border-blue-200 hover:shadow-md transition-all duration-300">
+                    <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 group-hover:text-blue-500 transition-colors">Next</span>
+                    <span class="text-base font-bold text-gray-900 line-clamp-2 group-hover:text-blue-600">{{ displayNextArticle.articleTitle }}</span>
+                  </router-link>
+                  <div v-else class="flex flex-col md:text-right p-5 rounded-2xl border border-dashed border-gray-200 bg-gray-50/30">
+                    <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Next</span>
+                    <span class="text-sm text-gray-400">已经是最后一篇了</span>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
+
+            <!-- Comment Section -->
+            <CommentSection v-if="article && !loading" :article-id="article.id" class="mt-8 bg-white rounded-3xl shadow-sm border border-gray-100 p-6 sm:p-10 lg:p-12" />
+
+            <!-- 404状态 -->
+            <div v-if="!article && !loading" class="py-24 text-center bg-white rounded-3xl shadow-sm border border-gray-100 px-6">
+              <div class="w-24 h-24 mx-auto mb-6 bg-gray-50 rounded-full flex items-center justify-center">
+                <svg class="h-12 w-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+              </div>
+              <h3 class="text-xl font-bold text-gray-900 mb-2">文章未找到</h3>
+              <p class="text-gray-500 max-w-sm mx-auto mb-8">抱歉，您访问的文章不存在或已被删除。可能链接有误或它已不在地球上。</p>
+              <router-link to="/" class="inline-flex items-center justify-center px-6 py-2.5 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors">
+                返回首页
+              </router-link>
+            </div>
+          </article>
         </div>
 
-        <!-- Comment Section -->
-        <CommentSection v-if="article" :article-id="article.id" class="mt-8" />
+        <!-- Sidebar -->
+        <aside class="w-[260px] xl:w-[280px] shrink-0">
+          <HomeSidebar />
+        </aside>
+      </div> <!-- 闭合 <div class="flex gap-8 lg:gap-12"> -->
+    </main>
 
-        <div v-else class="py-16 text-center">
-          <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-          </svg>
-          <h3 class="mt-2 text-sm font-medium text-gray-900">文章未找到</h3>
-          <p class="mt-1 text-sm text-gray-500">抱歉，您访问的文章不存在或已被删除。</p>
-          <div class="mt-6">
-            <el-button type="primary" @click="$router.push('/')">返回首页</el-button>
-          </div>
-        </div>
-      </section>
-
-      <!-- Sidebar -->
-      <aside class="w-full lg:w-80 shrink-0">
-        <Sidebar />
-      </aside>
-        </div>
-      </main>
-    </div>
+    <AppFooter />
   </div>
 </template>
 
 <script setup>
 import { collectArticle, uncollectArticle, isArticleCollected } from '@/api/frontend/favorite'
-import { getArticleDetail } from '@/api/frontend/article'
+import { getArticleDetail, getArticlePageListByCategory } from '@/api/frontend/article'
 import AppHeader from '@/components/frontend/AppHeader.vue'
-import Sidebar from '@/pages/frontend/sidebar.vue'
+import AppFooter from '@/components/frontend/AppFooter.vue'
+import HomeSidebar from '@/pages/frontend/HomeSidebar.vue'
 import CommentSection from '@/components/frontend/CommentSection.vue'
 import hljs from 'highlight.js'
 // 代码高亮样式
 import 'highlight.js/styles/tokyo-night-dark.css'
 import moment from 'moment'
-import { nextTick, onMounted, ref, watch } from 'vue'
+import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Star, StarFilled, Menu } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
@@ -190,10 +196,36 @@ const isCollected = ref(false)
 const collectLoading = ref(false)
 const headings = ref([]) // 文章目录
 const activeHeading = ref('') // 当前激活的标题
+const categoryNeighbors = ref({ preArticle: null, nextArticle: null })
 
 // 检查用户是否已登录
 const isLoggedIn = computed(() => {
   return !!userStore.frontendUserInfo && !!userStore.frontendUserInfo.userId
+})
+
+const normalizedCategoryId = computed(() => {
+  const category = article.value?.category
+  if (category && typeof category === 'object' && category.id) {
+    return Number(category.id)
+  }
+  if (route.query.categoryId) {
+    return Number(route.query.categoryId)
+  }
+  return null
+})
+
+const displayPreArticle = computed(() => {
+  if (normalizedCategoryId.value) {
+    return categoryNeighbors.value.preArticle
+  }
+  return article.value?.preArticle || null
+})
+
+const displayNextArticle = computed(() => {
+  if (normalizedCategoryId.value) {
+    return categoryNeighbors.value.nextArticle
+  }
+  return article.value?.nextArticle || null
 })
 
 onMounted(() => {
@@ -210,6 +242,10 @@ onMounted(() => {
             loadArticle()
         })
     })
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('scroll', updateActiveHeading)
 })
 
 // 当路由参数 id 变化时，重新加载文章（保证使用路由跳转也能触发）
@@ -246,11 +282,123 @@ function highlightCode() {
       block.removeAttribute('data-highlighted')
       // 执行高亮
       hljs.highlightElement(block)
+      const pre = block.parentElement
+      if (pre) {
+        pre.classList.add('code-block-shell')
+        const existingToolbar = pre.querySelector('.code-block-toolbar')
+        if (existingToolbar) {
+          existingToolbar.remove()
+        }
+
+        const languageClass = Array.from(block.classList).find((name) => name.startsWith('language-'))
+        const hljsLanguage = Array.from(block.classList).find((name) => name.startsWith('hljs-'))
+        const rawLanguage = block.getAttribute('data-language')
+          || (languageClass ? languageClass.replace('language-', '') : '')
+          || (hljsLanguage ? hljsLanguage.replace('hljs-', '') : '')
+          || ''
+        const language = formatLanguageLabel(rawLanguage)
+
+        const toolbar = document.createElement('div')
+        toolbar.className = 'code-block-toolbar'
+
+        const dots = document.createElement('div')
+        dots.className = 'code-block-dots'
+        dots.innerHTML = '<span></span><span></span><span></span>'
+
+        const actions = document.createElement('div')
+        actions.className = 'code-block-actions'
+
+        const languageLabel = document.createElement('span')
+        languageLabel.className = 'code-language-label'
+        languageLabel.textContent = language
+
+        const copyButton = document.createElement('button')
+        copyButton.className = 'code-copy-button'
+        copyButton.type = 'button'
+        copyButton.textContent = '复制'
+        copyButton.addEventListener('click', async () => {
+          try {
+            await navigator.clipboard.writeText(block.textContent || '')
+            copyButton.textContent = '已复制'
+            setTimeout(() => {
+              copyButton.textContent = '复制'
+            }, 1600)
+          } catch (error) {
+            console.warn('复制代码失败:', error)
+            copyButton.textContent = '复制失败'
+            setTimeout(() => {
+              copyButton.textContent = '复制'
+            }, 1600)
+          }
+        })
+
+        actions.appendChild(copyButton)
+        actions.appendChild(languageLabel)
+        toolbar.appendChild(dots)
+        toolbar.appendChild(actions)
+        pre.insertBefore(toolbar, block)
+      }
       console.log(`第 ${index + 1} 个代码块高亮成功`)
     } catch (e) {
       console.warn(`第 ${index + 1} 个代码块高亮失败:`, e)
     }
   })
+}
+
+function formatLanguageLabel(language) {
+  const key = String(language || '').trim().toLowerCase()
+  const labelMap = {
+    js: 'JS',
+    jsx: 'JSX',
+    javascript: 'JS',
+    ts: 'TS',
+    tsx: 'TSX',
+    typescript: 'TS',
+    sh: 'BASH',
+    shell: 'BASH',
+    bash: 'BASH',
+    zsh: 'ZSH',
+    powershell: 'POWERSHELL',
+    ps1: 'POWERSHELL',
+    py: 'PYTHON',
+    python: 'PYTHON',
+    java: 'JAVA',
+    c: 'C',
+    cpp: 'C++',
+    'c++': 'C++',
+    csharp: 'C#',
+    cs: 'C#',
+    go: 'GO',
+    golang: 'GO',
+    php: 'PHP',
+    html: 'HTML',
+    xml: 'XML',
+    css: 'CSS',
+    scss: 'SCSS',
+    less: 'LESS',
+    json: 'JSON',
+    yaml: 'YAML',
+    yml: 'YAML',
+    toml: 'TOML',
+    sql: 'SQL',
+    kotlin: 'KOTLIN',
+    kt: 'KOTLIN',
+    swift: 'SWIFT',
+    rust: 'RUST',
+    rs: 'RUST',
+    ruby: 'RUBY',
+    rb: 'RUBY',
+    vue: 'VUE',
+    dockerfile: 'DOCKER',
+    docker: 'DOCKER',
+    plaintext: 'TEXT',
+    text: 'TEXT',
+    txt: 'TEXT',
+    md: 'MARKDOWN',
+    markdown: 'MARKDOWN'
+  }
+
+  return labelMap[key] || (key ? key.toUpperCase() : 'TEXT')
 }
 
 // 切换收藏状态
@@ -353,17 +501,10 @@ async function loadArticle() {
     if (res && res.success) {
       article.value = res.data
       console.log('文章数据设置成功')
+      await resolveCategoryNeighbors()
       
       // 动态更新浏览器标签页标题
-      const userInfo = userStore.frontendUserInfo
-      const nickname = userInfo?.nickname
-      const siteTitle = siteConfig.config?.title || 'WebLog'
-      
-      if (nickname) {
-        document.title = `${article.value.title} - ${nickname}のBlog`
-      } else {
-        document.title = `${article.value.title} - ${siteTitle}`
-      }
+      document.title = `${article.value.title} - ThoughtFlow`
       
       // 检查是否已收藏（只有登录用户才会检查）
       if (isLoggedIn.value) {
@@ -386,8 +527,54 @@ async function loadArticle() {
   } catch (e) {
     console.error('加载文章失败', e)
     article.value = null
+    categoryNeighbors.value = { preArticle: null, nextArticle: null }
   } finally {
     loading.value = false
+  }
+}
+
+async function resolveCategoryNeighbors() {
+  const categoryId = normalizedCategoryId.value
+  const currentArticleId = Number(article.value?.id)
+
+  if (!categoryId || !currentArticleId) {
+    categoryNeighbors.value = { preArticle: null, nextArticle: null }
+    return
+  }
+
+  try {
+    const res = await getArticlePageListByCategory({
+      current: 1,
+      size: 200,
+      categoryId
+    })
+
+    if (!(res && res.success && Array.isArray(res.data))) {
+      categoryNeighbors.value = { preArticle: null, nextArticle: null }
+      return
+    }
+
+    const list = res.data
+      .map(item => ({
+        articleId: Number(item.id || item._id),
+        articleTitle: item.title
+      }))
+      .filter(item => item.articleId)
+
+    const currentIndex = list.findIndex(item => item.articleId === currentArticleId)
+
+    if (currentIndex === -1) {
+      categoryNeighbors.value = { preArticle: null, nextArticle: null }
+      return
+    }
+
+    categoryNeighbors.value = {
+      preArticle: currentIndex > 0 ? list[currentIndex - 1] : null,
+      nextArticle: currentIndex < list.length - 1 ? list[currentIndex + 1] : null
+    }
+  } catch (error) {
+    console.error('按分类计算相邻文章失败:', error)
+    categoryNeighbors.value = { preArticle: null, nextArticle: null }
   }
 }
 
@@ -399,6 +586,8 @@ function formatDate(ts) {
 // 提取文章目录
 function extractHeadings() {
   if (!articleContentRef.value) return
+
+  window.removeEventListener('scroll', updateActiveHeading)
   
   const contentEl = articleContentRef.value
   const headingElements = contentEl.querySelectorAll('h2, h3, h4')
@@ -465,44 +654,221 @@ function handleCollectClickForGuest() {
 </script>
 
 <style scoped>
-/* code 样式 */
-::v-deep(.article-content code:not(pre code)) {
-  padding: 2px 4px;
-  margin: 0 2px;
-  font-size: 95% !important;
-  border-radius: 4px;
-  color: rgb(41, 128, 185);
-  background-color: rgba(27, 31, 35, 0.05);
-  font-family: Operator Mono, Consolas, Monaco, Menlo, monospace;
+::v-deep(.article-content) {
+  color: #334155;
+  font-size: 1.02rem;
+  line-height: 1.95;
 }
 
-/* pre code 样式 */
-::v-deep(code) {
-  font-size: 98%;
+::v-deep(.article-content > :first-child) {
+  margin-top: 0;
+}
+
+::v-deep(.article-content h1),
+::v-deep(.article-content h2),
+::v-deep(.article-content h3),
+::v-deep(.article-content h4) {
+  color: #0f172a;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+::v-deep(.article-content h2) {
+  margin-top: 3.2rem;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.9);
+  font-size: clamp(1.8rem, 2.8vw, 2.8rem);
+}
+
+::v-deep(.article-content h3) {
+  margin-top: 2.2rem;
+  margin-bottom: 1rem;
+  font-size: clamp(1.3rem, 2vw, 1.75rem);
+}
+
+::v-deep(.article-content h4) {
+  margin-top: 1.8rem;
+  margin-bottom: 0.75rem;
+  font-size: 1.15rem;
+}
+
+::v-deep(.article-content p) {
+  margin: 1rem 0;
+}
+
+::v-deep(.article-content strong) {
+  color: #0f172a;
+  font-weight: 800;
+}
+
+::v-deep(.article-content a) {
+  color: #d97706;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(245, 158, 11, 0.25);
+  transition: color 0.25s ease, border-color 0.25s ease;
+}
+
+::v-deep(.article-content a:hover) {
+  color: #b45309;
+  border-color: rgba(217, 119, 6, 0.45);
+}
+
+::v-deep(.article-content ul),
+::v-deep(.article-content ol) {
+  margin: 1.15rem 0;
+  padding-left: 1.5rem;
+}
+
+::v-deep(.article-content li) {
+  margin: 0.55rem 0;
+  padding-left: 0.2rem;
+}
+
+::v-deep(.article-content blockquote) {
+  margin: 1.8rem 0;
+  padding: 1.1rem 1.25rem;
+  border-left: 4px solid #f59e0b;
+  border-radius: 0 18px 18px 0;
+  background: linear-gradient(135deg, rgba(255, 251, 235, 0.95), rgba(255, 255, 255, 0.92));
+  color: #475569;
+}
+
+::v-deep(.article-content hr) {
+  margin: 2.2rem 0;
+  border: 0;
+  border-top: 1px solid rgba(226, 232, 240, 0.9);
+}
+
+::v-deep(.article-content img) {
+  display: block;
+  max-width: 100%;
+  margin: 1.8rem auto;
+  border-radius: 20px;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+}
+
+::v-deep(.article-content table) {
+  width: 100%;
+  margin: 1.6rem 0;
+  overflow: hidden;
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  border-radius: 18px;
+  background: #fff;
+}
+
+::v-deep(.article-content th),
+::v-deep(.article-content td) {
+  padding: 0.9rem 1rem;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+  text-align: left;
+}
+
+::v-deep(.article-content th) {
+  background: #fff7ed;
+  color: #9a3412;
+  font-weight: 700;
+}
+
+::v-deep(.article-content tr:last-child td) {
+  border-bottom: none;
+}
+
+::v-deep(.article-content code:not(pre code)) {
+  padding: 0.18rem 0.45rem;
+  margin: 0 0.15rem;
+  border-radius: 8px;
+  border: 1px solid rgba(251, 191, 36, 0.18);
+  background: #fff7ed;
+  color: #c2410c;
+  font-size: 0.92em !important;
+  font-family: 'JetBrains Mono', 'Cascadia Code', Consolas, Monaco, monospace;
 }
 
 ::v-deep(pre) {
-  margin-bottom: 20px;
+  margin: 1.7rem 0;
   position: relative;
 }
 
-::v-deep(pre code.hljs) {
-  padding-top: 2rem;
-  padding-left: 1rem;
-  padding-right: 1rem;
-  padding-bottom: 0.7rem;
-  border-radius: 6px;
+::v-deep(pre.code-block-shell) {
+  overflow: hidden;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 20px;
+  box-shadow: 0 18px 36px rgba(15, 23, 42, 0.08);
+  background: #1f2937;
 }
 
-::v-deep(pre:before) {
+::v-deep(.code-block-toolbar) {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.6rem 0.9rem 0.5rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+  background: rgba(15, 23, 42, 0.22);
+}
+
+::v-deep(.code-block-dots) {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+::v-deep(.code-block-dots span) {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+}
+
+::v-deep(.code-block-dots span:nth-child(1)) {
   background: #fc625d;
-  border-radius: 50%;
-  box-shadow: 20px 0 #fdbc40, 40px 0 #35cd4b;
-  content: ' ';
-  height: 10px;
-  position: absolute;
-  width: 10px;
-  top: 12px;
-  left: 12px;
+}
+
+::v-deep(.code-block-dots span:nth-child(2)) {
+  background: #fdbc40;
+}
+
+::v-deep(.code-block-dots span:nth-child(3)) {
+  background: #35cd4b;
+}
+
+::v-deep(.code-block-actions) {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+::v-deep(.code-language-label) {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: rgba(226, 232, 240, 0.82);
+}
+
+::v-deep(pre code.hljs) {
+  padding: 1rem 1.2rem 1.15rem;
+  border-radius: 0 0 20px 20px;
+  font-size: 0.94rem;
+  line-height: 1.8;
+  font-family: 'JetBrains Mono', 'Cascadia Code', Consolas, Monaco, monospace;
+}
+
+::v-deep(.code-copy-button) {
+  padding: 0.28rem 0.62rem;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.32);
+  color: #f8fafc;
+  font-size: 11px;
+  font-weight: 600;
+  transition: background 0.25s ease, transform 0.25s ease;
+}
+
+::v-deep(.code-copy-button:hover) {
+  background: rgba(245, 158, 11, 0.85);
+  transform: translateY(-1px);
 }
 </style>

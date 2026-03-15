@@ -1,22 +1,20 @@
 <template>
-  <div class="min-h-screen bg-[#F5F7FA]">
-    <div v-if="!isLoggedIn" class="min-h-screen flex flex-col items-center justify-center p-4">
-      <div
-        class="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md text-center transform hover:scale-[1.01] transition-all duration-300">
-        <div class="bg-blue-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
-          <el-icon class="text-4xl text-blue-500">
+  <div class="min-h-screen bg-[#F5F7FA] flex flex-col">
+    <div v-if="!isLoggedIn" class="min-h-[calc(100vh-80px)] flex flex-col items-center justify-center p-4">
+      <div class="bg-white/60 backdrop-blur-xl rounded-3xl shadow-xl border border-gray-100 p-8 w-full max-w-md text-center transform hover:scale-[1.02] transition-all duration-300">
+        <div class="bg-gradient-to-br from-blue-50 to-indigo-50 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6">
+          <el-icon class="text-5xl text-blue-500">
             <Lock />
           </el-icon>
         </div>
-        <h2 class="text-2xl font-bold text-gray-800 mb-2">访问受限</h2>
-        <p class="text-gray-500 mb-8 leading-relaxed">文章归档功能仅对注册用户开放<br>请登录后查看完整的历史文章</p>
-        <div class="space-y-3">
-          <el-button type="primary" size="large" class="w-full !rounded-lg !text-lg !h-12" @click="goToLogin">
+        <h2 class="text-3xl font-extrabold text-gray-900 mb-3 tracking-tight">访问受限</h2>
+        <p class="text-gray-500 mb-8 leading-relaxed">文章归档功能仅对注册用户开放<br>带您穿梭时光，请先登录查阅历史足迹</p>
+        <div class="space-y-4">
+          <el-button type="primary" size="large" class="w-full !rounded-xl !text-lg !h-12 !font-semibold shadow-md hover:shadow-lg transition-all" @click="goToLogin">
             立即登录
           </el-button>
-
-          <el-button size="large" class="w-full !rounded-lg !h-12 !ml-0" @click="goHome">
-            返回首页
+          <el-button size="large" class="w-full !rounded-xl !h-12 !ml-0 border-transparent hover:border-gray-300 hover:bg-gray-50 transition-all text-gray-600" @click="goHome">
+            回到首页探索
           </el-button>
         </div>
       </div>
@@ -25,78 +23,94 @@
     <template v-else>
       <AppHeader :keyword="keyword" @update:keyword="keyword = $event" @search="search" />
 
-      <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col lg:flex-row gap-8">
-        <section class="w-full lg:w-[68%]">
-          <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8 min-h-[500px]">
-            <div class="flex items-center justify-between mb-8 border-b border-gray-100 pb-4">
-              <h2 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
-                <el-icon class="text-blue-500">
-                  <Calendar />
-                </el-icon>
-                文章归档
-              </h2>
-              <span class="text-gray-400 text-sm">共 {{ totalArticles }} 篇</span>
+      <main class="flex-1 max-w-[1500px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12 flex flex-col xl:flex-row gap-8 xl:gap-8">
+        <aside class="hidden xl:block xl:w-[250px] xl:shrink-0">
+          <DailyNoteSidebar />
+        </aside>
+
+        <section class="flex-1 min-w-0">
+          <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 md:p-10 min-h-[600px]">
+            <div class="flex items-end justify-between mb-10 pb-6 border-b border-gray-100/80">
+              <div>
+                <h2 class="text-3xl font-extrabold text-gray-900 tracking-tight flex items-center gap-3">
+                  <el-icon class="text-blue-600"><Calendar /></el-icon>
+                  时光机归档
+                </h2>
+                <p class="mt-2 text-sm text-gray-500">重温过去的点滴思考</p>
+              </div>
+              <div class="bg-blue-50 text-blue-700 font-bold px-4 py-1.5 rounded-full text-sm">
+                共记录 {{ totalArticles }} 篇
+              </div>
             </div>
 
-            <el-skeleton v-if="loading" :rows="10" animated />
-
-            <div v-else-if="Object.keys(groupedByYear).length === 0" class="py-20 text-center">
-              <el-empty description="暂无归档文章" />
+            <div v-if="loading" class="py-20 text-center">
+               <div class="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+               <p class="mt-4 text-sm text-gray-500 font-medium">翻阅资料库中 ...</p>
             </div>
 
-            <div v-else class="relative pl-4">
-              <div class="absolute left-[7px] top-2 bottom-0 w-[2px] bg-gray-100"></div>
+            <div v-else-if="Object.keys(groupedByYear).length === 0" class="py-24 text-center">
+              <div class="w-24 h-24 mx-auto mb-6 bg-gray-50 rounded-full flex items-center justify-center">
+                <svg class="h-12 w-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                </svg>
+              </div>
+              <h3 class="text-xl font-bold text-gray-900 mb-2">暂无归档文章</h3>
+              <p class="text-gray-500 max-w-sm mx-auto">岁月还未留下痕迹，等待您的第一篇分享。</p>
+            </div>
 
-              <div v-for="(months, year) in groupedByYear" :key="year" class="mb-12 relative">
-                <div class="flex items-center gap-4 mb-6 relative">
-                  <div class="w-4 h-4 rounded-full bg-blue-500 border-4 border-white shadow-sm z-10"></div>
-                  <h3 class="text-2xl font-bold text-gray-800 italic">{{ year }}</h3>
+            <div v-else class="relative pl-6 lg:pl-8">
+              <!-- 大时间轴线段 -->
+              <div class="absolute left-[13px] lg:left-[21px] top-3 bottom-0 w-[2px] bg-gradient-to-b from-blue-100 via-gray-100 to-transparent"></div>
+
+              <div v-for="(months, year) in groupedByYear" :key="year" class="mb-14 relative group/year">
+                <!-- 年份节点大圆点 -->
+                <div class="absolute -left-[35px] lg:-left-[27px] top-1 w-7 h-7 rounded-full bg-blue-500 border-4 border-white shadow-sm z-10 flex items-center justify-center group-hover/year:scale-110 transition-transform">
+                   <div class="w-2 h-2 bg-white rounded-full"></div>
                 </div>
+                <h3 class="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-gray-900 to-gray-500 italic mb-8 -mt-2 tracking-tighter">{{ year }}</h3>
 
-                <div v-for="(articles, month) in months" :key="month" class="mb-8 pl-8 relative">
-                  <div
-                    class="absolute left-[-25px] top-[6px] w-2.5 h-2.5 rounded-full bg-blue-200 border-2 border-white z-10">
-                  </div>
+                <div v-for="(articles, month) in months" :key="month" class="mb-10 pl-6 lg:pl-10 relative">
+                  <!-- 月份节点小圆点 -->
+                  <div class="absolute -left-[35px] lg:-left-[15px] top-[6px] w-3 h-3 rounded-full bg-blue-200 border-2 border-white z-10"></div>
 
-                  <h4 class="text-lg font-semibold text-gray-600 mb-4 flex items-center gap-2">
+                  <h4 class="text-xl font-bold text-gray-800 mb-6 flex items-center gap-3">
                     {{ getMonthName(month) }}
-                    <span class="text-xs font-normal text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">{{
-                      articles.length }}篇</span>
+                    <span class="text-xs font-semibold text-gray-500 bg-gray-100 px-2.5 py-1 rounded-full">{{ articles.length }} 篇</span>
                   </h4>
 
-                  <div class="space-y-3">
+                  <div class="space-y-4">
                     <div v-for="article in articles" :key="article.id"
-                      class="group bg-white border border-gray-100 rounded-xl p-4 hover:shadow-lg hover:border-blue-100 transition-all duration-300 cursor-pointer flex items-center gap-4"
+                      class="group bg-white border border-gray-100 rounded-2xl p-4 sm:p-5 hover:shadow-xl hover:border-blue-200 transition-all duration-300 cursor-pointer flex flex-col sm:flex-row sm:items-center gap-4 hover:-translate-y-1 relative overflow-hidden"
                       @click="goToArticle(article.id)">
-                      <div
-                        class="flex-shrink-0 w-12 text-center bg-gray-50 rounded-lg py-1 group-hover:bg-blue-50 transition-colors">
-                        <div class="text-xs text-gray-400 group-hover:text-blue-400">{{ getDay(article.createTime) }}
-                        </div>
-                        <div class="text-sm font-bold text-gray-600 group-hover:text-blue-600">日</div>
+                      
+                      <!-- 悬浮时的背景高亮 -->
+                      <div class="absolute inset-0 bg-blue-50/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+
+                      <!-- 左侧：日期小日历样式 -->
+                      <div class="flex-shrink-0 w-16 text-center bg-gray-50 rounded-xl py-2 group-hover:bg-blue-600 transition-colors z-10">
+                        <div class="text-xs text-gray-400 group-hover:text-blue-100 font-medium">{{ getMonthName(month).slice(0,3).toUpperCase() }}</div>
+                        <div class="text-2xl font-black text-gray-700 group-hover:text-white leading-none mt-1">{{ getDay(article.createTime) }}</div>
                       </div>
 
-                      <div class="flex-1 min-w-0">
-                        <h5
-                          class="font-medium text-gray-800 truncate group-hover:text-blue-600 transition-colors text-base">
+                      <!-- 中间：文章标题与元信息 -->
+                      <div class="flex-1 min-w-0 z-10">
+                        <h5 class="font-bold text-gray-900 truncate group-hover:text-blue-600 transition-colors text-lg mb-1.5">
                           {{ article.title }}
                         </h5>
-                        <div class="flex items-center gap-3 mt-1.5 text-xs text-gray-400">
-                          <span class="flex items-center gap-1 bg-gray-50 px-2 py-0.5 rounded">
-                            <el-icon>
-                              <Folder />
-                            </el-icon> {{ article.category || '未分类' }}
+                        <div class="flex flex-wrap items-center gap-2 sm:gap-4 mt-auto text-xs text-gray-500 font-medium">
+                          <span class="flex items-center gap-1.5 bg-gray-50 group-hover:bg-white px-2.5 py-1 rounded-md transition-colors border border-transparent group-hover:border-gray-100">
+                            <el-icon><Folder /></el-icon> {{ article.category || '未分类' }}
                           </span>
-                          <span v-if="article.viewCount" class="flex items-center gap-1">
-                            <el-icon>
-                              <View />
-                            </el-icon> {{ article.viewCount }}
+                          <span v-if="article.viewCount" class="flex items-center gap-1.5">
+                            <el-icon><View /></el-icon> {{ article.viewCount }}
                           </span>
                         </div>
                       </div>
 
-                      <el-icon class="text-gray-300 group-hover:translate-x-1 transition-transform">
-                        <ArrowRight />
-                      </el-icon>
+                      <!-- 右侧：直达箭头 -->
+                      <div class="hidden sm:flex self-center w-10 h-10 rounded-full bg-gray-50 items-center justify-center group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors z-10">
+                         <el-icon class="text-gray-400 group-hover:text-blue-600 translate-x-0 group-hover:translate-x-1 transition-transform"><ArrowRight /></el-icon>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -105,10 +119,14 @@
           </div>
         </section>
 
-        <aside class="w-full lg:w-[32%] space-y-8">
-          <Sidebar />
+        <!-- Sidebar -->
+        <aside class="w-full xl:w-[320px] shrink-0 space-y-8">
+          <HomeSidebar />
         </aside>
       </main>
+      
+      <!-- 全局页脚 -->
+      <AppFooter />
     </template>
   </div>
 </template>
@@ -120,7 +138,9 @@ import dayjs from 'dayjs' // 建议安装: npm install dayjs
 import { Lock, Calendar, Folder, View, ArrowRight } from '@element-plus/icons-vue'
 import { getArticleArchive } from '@/api/frontend/article'
 import AppHeader from '@/components/frontend/AppHeader.vue'
-import Sidebar from '@/pages/frontend/sidebar.vue'
+import AppFooter from '@/components/frontend/AppFooter.vue'
+import HomeSidebar from '@/pages/frontend/HomeSidebar.vue'
+import DailyNoteSidebar from '@/pages/frontend/DailyNoteSidebar.vue'
 import { useUserStore } from '@/stores/user'
 import { getToken } from '@/composables/cookie'
 
@@ -257,3 +277,4 @@ function getDay(dateString) {
 <style scoped>
 /* 可以在这里添加自定义动画 */
 </style>
+

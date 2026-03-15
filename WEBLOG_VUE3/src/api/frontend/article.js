@@ -5,6 +5,16 @@ export function getArticlePageList(data) {
     return axios.post("/article/list", data)
 }
 
+// 根据分类获取文章分页数据
+export function getArticlePageListByCategory(data) {
+    return axios.post("/article/list/by-category", data)
+}
+
+// 根据标签获取文章分页数据
+export function getArticlePageListByTag(data) {
+    return axios.post("/article/list/by-tag", data)
+}
+
 // 获取文章详情
 export function getArticleDetail(articleId) {
     // 后端要求接收 JSON 格式 { "articleId": <id> }

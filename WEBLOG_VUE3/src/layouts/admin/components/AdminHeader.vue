@@ -45,7 +45,7 @@
 
             <!-- 登录用户头像 -->
             <el-dropdown class="flex items-center justify-center h-full" @command="handleCommand">
-                <span class="el-dropdown-link flex items-center justify-center text-gray-700 text-sm cursor-pointer h-full px-3 hover:bg-gray-100 transition-colors rounded-md">
+                <span class="el-dropdown-link flex items-center justify-center text-gray-700 text-sm cursor-pointer h-full px-3 hover:bg-gray-100 transition-colors rounded-md outline-none" style="outline: none !important;">
                     <!-- 头像 Avatar -->
                     <el-avatar class="mr-2" :size="32"
                         src="https://img.quanxiaoha.com/quanxiaoha/f97361c0429d4bb1bc276ab835843065.jpg" />

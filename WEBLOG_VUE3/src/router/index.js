@@ -27,7 +27,7 @@ const routes = [
         path: "/",// 路由地址
         component: Index,//对应组件
         meta: { //meta 信息
-            title: "WebLog 首页" //标题
+            title: "首页" //标题
         }
     }, {
         path: "/category",//分类页
@@ -46,6 +46,12 @@ const routes = [
         component: TagList,
         meta: {
             title: "标签"
+        }
+    }, {
+        path: "/tag/:id",//标签文章页
+        component: TagArticles,
+        meta: {
+            title: "标签文章"
         }
     }, {
         path: "/user",
@@ -81,7 +87,7 @@ const routes = [
         path: "/login",//登录页
         component: login,
         meta: {
-            title: "WebLog 登录页"
+            title: "登录"
         }
     }, {
         path: "/register",//注册页
@@ -197,5 +203,12 @@ router.beforeEach((to, from, next) => {
     next()
 })
 
+// 动态设置页面标题
+router.afterEach((to) => {
+    const pageTitle = to.meta.title || 'ThoughtFlow'
+    document.title = pageTitle + ' - ThoughtFlow'
+})
+
 // ES6 模块导出语句，它用于将 router 对象导出，以便其他文件可以导入和使用这个对象
 export default router;
+

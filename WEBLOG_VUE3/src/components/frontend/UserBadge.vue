@@ -1,12 +1,12 @@
 <template>
-  <div class="flex items-center gap-3">
+  <div class="flex items-center">
     <div v-if="loading" class="text-sm text-gray-400">加载中...</div>
+
+    <!-- 已登录：显示头像和下拉菜单 -->
     <div v-else-if="user && user.nickname" class="flex items-center gap-2">
       <el-dropdown trigger="click">
         <div class="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
           <img :src="user.avatar || '/pics/default-avatar.png'" alt="avatar" class="w-8 h-8 rounded-full object-cover border border-gray-200" />
-          <span class="text-sm font-medium text-gray-900">{{ user.nickname || user.username }}</span>
-          <span class="text-xs text-gray-500">更多</span>
         </div>
         <template #dropdown>
           <el-dropdown-menu>
@@ -16,8 +16,18 @@
         </template>
       </el-dropdown>
     </div>
+
+    <!-- 未登录：显示小人图标，点击跳转登录页 -->
     <div v-else>
-      <el-button type="primary" size="default" round @click="$router.push('/login')">登录</el-button>
+      <button 
+        @click="goLogin"
+        class="w-9 h-9 rounded-full flex items-center justify-center text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-all duration-200"
+        title="登录"
+      >
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+        </svg>
+      </button>
     </div>
   </div>
 </template>
@@ -26,26 +36,25 @@
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
-import { removeToken } from '@/composables/cookie'
 
 const router = useRouter()
 const userStore = useUserStore()
 const user = computed(() => userStore.frontendUserInfo)
 const loading = computed(() => false)
 
+// 跳转登录页
+const goLogin = () => {
+  router.push('/login')
+}
+
+// 登出
 const logout = () => {
-  // Call the store's logout function to properly clear all user info
   userStore.logout()
   router.push('/')
 }
 
+// 跳转用户中心
 const goUserCenter = () => {
   router.push('/user')
 }
 </script>
-
-<style scoped>
-.el-dropdown-link {
-  cursor: pointer;
-}
-</style>

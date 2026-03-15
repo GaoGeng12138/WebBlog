@@ -1,93 +1,119 @@
+```
 <template>
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+  <div class="min-h-screen bg-[#F8FAFC] flex flex-col">
     <!-- Header -->
     <AppHeader :keyword="keyword" @update:keyword="keyword = $event" @search="search" />
 
     <!-- Main Content -->
-    <main class="flex flex-col lg:flex-row gap-8 py-8">
-      <!-- Categories Section -->
-      <section class="w-full lg:w-[68%]">
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-          <h2 class="text-2xl font-bold text-gray-900 mb-6">文章分类</h2>
+    <main class="flex-1 max-w-[1500px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
+      <div class="flex flex-col xl:flex-row gap-8 xl:gap-8">
+        <aside class="hidden xl:block xl:w-[250px] xl:shrink-0">
+          <DailyNoteSidebar />
+        </aside>
 
-          <div v-if="loading" class="py-16 text-center">
-            <div class="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500">
-            </div>
-            <p class="mt-2 text-gray-600">加载中...</p>
+        <!-- Categories Section -->
+        <section class="flex-1 min-w-0">
+          <div class="mb-8 pl-2">
+            <h2 class="text-3xl font-extrabold text-gray-900 tracking-tight">文章分类</h2>
+            <p class="mt-2 text-gray-500">探索博客涵盖的所有技术领域</p>
+          </div>
+
+          <div v-if="loading" class="py-20 text-center">
+            <div class="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+            <p class="mt-4 text-sm text-gray-500 font-medium">全力加载分类数据 ...</p>
           </div>
 
           <div v-else>
-            <div v-if="categories.length === 0" class="py-16 text-center">
-              <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10">
-                </path>
-              </svg>
-              <h3 class="mt-2 text-sm font-medium text-gray-900">暂无分类</h3>
-              <p class="mt-1 text-sm text-gray-500">目前还没有创建任何分类。</p>
+            <div v-if="categories.length === 0" class="flex flex-col items-center justify-center py-20 px-4 bg-white/60 backdrop-blur-md rounded-3xl border border-gray-100 shadow-sm">
+              <div class="w-24 h-24 mb-6 bg-blue-50 rounded-full flex items-center justify-center">
+                <svg class="h-12 w-12 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                </svg>
+              </div>
+              <h3 class="text-lg font-bold text-gray-900 mb-2">暂无分类</h3>
+              <p class="text-gray-500 text-center max-w-sm">作者还在努力码字中，暂未创建任何分类。</p>
             </div>
 
             <div v-else>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div v-for="category in categories" :key="category.id"
-                  class="border border-gray-200 rounded-lg p-5 hover:shadow-md transition-shadow duration-300 cursor-pointer"
-                  @click="goToCategoryArticles(category.id)">
-                  <div class="flex items-center justify-between">
-                    <h3 class="text-lg font-semibold text-gray-900">{{ category.name }}</h3>
-                    <span class="bg-blue-100 text-blue-800 text-sm font-medium px-2.5 py-0.5 rounded-full">
-                      {{ category.articleCount }} 篇文章
-                    </span>
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <div 
+                  v-for="(category, index) in categories" 
+                  :key="category.id" 
+                  class="group bg-white rounded-3xl p-6 border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden relative"
+                  @click="goToCategoryArticles(category.id)"
+                >
+                  <div class="absolute inset-0 bg-gradient-to-br from-gray-50 to-white opacity-0 group-hover:opacity-100 transition-opacity z-0"></div>
+                  
+                  <div class="relative z-10 flex flex-col h-full">
+                    <div class="flex items-start justify-between mb-4">
+                      <!-- 动态生成前四个分类的渐变色块，后续则默认为灰蓝 -->
+                      <div class="w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm text-white font-bold text-xl group-hover:scale-110 transition-transform"
+                        :class="{
+                          'bg-gradient-to-br from-blue-500 to-indigo-600': index % 4 === 0,
+                          'bg-gradient-to-br from-emerald-400 to-teal-500': index % 4 === 1,
+                          'bg-gradient-to-br from-orange-400 to-rose-500': index % 4 === 2,
+                          'bg-gradient-to-br from-purple-500 to-pink-500': index % 4 === 3
+                        }"
+                      >
+                         {{ category.name ? category.name.substring(0, 1).toUpperCase() : 'C' }}
+                      </div>
+                      <span class="bg-gray-50 group-hover:bg-blue-50 text-gray-400 group-hover:text-blue-600 text-xs font-bold px-3 py-1 rounded-full transition-colors flex items-center gap-1">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        {{ category.articleCount || 0 }}
+                      </span>
+                    </div>
+                    
+                    <h3 class="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors mb-2">{{ category.name }}</h3>
+                    <p class="text-sm text-gray-500 line-clamp-2 mt-auto">包含有关 {{ category.name }} 的各类技术探讨和文章分享。</p>
                   </div>
-                  <p class="mt-2 text-gray-600 text-sm">{{ category.illustrate || '暂无描述' }}</p>
                 </div>
               </div>
               
               <!-- Pagination -->
-              <div class="mt-8">
+              <div class="mt-12 flex justify-center">
                 <Pagination 
-                  :current-page="page" 
-                  :page-size="size" 
                   :total="total"
-                  @update:current-page="handlePageChange"
+                  :current="page"
+                  :size="size"
                   @page-change="handlePageChange"
+                  class="scale-105"
                 />
               </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <!-- Sidebar -->
-      <aside class="w-full lg:w-[32%]">
-        <Sidebar />
-      </aside>
+        <!-- Sidebar -->
+        <aside class="w-full xl:w-[320px] xl:shrink-0">
+          <HomeSidebar />
+        </aside>
+      </div>
     </main>
+    
+    <AppFooter />
   </div>
 </template>
 
 <script setup>
-import { getAllCategoryList, getCategoryList } from '@/api/frontend/category'
-import { getAllTagList } from '@/api/frontend/tag'
-import { onMounted, ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { getCategoryList } from '@/api/frontend/category'
 import AppHeader from '@/components/frontend/AppHeader.vue'
+import AppFooter from '@/components/frontend/AppFooter.vue'
+import HomeSidebar from '@/pages/frontend/HomeSidebar.vue'
+import DailyNoteSidebar from '@/pages/frontend/DailyNoteSidebar.vue'
 import Pagination from '@/components/frontend/Pagination.vue'
-import Sidebar from '@/pages/frontend/sidebar.vue'
 
 const router = useRouter()
-
 const categories = ref([])
-const sideCategories = ref([])
-const loading = ref(false)
-const page = ref(1)
-const size = ref(6)
 const total = ref(0)
+const page = ref(1)
+const size = ref(12)
+const loading = ref(false)
 const keyword = ref('')
-const sidebarTags = ref([])
 
 onMounted(() => {
   loadCategories()
-  loadSidebarData()
 })
 
 // 异步加载分类数据
@@ -96,65 +122,36 @@ async function loadCategories() {
   try {
     const res = await getCategoryList({ current: page.value, size: size.value, name: keyword.value })
     if (res && res.success) {
-      categories.value = res.data.map(category => ({
-        id: category.id,
-        name: category.name,
-        articleCount: category.articleCount || 0,
-        illustrate: category.illustrate || ''
-      }))
-      // Update pagination info
-      page.value = res.current || page.value
-      size.value = res.size || size.value
-      total.value = res.total || total.value
+      if (res.data && res.data.records) {
+        categories.value = res.data.records.map(category => ({
+          id: category.id,
+          name: category.name,
+          articleCount: category.articleCount || 0,
+          illustrate: category.illustrate || ''
+        }))
+        total.value = res.data.total
+      } else {
+        const dataArr = Array.isArray(res.data) ? res.data : (res.data ? [res.data] : [])
+        categories.value = dataArr.map(category => ({
+          id: category.id,
+          name: category.name,
+          articleCount: category.articleCount || 0,
+          illustrate: category.illustrate || ''
+        }))
+        page.value = res.current || page.value
+        size.value = res.size || size.value
+        total.value = res.total || categories.value.length
+      }
     }
   } catch (error) {
     console.error('Failed to load categories:', error)
-    // Fallback to mock data if API fails
-    categories.value = [
-      { id: 1, name: 'Java', articleCount: 12, description: 'Java 相关技术文章' },
-      { id: 2, name: 'Postman', articleCount: 8, description: 'API 测试工具使用指南' },
-      { id: 3, name: 'Vue.js', articleCount: 15, description: '前端框架 Vue.js 实践' },
-      { id: 4, name: 'Spring Boot', articleCount: 7, description: 'Java 微服务框架' },
-      { id: 5, name: '数据库', articleCount: 10, description: '数据库设计与优化' },
-      { id: 6, name: 'DevOps', articleCount: 5, description: '持续集成与部署实践' }
-    ]
   } finally {
     loading.value = false
   }
 }
 
-// 异步加载侧边栏数据
-async function loadSidebarData() {
-  try {
-    // Load tags for sidebar
-    const tagRes = await getAllTagList()
-    if (tagRes && tagRes.success) {
-      sidebarTags.value = tagRes.data.map(tag => tag.name || tag)
-    }
-
-    // Load categories for sidebar
-    const categoryRes = await getAllCategoryList()
-    if (categoryRes && categoryRes.success) {
-      sideCategories.value = categoryRes.data.map(category => ({
-        id: category.id,
-        name: category.name,
-        count: category.articleCount || 0
-      }))
-    }
-  } catch (error) {
-    console.error('Failed to load sidebar data:', error)
-    // Fallback to mock data if API fails
-    sidebarTags.value = ['工具', 'API 调试', 'Python', '从 0 到 1', '后端开发', '前端框架', '数据库', '微服务']
-    sideCategories.value = [
-      { id: 1, name: 'Java', count: 12 },
-      { id: 2, name: 'Postman', count: 8 },
-      { id: 3, name: 'Vue.js', count: 15 },
-      { id: 4, name: 'Spring Boot', count: 7 }
-    ]
-  }
-}
-
-function search() {
+function search(searchKeyword) {
+  if (searchKeyword) keyword.value = searchKeyword
   page.value = 1
   loadCategories()
 }
@@ -162,13 +159,12 @@ function search() {
 function handlePageChange(newPage) {
   page.value = newPage
   loadCategories()
+  window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
-function goToCategoryArticles(categoryId) {
-  router.push(`/category/${categoryId}`)
+function goToCategoryArticles(id) {
+  router.push({ path: `/category/${id}` })
 }
 
-function goToCategory(categoryId) {
-  router.push(`/category/${categoryId}`)
-}
 </script>
+

@@ -3,9 +3,6 @@ package com.gaog.weblog.web.convert;
 import com.gaog.weblog.common.domain.dos.ArticleDO;
 import com.gaog.weblog.web.model.vo.archive.FindArchiveArticleRspVO;
 import com.gaog.weblog.web.model.vo.article.FindIndexArticlePageListRspVO;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.factory.Mappers;
 
 /**
  *
@@ -14,26 +11,37 @@ import org.mapstruct.factory.Mappers;
  * @Version: 1.0
  * @Description: convert 装换接口
  */
-@Mapper
-public interface ArticleConvert {
+public class ArticleConvert {
     /**
      * 初始化 convert 实例
      */
-    ArticleConvert INSTANCE = Mappers.getMapper(ArticleConvert.class);
+    public static final ArticleConvert INSTANCE = new ArticleConvert();
+
+    private ArticleConvert() {
+    }
 
     /**
      * 将 DO 转化为 VO
      * @param bean
      * @return
      */
-    @Mapping(source = "id", target = "id")
-    @Mapping(source = "cover", target = "cover")
-    @Mapping(source = "title", target = "title")
-    @Mapping(source = "author", target = "author")
-    @Mapping(source = "createTime", target = "createTime")
-    @Mapping(source = "status", target = "status")
-    @Mapping(source = "summary", target = "summary")
-    FindIndexArticlePageListRspVO convertDO2VO(ArticleDO bean);
+    public FindIndexArticlePageListRspVO convertDO2VO(ArticleDO bean) {
+        if (bean == null) {
+            return null;
+        }
+
+        return FindIndexArticlePageListRspVO.builder()
+                .id(bean.getId())
+                .cover(bean.getCover())
+                .title(bean.getTitle())
+                .author(bean.getAuthor())
+                .createTime(bean.getCreateTime())
+                .updateTime(bean.getUpdateTime())
+                .status(bean.getStatus())
+                .summary(bean.getSummary())
+                .readNum(bean.getReadNum())
+                .build();
+    }
 
 
     /**
@@ -41,8 +49,18 @@ public interface ArticleConvert {
      * @param bean
      * @return
      */
-    @Mapping(target = "createDate", expression = "java(java.time.LocalDate.from(bean.getCreateTime()))")
-    @Mapping(target = "createMonth", expression = "java(java.time.YearMonth.from(bean.getCreateTime()))")
-    FindArchiveArticleRspVO convertDO2ArchiveArticleVO(ArticleDO bean);
+    public FindArchiveArticleRspVO convertDO2ArchiveArticleVO(ArticleDO bean) {
+        if (bean == null) {
+            return null;
+        }
+
+        return FindArchiveArticleRspVO.builder()
+                .id(bean.getId())
+                .cover(bean.getCover())
+                .title(bean.getTitle())
+                .createDate(java.time.LocalDate.from(bean.getCreateTime()))
+                .createMonth(java.time.YearMonth.from(bean.getCreateTime()))
+                .build();
+    }
 
 }

@@ -26,6 +26,11 @@ public class FindArticleByTagReqVO {
      */
     @NotNull(message = "每页展示的数量不能为空")
     private Long size;
+
+    /**
+     * 关键字
+     */
+    private String name;
     
     /**
      * 标签ID

@@ -1,10 +1,90 @@
+@import './admin.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@import './admin.css';
-
 /* Element Plus 输入框组件的样式混含了 flowbite 的样式  所以通过加入下面的代码重铸样式 */
 [type='text']:focus, [type='email']:focus, [type='url']:focus, [type='password']:focus, [type='number']:focus, [type='date']:focus, [type='datetime-local']:focus, [type='month']:focus, [type='search']:focus, [type='tel']:focus, [type='time']:focus, [type='week']:focus, [multiple]:focus, select:focus {
-  box-shadow: 0 0 0 1px transparent inset!important;
+  box-shadow: 0 0 0 1px transparent inset !important;
+}
+
+html, body {
+  background:
+    radial-gradient(circle at top left, rgba(255, 255, 255, 0.52), transparent 22%),
+    radial-gradient(circle at 82% 12%, rgba(255, 251, 242, 0.42), transparent 20%),
+    linear-gradient(180deg, #fdf7eb 0%, #fbf3e3 100%);
+  color: #475569;
+  font-weight: 400;
+  letter-spacing: 0.002em;
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.5;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.36), transparent 34%),
+    radial-gradient(circle at 50% 100%, rgba(255, 248, 235, 0.26), transparent 30%);
+  filter: blur(2px);
+}
+
+::selection {
+  background-color: rgba(37, 99, 235, 0.2);
+  color: #1e40af;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.glass-card {
+  @apply border border-white/50 bg-white/85 shadow-sm backdrop-blur-md transition-all duration-300 hover:shadow-md;
+}
+
+:where(body):not(.article-detail-page):not(.article-detail-page *) {
+  color: #526074;
+}
+
+:where(body button, body input, body textarea, body select, body p, body span, body a, body li, body label, body small):not(.article-detail-page *),
+:where(body div, body section, body article, body aside, body nav):not(.article-detail-page *) {
+  font-weight: 400;
+}
+
+:where(body h1, body h2, body h3, body h4, body h5, body h6, body strong, body b):not(.article-detail-page *) {
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: #243246;
+}
+
+:where(body .font-medium):not(.article-detail-page *) {
+  font-weight: 400 !important;
+}
+
+:where(body .font-semibold, body .font-bold):not(.article-detail-page *) {
+  font-weight: 500 !important;
+}
+
+:where(body .font-extrabold, body .font-black):not(.article-detail-page *) {
+  font-weight: 600 !important;
 }

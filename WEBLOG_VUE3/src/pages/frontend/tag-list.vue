@@ -1,74 +1,81 @@
 <template>
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-     <!-- Header -->
+  <div class="min-h-screen bg-[#F8FAFC] flex flex-col">
+    <!-- Header -->
     <AppHeader :keyword="keyword" @update:keyword="keyword = $event" @search="search" />
 
     <!-- Main Content -->
-    <main class="flex flex-col lg:flex-row gap-8 py-8">
-      <!-- Tags Section -->
-      <section class="w-full lg:w-[68%]">
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-          <div class="flex items-center justify-between mb-6">
-            <h2 class="text-2xl font-bold text-gray-900">文章标签</h2>
+    <main class="flex-1 max-w-[1500px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
+      <div class="flex flex-col lg:flex-row gap-8 lg:gap-12">
+        <!-- Tags Section -->
+        <section class="flex-1 min-w-0">
+          <div class="mb-8">
+            <h2 class="text-3xl font-extrabold text-gray-900 tracking-tight">探索标签</h2>
+            <p class="mt-2 text-gray-500">通过标签快速定位你感兴趣的技术内容</p>
           </div>
 
-          <div v-if="loading" class="py-16 text-center">
+          <div v-if="loading" class="py-20 text-center">
             <div class="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
-            <p class="mt-2 text-gray-600">加载中...</p>
+            <p class="mt-4 text-sm text-gray-500 font-medium">全力加载标签数据 ...</p>
           </div>
 
           <div v-else>
-            <div v-if="tags.length === 0" class="py-16 text-center">
-              <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z">
-                </path>
-              </svg>
-              <h3 class="mt-2 text-sm font-medium text-gray-900">暂无标签</h3>
-              <p class="mt-1 text-sm text-gray-500">目前还没有创建任何标签。</p>
+            <div v-if="tags.length === 0" class="flex flex-col items-center justify-center py-20 px-4 bg-white/60 backdrop-blur-md rounded-3xl border border-gray-100 shadow-sm">
+              <div class="w-24 h-24 mb-6 bg-gray-50 rounded-full flex items-center justify-center">
+                <svg class="h-12 w-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+                </svg>
+              </div>
+              <h3 class="text-lg font-bold text-gray-900 mb-2">暂无标签</h3>
+              <p class="text-gray-500 text-center max-w-sm">目前还没有创建任何标签，请稍后再来。</p>
             </div>
 
             <div v-else>
-              <div class="mt-10">
-                <h3 class="text-lg font-semibold text-gray-900 mb-4">标签列表</h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  <div 
-                    v-for="tag in tags" 
-                    :key="tag.id" 
-                    class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow duration-300 cursor-pointer flex items-center justify-between"
-                    @click="goToTagArticles(tag.id)"
-                  >
-                    <div class="flex items-center">
-                      <div class="w-3 h-3 rounded-full bg-blue-500 mr-3"></div>
-                      <span class="font-medium text-gray-900">{{ tag.name }}</span>
-                    </div>
-                    <span class="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
-                      {{ tag.articleCount }} 篇文章
-                    </span>
+              <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6">
+                <div 
+                  v-for="(tag, index) in tags" 
+                  :key="tag.id" 
+                  class="group relative bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden flex flex-col items-center justify-center text-center h-32"
+                  @click="goToTagArticles(tag.id)"
+                >
+                  <!-- 悬浮时的背景高亮 -->
+                  <div class="absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-10 transition-opacity duration-300"
+                    :class="['from-blue-500 to-indigo-600', 'from-emerald-400 to-teal-500', 'from-orange-400 to-rose-500', 'from-purple-500 to-pink-500'][index % 4]">
+                  </div>
+                  
+                  <div class="relative z-10 w-full">
+                     <div class="inline-flex items-center justify-center mb-3">
+                       <span class="text-2xl font-black text-gray-200 group-hover:text-blue-200 transition-colors mr-1">#</span>
+                       <span class="font-bold text-gray-900 group-hover:text-blue-600 transition-colors text-lg truncate max-w-full" :title="tag.name">{{ tag.name }}</span>
+                     </div>
+                     <div class="bg-gray-50 group-hover:bg-blue-50 text-gray-500 group-hover:text-blue-600 text-xs font-semibold px-3 py-1 rounded-full transition-colors inline-block">
+                        {{ tag.articleCount }} 篇文章
+                     </div>
                   </div>
                 </div>
               </div>
               
               <!-- Pagination -->
-              <div class="mt-8">
+              <div class="mt-12 flex justify-center">
                 <Pagination 
-                  :current-page="page" 
-                  :page-size="size" 
                   :total="total"
-                  @update:current-page="handlePageChange"
+                  :current="page"
+                  :size="size"
                   @page-change="handlePageChange"
+                  class="scale-105"
                 />
               </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <!-- Sidebar -->
-      <aside class="w-full lg:w-[32%]">
-        <Sidebar />
-      </aside>
+        <!-- Sidebar -->
+        <aside class="w-full lg:w-[320px] xl:w-[360px] shrink-0">
+          <HomeSidebar />
+        </aside>
+      </div>
     </main>
+    
+    <AppFooter />
   </div>
 </template>
 
@@ -78,8 +85,9 @@ import { useRouter } from 'vue-router'
 import { getTagList, getAllTagList } from '@/api/frontend/tag'
 import { getAllCategoryList } from '@/api/frontend/category'
 import AppHeader from '@/components/frontend/AppHeader.vue'
+import AppFooter from '@/components/frontend/AppFooter.vue'
 import Pagination from '@/components/frontend/Pagination.vue'
-import Sidebar from '@/pages/frontend/sidebar.vue'
+import HomeSidebar from '@/pages/frontend/HomeSidebar.vue'
 
 const router = useRouter()
 
@@ -195,3 +203,7 @@ function goToCategory(categoryId) {
   router.push(`/category/${categoryId}`)
 }
 </script>
+
+
+
+

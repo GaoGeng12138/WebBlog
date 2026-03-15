@@ -1,84 +1,44 @@
 <template>
   <header 
-    class="sticky top-0 z-50 border-b border-gray-100 transition-all duration-300"
-    :class="[isScrolled ? 'backdrop-blur-md bg-white/80 shadow-sm' : 'bg-transparent']"
+    class="sticky top-0 z-50 transition-all duration-300 border-b"
+    :class="[
+      isScrolled 
+        ? 'backdrop-blur-xl bg-[#fdf7eb]/92 shadow-sm border-[#eadfca]/70' 
+        : 'bg-[#fdf7eb]/82 backdrop-blur-sm border-transparent'
+    ]"
   >
-    <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex items-center justify-between h-16">
+    <div class="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-[78px] lg:h-[96px]">
         
+        <!-- Left: Logo -->
         <div class="flex-shrink-0 flex items-center cursor-pointer group" @click="$router.push('/')">
-          <!-- Logo -->
-          <div class="relative bg-transparent z-10 flex items-center justify-center">
+          <div class="relative flex items-center justify-center overflow-hidden rounded-xl p-1.5 transition-all duration-300 group-hover:bg-blue-50">
             <img 
               :src="siteConfig.siteInfo.logoUrl || '/vite.svg'" 
-              class="h-12 w-auto max-w-[200px] mr-3 object-contain transition-all duration-300 group-hover:scale-110  bg-transparent" 
-              style="background: transparent !important;"
+              class="h-11 lg:h-15 w-auto max-w-[240px] object-contain transition-transform duration-500 group-hover:scale-105" 
               :alt="siteConfig.siteInfo.title || 'logo'" 
             />
           </div>
-          
-          <!-- 标题和标语 -->
-          <div class="flex flex-col relative">
-            <h1 class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600 tracking-tight leading-tight">
-              <span v-if="isLoggedIn && user.nickname">
-                {{ user.nickname }}
-                <span class="mx-1.5">の</span>
-              </span>
-              {{ siteConfig.siteInfo.title || 'My Blog' }}
-            </h1>
-            <p v-if="siteConfig.siteInfo.slogan" class="text-xs text-gray-500 font-medium tracking-wide hidden sm:block">
-              {{ siteConfig.siteInfo.slogan }}
-            </p>
-            
-            <!-- 描述浮层（鼠标悬停显示） -->
-            <div 
-              v-if="siteConfig.siteInfo.description" 
-              class="absolute top-full left-0 mt-2 w-64 bg-white rounded-lg shadow-xl p-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50 border border-gray-100"
-            >
-              <div class="flex items-start gap-2">
-                <svg class="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-                <p class="text-xs text-gray-600 leading-relaxed">
-                  {{ siteConfig.siteInfo.description }}
-                </p>
-              </div>
-              <!-- 三角箭头 -->
-              <div class="absolute -top-2 left-4 w-4 h-4 bg-white border-l border-t border-gray-100 transform rotate-45"></div>
-            </div>
-          </div>
+          <!-- Option: Text Logo Fallback -->
+          <span v-if="!siteConfig.siteInfo.logoUrl" class="ml-2 text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">
+            {{ siteConfig.siteInfo.title || 'ThoughtFlow' }}
+          </span>
         </div>
 
-        <div class="hidden md:block flex-1 px-8">
-           <div class="flex justify-center">
-             <Navigation />
-           </div>
+        <!-- Middle: Navigation (Desktop) -->
+        <div class="hidden md:flex flex-1 items-center justify-center px-10">
+          <Navigation />
         </div>
 
-        <div class="flex items-center gap-3">
-          
-          <div class="relative hidden sm:block group">
-            <input 
-              :value="keyword" 
-              @input="$emit('update:keyword', $event.target.value)"
-              @keyup.enter="$emit('search')"
-              placeholder="Search..." 
-              class="bg-gray-100 border-none text-sm rounded-full px-4 py-1.5 pl-9 
-                     focus:ring-2 focus:ring-blue-500/50 focus:bg-white transition-all duration-300 
-                     w-32 focus:w-64 placeholder-gray-400"
-            />
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <svg class="h-4 w-4 text-gray-400 group-focus-within:text-blue-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-            </div>
-          </div>
-
+        <!-- Right: Actions -->
+        <div class="flex items-center gap-4 lg:gap-6">
+          <!-- User Badge -->
           <UserBadge />
 
+          <!-- Mobile Menu Button -->
           <button 
             @click="isMobileMenuOpen = !isMobileMenuOpen"
-            class="md:hidden p-2 rounded-md text-gray-500 hover:bg-gray-100 transition-colors focus:outline-none"
+            class="md:hidden p-2 rounded-xl text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-colors focus:outline-none"
           >
             <svg v-if="!isMobileMenuOpen" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
@@ -91,35 +51,30 @@
       </div>
     </div>
 
+    <!-- Mobile Menu Overlay -->
     <transition
-      enter-active-class="transition duration-200 ease-out"
-      enter-from-class="transform -translate-y-2 opacity-0"
-      enter-to-class="transform translate-y-0 opacity-100"
-      leave-active-class="transition duration-150 ease-in"
-      leave-from-class="transform translate-y-0 opacity-100"
-      leave-to-class="transform -translate-y-2 opacity-0"
+      enter-active-class="transition duration-300 ease-out transform origin-top"
+      enter-from-class="scale-y-0 opacity-0"
+      enter-to-class="scale-y-100 opacity-100"
+      leave-active-class="transition duration-200 ease-in transform origin-top"
+      leave-from-class="scale-y-100 opacity-100"
+      leave-to-class="scale-y-0 opacity-0"
     >
-      <div v-if="isMobileMenuOpen" class="md:hidden border-t border-gray-100 bg-white">
-        <div class="px-4 py-4 space-y-4">
-          <div class="relative">
-             <input 
-              :value="keyword" 
-              @input="$emit('update:keyword', $event.target.value)"
-              @keyup.enter="$emit('search')"
-              placeholder="搜索文章..." 
-              class="w-full bg-gray-100 border-none rounded-lg px-4 py-2 pl-10 focus:ring-2 focus:ring-blue-500" 
-            />
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-               <svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-               </svg>
-            </div>
-          </div>
-          
-          <Navigation direction="vertical" /> 
+      <div v-if="isMobileMenuOpen" class="md:hidden absolute top-full left-0 w-full bg-[#fdf7eb]/96 backdrop-blur-xl border-b border-[#eadfca]/80 shadow-xl pb-6 pt-2">
+        <div class="px-4 space-y-6">
+          <Navigation direction="vertical" @navigate="isMobileMenuOpen = false" /> 
         </div>
       </div>
     </transition>
+
+    <!-- 底部分割线：基础分割线负责稳定的页面分层，进度条负责滚动反馈 -->
+    <div class="header-divider" aria-hidden="true">
+      <span class="header-divider__base"></span>
+      <span class="header-divider__glow"></span>
+      <div class="header-progress">
+        <div class="header-progress__bar" :style="{ transform: `scaleX(${scrollProgress})` }"></div>
+      </div>
+    </div>
   </header>
 </template>
 
@@ -139,26 +94,31 @@ const isLoggedIn = computed(() => {
   return !!user.value && !!user.value.userId
 })
 
-defineProps({
+const props = defineProps({
   keyword: {
     type: String,
     default: ''
   }
 })
 
-defineEmits(['update:keyword', 'search'])
+const emit = defineEmits(['update:keyword', 'search'])
 
 // 状态控制
 const isMobileMenuOpen = ref(false)
 const isScrolled = ref(false)
+const scrollProgress = ref(0)
 
 // 监听滚动，实现吸顶时的样式变化
 const handleScroll = () => {
-  isScrolled.value = window.scrollY > 10
+  isScrolled.value = window.scrollY > 20
+  const scrollTop = window.scrollY
+  const scrollHeight = document.documentElement.scrollHeight - window.innerHeight
+  scrollProgress.value = scrollHeight > 0 ? Math.min(scrollTop / scrollHeight, 1) : 0
 }
 
 onMounted(() => {
-  window.addEventListener('scroll', handleScroll)
+  window.addEventListener('scroll', handleScroll, { passive: true })
+  handleScroll() // 初始化检查
 })
 
 onUnmounted(() => {
@@ -167,5 +127,49 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-/* 如果你需要更复杂的背景模糊，确保 tailwind.config.js 开启了 backdrop-filter */
+.header-divider {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  pointer-events: none;
+}
+
+.header-divider__base {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(226, 232, 240, 0.1), rgba(203, 213, 225, 0.9), rgba(226, 232, 240, 0.1));
+}
+
+.header-divider__glow {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: min(52vw, 720px);
+  height: 10px;
+  transform: translateX(-50%);
+  background: radial-gradient(circle, rgba(251, 191, 36, 0.18) 0%, rgba(251, 191, 36, 0.06) 42%, transparent 76%);
+  filter: blur(6px);
+}
+
+.header-progress {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: rgba(148, 163, 184, 0.08);
+  overflow: hidden;
+}
+
+.header-progress__bar {
+  height: 100%;
+  width: 100%;
+  transform-origin: left center;
+  background: linear-gradient(90deg, #2563eb 0%, #3b82f6 35%, #0ea5e9 68%, #22c55e 100%);
+  transition: transform 120ms linear;
+  box-shadow: 0 0 14px rgba(59, 130, 246, 0.26);
+}
 </style>
