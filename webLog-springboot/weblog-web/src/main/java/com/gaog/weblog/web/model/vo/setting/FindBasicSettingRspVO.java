@@ -20,9 +20,6 @@ public class FindBasicSettingRspVO {
     @ApiModelProperty("网站标题")
     private String title;
 
-    @ApiModelProperty("网站标语")
-    private String slogan;
-
     @ApiModelProperty("网站描述")
     private String description;
 

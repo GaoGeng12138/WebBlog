@@ -242,6 +242,11 @@ public class CommentServiceImpl implements com.gaog.weblog.web.service.CommentSe
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Response likeComment(Long commentId) {
+        BlogSettingDO setting = siteSettingMapper.findSingleton();
+        if (setting != null && Boolean.FALSE.equals(setting.getLikeEnabled())) {
+            return Response.fail(ResponseCodeEnum.LIKE_DISABLED);
+        }
+
         // Get current logged-in user
         Long userId = SecurityContextUtil.getCurrentUserId();
 
@@ -279,6 +284,11 @@ public class CommentServiceImpl implements com.gaog.weblog.web.service.CommentSe
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Response unlikeComment(Long commentId) {
+        BlogSettingDO setting = siteSettingMapper.findSingleton();
+        if (setting != null && Boolean.FALSE.equals(setting.getLikeEnabled())) {
+            return Response.fail(ResponseCodeEnum.LIKE_DISABLED);
+        }
+
         // Get current logged-in user
         Long userId = SecurityContextUtil.getCurrentUserId();
 

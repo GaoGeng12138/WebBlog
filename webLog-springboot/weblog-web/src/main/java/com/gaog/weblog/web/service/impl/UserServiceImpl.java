@@ -11,10 +11,12 @@ import com.gaog.weblog.common.utils.Response;
 import com.gaog.weblog.jwt.model.CustomUserDetails;
 import com.gaog.weblog.jwt.utils.SecurityContextUtil;
 import com.gaog.weblog.common.domain.dos.ArticleDO;
+import com.gaog.weblog.common.domain.dos.BlogSettingDO;
 import com.gaog.weblog.common.domain.dos.CommentDO;
 import com.gaog.weblog.common.domain.dos.UserFavoriteArticleDO;
 import com.gaog.weblog.common.domain.mapper.ArticleMapper;
 import com.gaog.weblog.common.domain.mapper.CommentMapper;
+import com.gaog.weblog.common.domain.mapper.SiteSettingMapper;
 import com.gaog.weblog.common.domain.mapper.UserFavoriteArticleMapper;
 import com.gaog.weblog.web.model.vo.user.RegisterUserReqVO;
 import com.gaog.weblog.web.model.vo.user.RegisterUserRspVO;
@@ -65,6 +67,9 @@ public class UserServiceImpl implements UserService {
     
     @Autowired
     private UserActivityScoreService userActivityScoreService;
+
+    @Autowired
+    private SiteSettingMapper siteSettingMapper;
 
     /**
      * 获取当前登录用户信息
@@ -147,6 +152,11 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Response register(RegisterUserReqVO registerUserReqVO) {
+        BlogSettingDO setting = siteSettingMapper.findSingleton();
+        if (setting != null && Boolean.FALSE.equals(setting.getUserRegisterEnabled())) {
+            return Response.fail(ResponseCodeEnum.USER_REGISTER_DISABLED);
+        }
+
         String username = registerUserReqVO.getUsername();
         String password = registerUserReqVO.getPassword();
         String email = registerUserReqVO.getEmail();

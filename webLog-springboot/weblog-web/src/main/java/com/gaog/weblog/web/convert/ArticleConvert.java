@@ -1,6 +1,7 @@
 package com.gaog.weblog.web.convert;
 
 import com.gaog.weblog.common.domain.dos.ArticleDO;
+import com.gaog.weblog.common.enums.ArticleSourceEnum;
 import com.gaog.weblog.web.model.vo.archive.FindArchiveArticleRspVO;
 import com.gaog.weblog.web.model.vo.article.FindIndexArticlePageListRspVO;
 
@@ -40,6 +41,8 @@ public class ArticleConvert {
                 .status(bean.getStatus())
                 .summary(bean.getSummary())
                 .readNum(bean.getReadNum())
+                .articleSource(bean.getArticleSource())
+                .articleSourceLabel(ArticleSourceEnum.getDescByCode(bean.getArticleSource()))
                 .build();
     }
 

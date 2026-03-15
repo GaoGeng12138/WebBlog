@@ -56,6 +56,16 @@ public class FindArticlePageListRspVO {
     private List<String> tags;
 
     /**
+     * 文章来源
+     */
+    private Integer articleSource;
+
+    /**
+     * 文章来源描述
+     */
+    private String articleSourceLabel;
+
+    /**
      * 创建时间
      */
     private LocalDateTime createTime;

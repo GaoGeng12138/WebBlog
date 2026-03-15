@@ -6,7 +6,6 @@ export const useSiteConfigStore = defineStore('siteConfig', () => {
     // 网站基本信息
     const siteInfo = ref({
         title: '',
-        slogan: '',
         description: '',
         logoUrl: '',
         frontendArticlePageSize: 12,
@@ -41,7 +40,6 @@ export const useSiteConfigStore = defineStore('siteConfig', () => {
             if (response.success && response.data) {
                 siteInfo.value = {
                     title: response.data.title || '',
-                    slogan: response.data.slogan || '',
                     description: response.data.description || '',
                     logoUrl: response.data.logoUrl || '',
                     frontendArticlePageSize: response.data.frontendArticlePageSize || 12,

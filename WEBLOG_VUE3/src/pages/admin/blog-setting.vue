@@ -39,18 +39,6 @@
                             />
                         </el-form-item>
 
-                        <!-- 网站标语 -->
-                        <el-form-item label="网站标语" prop="slogan">
-                            <el-input 
-                                v-model="form.slogan" 
-                                placeholder="请输入网站标语" 
-                                maxlength="100" 
-                                show-word-limit 
-                                clearable 
-                                class="admin-input"
-                            />
-                        </el-form-item>
-
                         <!-- 网站描述 -->
                         <el-form-item label="网站描述" prop="description">
                             <el-input 
@@ -88,6 +76,7 @@
                                     :on-change="handleLogoChange"
                                     :auto-upload="false"
                                     :before-upload="beforeLogoUpload"
+                                    :disabled="logoUploading"
                                 >
                                     <img v-if="form.logoUrl" :src="form.logoUrl" class="logo" />
                                     <el-icon v-else class="logo-uploader-icon">
@@ -98,6 +87,9 @@
                                     <el-text class="mx-1" type="info" size="small">
                                         建议尺寸：200x200，支持 jpg、png 格式，大小不超过 2M
                                     </el-text>
+                                    <div v-if="logoUploading" class="mt-2 text-sm text-blue-500">
+                                        Logo 上传中...
+                                    </div>
                                 </div>
                             </div>
                         </el-form-item>
@@ -343,7 +335,6 @@ const activeTab = ref('basic')
 // 基本设置表单数据
 const form = reactive({
     title: '',
-    slogan: '',
     description: '',
     logoUrl: '',
     githubEnabled: false,
@@ -376,9 +367,6 @@ const rules = {
         { required: true, message: '请输入网站标题', trigger: 'blur' },
         { min: 1, max: 50, message: '网站标题长度在 1 到 50 个字符', trigger: 'blur' }
     ],
-    slogan: [
-        { max: 100, message: '网站标语长度不超过 100 个字符', trigger: 'blur' }
-    ],
     description: [
         { max: 200, message: '网站描述长度不超过 200 个字符', trigger: 'blur' }
     ],
@@ -392,6 +380,7 @@ const formRef = ref(null)
 const permissionFormRef = ref(null)
 const btnLoading = ref(false)
 const permissionBtnLoading = ref(false)
+const logoUploading = ref(false)
 
 // 上传文件前校验
 const beforeLogoUpload = (file) => {
@@ -409,8 +398,17 @@ const beforeLogoUpload = (file) => {
 
 // 上传Logo
 const handleLogoChange = (file) => {
+    if (!file?.raw) {
+        return
+    }
+
+    if (!beforeLogoUpload(file.raw)) {
+        return
+    }
+
     let formData = new FormData()
     formData.append('file', file.raw)
+    logoUploading.value = true
     uploadFile(formData).then((res) => {
         if (res.success) {
             form.logoUrl = res.data.url
@@ -418,6 +416,10 @@ const handleLogoChange = (file) => {
         } else {
             showMessage(res.message || '上传失败', 'error')
         }
+    }).catch(() => {
+        showMessage('上传失败', 'error')
+    }).finally(() => {
+        logoUploading.value = false
     })
 }
 
@@ -458,6 +460,11 @@ const handleWeiboEnabledChange = (value) => {
 
 // 提交表单
 const onSubmit = () => {
+    if (logoUploading.value) {
+        showMessage('Logo 上传中，请等待上传完成后再保存', 'warning')
+        return
+    }
+
     formRef.value.validate((valid) => {
         if (!valid) {
             return false
@@ -469,7 +476,6 @@ const onSubmit = () => {
         const submitData = {
             // 网站基本信息
             title: form.title,
-            slogan: form.slogan,
             description: form.description,
             logoUrl: form.logoUrl,
             frontendArticlePageSize: form.frontendArticlePageSize,
@@ -519,7 +525,6 @@ const loadSettings = () => {
             // 加载基本设置
             Object.assign(form, {
                 title: res.data.title || '',
-                slogan: res.data.slogan || '',
                 description: res.data.description || '',
                 logoUrl: res.data.logoUrl || '',
                 frontendArticlePageSize: res.data.frontendArticlePageSize || 12,
@@ -559,13 +564,17 @@ const loadSettings = () => {
 
 // 提交权限设置
 const onSubmitPermissions = () => {
+    if (logoUploading.value) {
+        showMessage('Logo 上传中，请等待上传完成后再保存', 'warning')
+        return
+    }
+
     permissionBtnLoading.value = true
     
     // 准备提交数据，合并基本设置和权限设置
     const submitData = {
         // 网站基本信息
         title: form.title,
-        slogan: form.slogan,
         description: form.description,
         logoUrl: form.logoUrl,
         frontendArticlePageSize: form.frontendArticlePageSize,

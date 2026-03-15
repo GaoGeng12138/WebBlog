@@ -29,8 +29,11 @@ app.use(pinia)
 app.use(VueViewer)
 
 // 初始化网站配置
-const siteConfigStore = useSiteConfigStore()
-siteConfigStore.initConfig()
+const bootstrap = async () => {
+    const siteConfigStore = useSiteConfigStore()
+    await siteConfigStore.initConfig()
+    app.mount('#app')
+}
 
-app.mount('#app')
+bootstrap()
 

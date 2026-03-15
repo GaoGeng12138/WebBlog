@@ -119,6 +119,14 @@
                         </div>
                     </template>
                 </el-table-column>
+
+                <el-table-column label="文章来源" width="120" align="center">
+                    <template #default="{ row }">
+                        <el-tag :type="row.articleSource === 2 ? 'warning' : 'info'" size="small">
+                            {{ row.articleSourceLabel || '后台发布' }}
+                        </el-tag>
+                    </template>
+                </el-table-column>
                 
                 <el-table-column prop="createTime" label="创建时间" width="180" align="center" />
                 

@@ -8,7 +8,6 @@ import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.Length;
 
 import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.util.List;
@@ -40,6 +39,5 @@ public class PublishArticleReqVO implements Serializable {
     @NotNull(message = "文章分类不能为空")
     private Long categoryId;
 
-    @NotEmpty(message = "文章标签不能为空")
     private List<String> tags;
 }

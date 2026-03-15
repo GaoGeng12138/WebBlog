@@ -79,7 +79,6 @@ public class SiteController {
         // 转换为基本设置 VO
         FindBasicSettingRspVO basicSettings = FindBasicSettingRspVO.builder()
                 .title(setting.getTitle())
-                .slogan(setting.getSlogan())
                 .description(setting.getDescription())
                 .logoUrl(setting.getLogoUrl())
                 .githubEnabled(setting.getGithubEnabled())

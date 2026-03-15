@@ -43,6 +43,10 @@
                     <el-text class="mx-1" type="info" size="small">&nbsp;&nbsp; 可选择已有标签或输入新标签，支持模糊搜索</el-text>
                 </el-form-item>
 
+                <el-form-item label="文章来源">
+                    <el-tag type="info">{{ isEdit ? (form.articleSourceLabel || '后台发布') : '后台发布' }}</el-tag>
+                </el-form-item>
+
                 <!-- 文章摘要 -->
                 <el-form-item label="文章摘要" prop="summary">
                     <!-- :rows="3" 指定 textarea 默认显示 3 行 -->
@@ -99,7 +103,9 @@ const form = reactive({
     categoryId: null,
     tagIds: [],
     summary: '',
-    content: ''
+    content: '',
+    articleSource: 1,
+    articleSourceLabel: '后台发布'
 })
 
 // 表单校验规则
@@ -116,9 +122,6 @@ const rules = {
     ],
     categoryId: [
         { required: true, message: '请选择文章分类', trigger: 'blur' }
-    ],
-    tagIds: [
-        { required: true, message: '请选择文章标签', trigger: 'blur' }
     ],
 }
 
@@ -235,10 +238,13 @@ const onSubmit = () => {
         btnLoading.value = true
         // 将 tagIds 从标签名称数组转换为后端需要的格式
         const submitData = {
-            ...form,
+            title: form.title,
+            cover: form.cover,
+            categoryId: form.categoryId,
+            summary: form.summary,
+            content: form.content,
             tags: form.tagIds // 后端接收 tags 字段，为标签名称数组
         }
-        delete submitData.tagIds // 删除 tagIds 字段
 
         // 根据编辑或新增调用不同接口
         const apiCall = isEdit.value
@@ -299,6 +305,8 @@ const loadArticleDetail = () => {
             form.tagIds = article.tags ? article.tags.map(tag => tag.value) : []
             form.summary = article.summary
             form.content = article.content
+            form.articleSource = article.articleSource || 1
+            form.articleSourceLabel = article.articleSourceLabel || '后台发布'
         } else {
             showMessage('加载文章详情失败', 'error')
         }

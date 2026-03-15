@@ -204,14 +204,12 @@ const isLoggedIn = computed(() => {
 })
 
 const normalizedCategoryId = computed(() => {
-  const category = article.value?.category
-  if (category && typeof category === 'object' && category.id) {
-    return Number(category.id)
+  if (!route.query.categoryId) {
+    return null
   }
-  if (route.query.categoryId) {
-    return Number(route.query.categoryId)
-  }
-  return null
+
+  const categoryId = Number(route.query.categoryId)
+  return Number.isFinite(categoryId) ? categoryId : null
 })
 
 const displayPreArticle = computed(() => {

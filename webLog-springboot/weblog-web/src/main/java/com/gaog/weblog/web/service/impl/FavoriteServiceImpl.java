@@ -5,8 +5,10 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.gaog.weblog.admin.model.vo.article.FindArticlePageListRspVO;
 import com.gaog.weblog.common.domain.dos.ArticleDO;
+import com.gaog.weblog.common.domain.dos.BlogSettingDO;
 import com.gaog.weblog.common.domain.dos.UserFavoriteArticleDO;
 import com.gaog.weblog.common.domain.mapper.ArticleMapper;
+import com.gaog.weblog.common.domain.mapper.SiteSettingMapper;
 import com.gaog.weblog.common.domain.mapper.UserFavoriteArticleMapper;
 import com.gaog.weblog.common.enums.ResponseCodeEnum;
 import com.gaog.weblog.common.utils.PageResponse;
@@ -33,8 +35,24 @@ public class FavoriteServiceImpl implements FavoriteService {
     @Autowired
     private ArticleMapper articleMapper;
 
+    @Autowired
+    private SiteSettingMapper siteSettingMapper;
+
+    private Response<?> checkFavoriteEnabled() {
+        BlogSettingDO setting = siteSettingMapper.findSingleton();
+        if (setting != null && Boolean.FALSE.equals(setting.getFavoriteEnabled())) {
+            return Response.fail(ResponseCodeEnum.FAVORITE_DISABLED);
+        }
+        return null;
+    }
+
     @Override
     public Response favoriteArticle(Long articleId) {
+        Response<?> disabledResponse = checkFavoriteEnabled();
+        if (disabledResponse != null) {
+            return disabledResponse;
+        }
+
         // 获取当前登录用户信息
         CustomUserDetails userDetails = SecurityContextUtil.getCurrentUser();
         Long userId = userDetails.getUserId();
@@ -66,6 +84,11 @@ public class FavoriteServiceImpl implements FavoriteService {
 
     @Override
     public Response unfavoriteArticle(Long articleId) {
+        Response<?> disabledResponse = checkFavoriteEnabled();
+        if (disabledResponse != null) {
+            return disabledResponse;
+        }
+
         // 获取当前登录用户信息
         CustomUserDetails userDetails = SecurityContextUtil.getCurrentUser();
 
@@ -81,6 +104,11 @@ public class FavoriteServiceImpl implements FavoriteService {
 
     @Override
     public Response getFavoriteArticles(Long current, Long size) {
+        Response<?> disabledResponse = checkFavoriteEnabled();
+        if (disabledResponse != null) {
+            return disabledResponse;
+        }
+
         // 获取当前登录用户信息
         CustomUserDetails userDetails = SecurityContextUtil.getCurrentUser();
         Long userId = userDetails.getUserId();
@@ -120,6 +148,11 @@ public class FavoriteServiceImpl implements FavoriteService {
 
     @Override
     public Response isFavorited(Long articleId) {
+        Response<?> disabledResponse = checkFavoriteEnabled();
+        if (disabledResponse != null) {
+            return disabledResponse;
+        }
+
         // 获取当前登录用户信息
         CustomUserDetails userDetails = SecurityContextUtil.getCurrentUser();
         if (userDetails == null) {

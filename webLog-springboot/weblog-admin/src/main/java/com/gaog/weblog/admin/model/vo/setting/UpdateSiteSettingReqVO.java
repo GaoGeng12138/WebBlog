@@ -16,10 +16,6 @@ public class UpdateSiteSettingReqVO {
     @Size(max = 50, message = "网站标题最多50字")
     private String title;
 
-    @ApiModelProperty("站点标语")
-    @Size(max = 100, message = "网站标语最多100字")
-    private String slogan;
-
     @ApiModelProperty("站点描述")
     @Size(max = 200, message = "网站描述最多200字")
     private String description;

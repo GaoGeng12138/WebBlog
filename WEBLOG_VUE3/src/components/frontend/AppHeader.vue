@@ -14,15 +14,12 @@
         <div class="flex-shrink-0 flex items-center cursor-pointer group" @click="$router.push('/')">
           <div class="relative flex items-center justify-center overflow-hidden rounded-xl p-1.5 transition-all duration-300 group-hover:bg-blue-50">
             <img 
-              :src="siteConfig.siteInfo.logoUrl || '/vite.svg'" 
+              :src="displayLogo"
+              @error="handleLogoError"
               class="h-11 lg:h-15 w-auto max-w-[240px] object-contain transition-transform duration-500 group-hover:scale-105" 
               :alt="siteConfig.siteInfo.title || 'logo'" 
             />
           </div>
-          <!-- Option: Text Logo Fallback -->
-          <span v-if="!siteConfig.siteInfo.logoUrl" class="ml-2 text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">
-            {{ siteConfig.siteInfo.title || 'ThoughtFlow' }}
-          </span>
         </div>
 
         <!-- Middle: Navigation (Desktop) -->
@@ -85,6 +82,8 @@ import UserBadge from '@/components/frontend/UserBadge.vue'
 import { useUserStore } from '@/stores/user'
 import { useSiteConfigStore } from '@/stores/siteConfig'
 
+const fallbackLogo = '/thoughtflow_logo.png'
+
 const userStore = useUserStore()
 const siteConfig = useSiteConfigStore()
 const user = computed(() => userStore.frontendUserInfo)
@@ -102,6 +101,15 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['update:keyword', 'search'])
+
+const displayLogo = computed(() => siteConfig.siteInfo.logoUrl || fallbackLogo)
+
+const handleLogoError = (event) => {
+  if (event.target.src.endsWith(fallbackLogo)) {
+    return
+  }
+  event.target.src = fallbackLogo
+}
 
 // 状态控制
 const isMobileMenuOpen = ref(false)

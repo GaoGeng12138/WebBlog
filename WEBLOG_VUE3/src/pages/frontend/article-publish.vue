@@ -55,6 +55,10 @@
                         </el-form-item>
                     </div>
 
+                    <el-form-item label="文章来源">
+                        <el-tag type="info" size="large">{{ isEdit ? (form.articleSourceLabel || '前台发布') : '前台发布' }}</el-tag>
+                    </el-form-item>
+
                     <el-form-item label="文章摘要" prop="summary">
                         <el-input v-model="form.summary" type="textarea" :rows="3" placeholder="编写一段引人入胜的摘要（选填）"
                             maxlength="200" show-word-limit />
@@ -162,7 +166,9 @@ const form = reactive({
     summary: '',
     content: '',
     userId:user.value.userId || null,
-    editorType: 'markdown'
+    editorType: 'markdown',
+    articleSource: 2,
+    articleSourceLabel: '前台发布'
 })
 
 const editorRef = shallowRef()
@@ -202,7 +208,6 @@ const onMdUploadImg = async (files, callback) => {
 const rules = {
     title: [{ required: true, message: '请输入文章标题', trigger: 'blur' }],
     categoryId: [{ required: true, message: '请选择分类', trigger: 'change' }],
-    tags: [{ type: 'array', required: true, message: '请选择标签', trigger: 'change' }],
     cover: [{ required: true, message: '请上传封面图片', trigger: 'change' }],
     content: [{ required: true, message: '文章内容不能为空', trigger: 'blur' }]
 }
@@ -242,7 +247,9 @@ const loadArticle = async (id) => {
                 tags: article.tags || [],
                 summary: article.summary || '',
                 content: article.content || '',
-                editorType: article.editorType || 'markdown'
+                editorType: article.editorType || 'markdown',
+                articleSource: article.articleSource || 2,
+                articleSourceLabel: article.articleSourceLabel || '前台发布'
             })
         }
     } catch (e) {
@@ -261,7 +268,16 @@ const onSubmit = async () => {
 
     submitting.value = true
     try {
-        const payload = { ...form }
+        const payload = {
+            title: form.title,
+            cover: form.cover,
+            categoryId: form.categoryId,
+            tags: form.tags,
+            summary: form.summary,
+            content: form.content,
+            userId: form.userId,
+            editorType: form.editorType
+        }
         const api = isEdit.value && route.params.id ? updateArticle(route.params.id, payload) : publishArticle(payload)
         const res = await api
 

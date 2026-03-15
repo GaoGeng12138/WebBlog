@@ -25,7 +25,6 @@ public class BlogSettingDO {
 
     // 网站信息
     private String title;              // 网站标题
-    private String slogan;             // 网站标语
     private String description;        // 网站描述
     
     // 网站资源

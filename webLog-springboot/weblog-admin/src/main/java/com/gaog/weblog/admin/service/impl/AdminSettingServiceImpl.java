@@ -27,7 +27,6 @@ public class AdminSettingServiceImpl implements AdminSettingService {
             setting = BlogSettingDO.builder()
                     .id(1L)
                     .title("我的博客")
-                    .slogan("记录与分享")
                     .description("")
                     .frontendArticlePageSize(12)
                     .githubEnabled(false)
@@ -64,7 +63,6 @@ public class AdminSettingServiceImpl implements AdminSettingService {
             setting = BlogSettingDO.builder().id(1L).createTime(new Date()).isDeleted(false).build();
         }
         setting.setTitle(reqVO.getTitle());
-        setting.setSlogan(reqVO.getSlogan());
         setting.setDescription(reqVO.getDescription());
         setting.setLogoUrl(reqVO.getLogoUrl());
         setting.setFrontendArticlePageSize(reqVO.getFrontendArticlePageSize() == null ? 12 : reqVO.getFrontendArticlePageSize());

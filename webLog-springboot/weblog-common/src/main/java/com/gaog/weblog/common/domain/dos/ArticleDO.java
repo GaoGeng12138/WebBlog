@@ -37,6 +37,8 @@ public class ArticleDO {
 
     private String author;
 
+    private Integer articleSource;
+
     private String summary;
 
     private LocalDateTime createTime;

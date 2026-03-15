@@ -29,6 +29,8 @@ public class FindIndexArticlePageListRspVO {
     private LocalDateTime updateTime;
     private Long readNum;
     private String summary;
+    private Integer articleSource;
+    private String articleSourceLabel;
     /**
      * 文章分类
      */

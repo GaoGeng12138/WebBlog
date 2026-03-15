@@ -10,6 +10,7 @@ import com.gaog.weblog.common.domain.dos.ArticleCategoryRelDO;
 import com.gaog.weblog.common.domain.dos.ArticleContentDO;
 import com.gaog.weblog.common.domain.dos.ArticleDO;
 import com.gaog.weblog.common.domain.dos.ArticleTagRelDO;
+import com.gaog.weblog.common.domain.dos.BlogSettingDO;
 import com.gaog.weblog.common.domain.dos.CategoryDO;
 import com.gaog.weblog.common.domain.dos.TagDO;
 import com.gaog.weblog.common.domain.dos.VisitorLogDO;
@@ -18,10 +19,12 @@ import com.gaog.weblog.common.domain.mapper.ArticleContentMapper;
 import com.gaog.weblog.common.domain.mapper.ArticleMapper;
 import com.gaog.weblog.common.domain.mapper.ArticleTagRelMapper;
 import com.gaog.weblog.common.domain.mapper.CategoryMapper;
+import com.gaog.weblog.common.domain.mapper.SiteSettingMapper;
 import com.gaog.weblog.common.domain.mapper.StatisticsArticlePvMapper;
 import com.gaog.weblog.common.domain.mapper.TagMapper;
 import com.gaog.weblog.common.domain.mapper.VisitorLogMapper;
 import com.gaog.weblog.common.enums.ArticleStatusEnum;
+import com.gaog.weblog.common.enums.ArticleSourceEnum;
 import com.gaog.weblog.common.enums.ResponseCodeEnum;
 import com.gaog.weblog.common.exception.BizException;
 import com.gaog.weblog.common.utils.IpUtil;
@@ -84,6 +87,8 @@ public class ArticleServiceImpl implements ArticleService {
     private StatisticsArticlePvMapper statisticsArticlePvMapper;
     @Autowired
     private VisitorLogMapper visitorLogMapper;
+    @Autowired
+    private SiteSettingMapper siteSettingMapper;
 
     /**
      * 获取首页文章分页数据  支持个人中心查询自己发布的文章
@@ -346,6 +351,8 @@ public class ArticleServiceImpl implements ArticleService {
                 .createTime(articleDO.getCreateTime())
                 .content(MarkdownHelper.convertMarkdown2Html(articleContentDO.getContent()))
                 .readNum(articleDO.getReadNum())
+                .articleSource(articleDO.getArticleSource())
+                .articleSourceLabel(ArticleSourceEnum.getDescByCode(articleDO.getArticleSource()))
                 .build();
 
         // 查询所属分类
@@ -360,13 +367,21 @@ public class ArticleServiceImpl implements ArticleService {
 
         // 查询标签
         List<ArticleTagRelDO> articleTagRelDOS = articleTagRelMapper.selectByArticleId(articleId);
-        List<Long> tagIds = articleTagRelDOS.stream().map(ArticleTagRelDO::getTagId).collect(Collectors.toList());
-        List<TagDO> tagDOS = tagMapper.selectByIds(tagIds);
-
-        // 标签 DO 转 VO
-        List<FindTagListRspVO> tagVOS = tagDOS.stream()
-                .map(tagDO -> FindTagListRspVO.builder().id(tagDO.getId()).name(tagDO.getName()).build())
-                .collect(Collectors.toList());
+        List<FindTagListRspVO> tagVOS = Lists.newArrayList();
+        if (!CollectionUtils.isEmpty(articleTagRelDOS)) {
+            List<Long> tagIds = articleTagRelDOS.stream()
+                    .map(ArticleTagRelDO::getTagId)
+                    .collect(Collectors.toList());
+            if (!CollectionUtils.isEmpty(tagIds)) {
+                List<TagDO> tagDOS = tagMapper.selectByIds(tagIds);
+                if (!CollectionUtils.isEmpty(tagDOS)) {
+                    // 标签 DO 转 VO
+                    tagVOS = tagDOS.stream()
+                            .map(tagDO -> FindTagListRspVO.builder().id(tagDO.getId()).name(tagDO.getName()).build())
+                            .collect(Collectors.toList());
+                }
+            }
+        }
         vo.setTags(tagVOS);
 
         // 上一篇
@@ -517,9 +532,18 @@ public class ArticleServiceImpl implements ArticleService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Response publishArticle(PublishArticleReqVO publishArticleReqVO) {
+        BlogSettingDO setting = siteSettingMapper.findSingleton();
+        if (setting != null && Boolean.FALSE.equals(setting.getUserPublishEnabled())) {
+            return Response.fail(ResponseCodeEnum.USER_PUBLISH_DISABLED);
+        }
 
         Long userId = SecurityContextUtil.getCurrentUserId();
         String nickName = SecurityContextUtil.getCurrentUserNickname();
+
+        Integer status = ArticleStatusEnum.PUBLISH.getCode();
+        if (setting != null && Boolean.TRUE.equals(setting.getArticleReviewRequired())) {
+            status = ArticleStatusEnum.TO_DO_APPROVE.getCode();
+        }
 
         ArticleDO articleDO = ArticleDO.builder()
                 .title(publishArticleReqVO.getTitle())
@@ -527,8 +551,9 @@ public class ArticleServiceImpl implements ArticleService {
                 .summary(publishArticleReqVO.getSummary())
                 .author(nickName)
                 .userId(userId)
+                .articleSource(ArticleSourceEnum.FRONTEND.getCode())
                 .readNum(0L)
-                .status(ArticleStatusEnum.PUBLISH.getCode())
+                .status(status)
                 .createTime(LocalDateTime.now())
                 .updateTime(LocalDateTime.now())
                 .build();
@@ -578,6 +603,10 @@ public class ArticleServiceImpl implements ArticleService {
      * @param publishTags
      */
     private void insertTags(Long articleId, List<String> publishTags) {
+        if (CollectionUtils.isEmpty(publishTags)) {
+            return;
+        }
+
         // 筛选提交的标签（表中不存在的标签）
         List<String> notExistTags = null;
         // 筛选提交的标签（表中已存在的标签）
@@ -665,6 +694,11 @@ public class ArticleServiceImpl implements ArticleService {
      */
     @Override
     public Response updateArticle(FrontendUpdateArticleReqVO updateArticleReqVO) {
+        BlogSettingDO setting = siteSettingMapper.findSingleton();
+        if (setting != null && Boolean.FALSE.equals(setting.getUserPublishEnabled())) {
+            return Response.fail(ResponseCodeEnum.USER_PUBLISH_DISABLED);
+        }
+
         Long articleId = updateArticleReqVO.getId();
         // 从 SecurityContext 获取用户ID
         Long userId = SecurityContextUtil.getCurrentUserId();
@@ -682,6 +716,9 @@ public class ArticleServiceImpl implements ArticleService {
                 .title(updateArticleReqVO.getTitle())
                 .cover(updateArticleReqVO.getCover())
                 .summary(updateArticleReqVO.getSummary())
+                .status(setting != null && Boolean.TRUE.equals(setting.getArticleReviewRequired())
+                        ? ArticleStatusEnum.TO_DO_APPROVE.getCode()
+                        : null)
                 .updateTime(LocalDateTime.now())
                 .build();
         articleMapper.updateById(updateArticleDO);

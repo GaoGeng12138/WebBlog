@@ -52,6 +52,10 @@ public enum ResponseCodeEnum implements BaseExceptionInterface {
     UPDATE_ROLE_FAILED("20032", "更新角色失败！"),
     DELETE_ROLE_FAILED("20033", "删除角色失败！"),
     CREATE_ROLE_FAILED("20034", "创建角色失败！"),
+    USER_REGISTER_DISABLED("20035", "用户注册功能已关闭！"),
+    FAVORITE_DISABLED("20036", "收藏功能已关闭！"),
+    USER_PUBLISH_DISABLED("20037", "用户发布文章功能已关闭！"),
+    LIKE_DISABLED("20038", "点赞功能已关闭！"),
 
     // ----------- 业务异常状态码 -----------
     PRODUCT_NOT_FOUND("20000", "该产品不存在（测试使用）"),

@@ -24,6 +24,7 @@ import com.gaog.weblog.common.domain.mapper.ArticleMapper;
 import com.gaog.weblog.common.domain.mapper.ArticleTagRelMapper;
 import com.gaog.weblog.common.domain.mapper.CategoryMapper;
 import com.gaog.weblog.common.domain.mapper.TagMapper;
+import com.gaog.weblog.common.enums.ArticleSourceEnum;
 import com.gaog.weblog.common.enums.ArticleStatusEnum;
 import com.gaog.weblog.common.enums.ResponseCodeEnum;
 import com.gaog.weblog.common.exception.BizException;
@@ -89,6 +90,7 @@ public class AdminArticleServiceImpl implements AdminArticleService {
                 .status(ArticleStatusEnum.PUBLISH.getCode())
                 .userId(userId)
                 .author(nickname)
+                .articleSource(ArticleSourceEnum.ADMIN.getCode())
                 .readNum(0L)
                 .createTime(LocalDateTime.now())
                 .updateTime(LocalDateTime.now())
@@ -139,6 +141,10 @@ public class AdminArticleServiceImpl implements AdminArticleService {
      * @param publishTags
      */
     private void insertTags(Long articleId, List<String> publishTags) {
+        if (CollectionUtils.isEmpty(publishTags)) {
+            return;
+        }
+
         // 筛选提交的标签（表中不存在的标签）
         List<String> notExistTags = null;
         // 筛选提交的标签（表中已存在的标签）
@@ -349,6 +355,8 @@ public class AdminArticleServiceImpl implements AdminArticleService {
                                 .summary(articleDO.getSummary())
                                 .category(categoryName)
                                 .tags(tagNames)
+                                .articleSource(articleDO.getArticleSource())
+                                .articleSourceLabel(ArticleSourceEnum.getDescByCode(articleDO.getArticleSource()))
                                 .createTime(articleDO.getCreateTime())
                                 .build();
                     })
@@ -421,6 +429,8 @@ public class AdminArticleServiceImpl implements AdminArticleService {
                 .content(Objects.nonNull(articleContentDO) ? articleContentDO.getContent() : "")
                 .categoryId(Objects.nonNull(articleCategoryRelDO) ? articleCategoryRelDO.getCategoryId() : null)
                 .tags(tags)
+                .articleSource(articleDO.getArticleSource())
+                .articleSourceLabel(ArticleSourceEnum.getDescByCode(articleDO.getArticleSource()))
                 .createTime(articleDO.getCreateTime())
                 .build();
 

@@ -12,9 +12,6 @@ public class FindSiteSettingRspVO {
     @ApiModelProperty("网站标题")
     private String title;
 
-    @ApiModelProperty("网站标语")
-    private String slogan;
-
     @ApiModelProperty("网站描述")
     private String description;
 
@@ -81,7 +78,6 @@ public class FindSiteSettingRspVO {
             return vo;
         }
         vo.setTitle(settingDO.getTitle());
-        vo.setSlogan(settingDO.getSlogan());
         vo.setDescription(settingDO.getDescription());
         vo.setLogoUrl(settingDO.getLogoUrl());
         vo.setFrontendArticlePageSize(settingDO.getFrontendArticlePageSize());
