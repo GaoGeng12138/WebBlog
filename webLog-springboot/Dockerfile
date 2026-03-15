@@ -22,11 +22,11 @@ FROM eclipse-temurin:11-jre
 WORKDIR /app
 
 ENV TZ=Asia/Shanghai
-ENV SPRING_PROFILES_ACTIVE=docker
+ENV SPRING_PROFILES_ACTIVE=prod
 ENV JAVA_OPTS=""
 
 COPY --from=builder /app/weblog-web/target/weblog-web-*.jar /app/app.jar
 
 EXPOSE 8080
 
-ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar /app/app.jar --spring.profiles.active=${SPRING_PROFILES_ACTIVE:-docker}"]
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar /app/app.jar --spring.profiles.active=${SPRING_PROFILES_ACTIVE:-prod}"]

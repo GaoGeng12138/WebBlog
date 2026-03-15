@@ -11,16 +11,16 @@ services:
     ports:
       - "8080:8080"
     environment:
-      SPRING_PROFILES_ACTIVE: docker
+      SPRING_PROFILES_ACTIVE: prod
       SERVER_PORT: 8080
       SERVER_SERVLET_CONTEXT_PATH: /webLog
       SPRING_DATASOURCE_DRIVER_CLASS_NAME: com.mysql.cj.jdbc.Driver
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/weblog?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&useSSL=false&zeroDateTimeBehavior=convertToNull&serverTimezone=Asia/Shanghai
+      SPRING_DATASOURCE_URL: jdbc:mysql://49.232.228.55:3306/weblog?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&useSSL=false&zeroDateTimeBehavior=convertToNull&serverTimezone=Asia/Shanghai
       SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: 123456
-      MINIO_ENDPOINT: http://minio:9000
-      MINIO_ACCESSKEY: gaog
-      MINIO_SECRETKEY: gaogeng123
+      SPRING_DATASOURCE_PASSWORD: 95833414
+      MINIO_ENDPOINT: http://49.232.228.55:9000
+      MINIO_ACCESSKEY: admin
+      MINIO_SECRETKEY: 95833414
       MINIO_BUCKETNAME: weblog
       APP_DATABASE_INIT_CREATE: "true"
       APP_DATABASE_INIT_INSERTS: "true"
@@ -28,4 +28,5 @@ services:
 
 # 说明：
 # 1. 此编排仅包含后端服务，MySQL 和 MinIO 请使用外部已存在服务。
-# 2. 如需接入其他主机，请把上面的 mysql / minio 主机名改成实际地址。
+# 2. 当前默认通过服务器公网 IP 49.232.228.55 访问 MySQL / MinIO。
+# 3. 如果后端不是容器部署、而是直接跑在宿主机上，才可以改成 127.0.0.1。
