@@ -238,3 +238,4 @@ CREATE TABLE `t_visitor_log`
     UNIQUE KEY `uk_user_date` (`user_id`,`visit_date`) USING BTREE,
     KEY           `idx_visit_date` (`visit_date`) USING BTREE
 ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 ROW_FORMAT=DYNAMIC COMMENT='访客记录表';
+
