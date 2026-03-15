@@ -3,6 +3,7 @@ package com.gaog.weblog.admin.service;
 import com.gaog.weblog.admin.model.vo.category.AddCategoryReqVO;
 import com.gaog.weblog.admin.model.vo.category.DeleteCategoryReqVO;
 import com.gaog.weblog.admin.model.vo.category.FindCategoryPageListReqVO;
+import com.gaog.weblog.admin.model.vo.category.UpdateCategoryShowOnFrontReqVO;
 import com.gaog.weblog.common.utils.PageResponse;
 import com.gaog.weblog.common.utils.Response;
 
@@ -42,4 +43,11 @@ public interface AdminCategoryService {
      * @return
      */
     Response findCategorySelectList();
+
+    /**
+     * 更新分类前台展示状态
+     * @param updateCategoryShowOnFrontReqVO
+     * @return
+     */
+    Response updateCategoryShowOnFront(UpdateCategoryShowOnFrontReqVO updateCategoryShowOnFrontReqVO);
 }

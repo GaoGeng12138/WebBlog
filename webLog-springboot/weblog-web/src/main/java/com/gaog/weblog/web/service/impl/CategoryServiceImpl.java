@@ -9,9 +9,9 @@ import com.gaog.weblog.common.domain.mapper.ArticleCategoryRelMapper;
 import com.gaog.weblog.common.domain.mapper.CategoryMapper;
 import com.gaog.weblog.common.utils.PageResponse;
 import com.gaog.weblog.common.utils.Response;
+import com.gaog.weblog.web.model.vo.category.FindCategoryArticleReqVO;
 import com.gaog.weblog.web.model.vo.category.FindCategoryPageListReqVO;
 import com.gaog.weblog.web.model.vo.category.FindCategoryPageListRspVO;
-import com.gaog.weblog.web.model.vo.category.FindCategoryArticleReqVO;
 import com.gaog.weblog.web.service.CategoryService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,31 +43,22 @@ public class CategoryServiceImpl implements CategoryService {
      */
     @Override
     public PageResponse findCategoryList(FindCategoryPageListReqVO findCategoryPageListReqVO) {
-        // 获取当前页、以及每页需要展示的数据数量
         Long current = findCategoryPageListReqVO.getCurrent();
         Long size = findCategoryPageListReqVO.getSize();
 
-        // 分页对象(查询第几页、每页多少数据)
         Page<CategoryDO> page = new Page<>(current, size);
-
-        // 构建查询条件
         LambdaQueryWrapper<CategoryDO> wrapper = new LambdaQueryWrapper<>();
         wrapper.orderByDesc(CategoryDO::getCreateTime);
 
-        // 执行分页查询
         Page<CategoryDO> categoryDOPage = categoryMapper.selectPage(page, wrapper);
-
         List<CategoryDO> categoryDOS = categoryDOPage.getRecords();
 
-        // DO 转 VO
         List<FindCategoryPageListRspVO> vos = null;
         if (!CollectionUtils.isEmpty(categoryDOS)) {
-            // 获取所有分类的ID
             List<Long> categoryIds = categoryDOS.stream()
                     .map(CategoryDO::getId)
                     .collect(Collectors.toList());
 
-            // 查询每个分类下的文章数量
             Map<Long, Integer> categoryArticleCountMap = articleCategoryRelMapper.selectList(
                             new LambdaQueryWrapper<ArticleCategoryRelDO>()
                                     .in(ArticleCategoryRelDO::getCategoryId, categoryIds))
@@ -83,6 +74,7 @@ public class CategoryServiceImpl implements CategoryService {
                             .name(categoryDO.getName())
                             .illustrate(categoryDO.getIllustrate())
                             .articleCount(categoryArticleCountMap.getOrDefault(categoryDO.getId(), 0))
+                            .showOnFront(!Boolean.FALSE.equals(categoryDO.getShowOnFront()))
                             .createTime(categoryDO.getCreateTime())
                             .build())
                     .collect(Collectors.toList());
@@ -90,7 +82,7 @@ public class CategoryServiceImpl implements CategoryService {
 
         return PageResponse.success(categoryDOPage, vos);
     }
-    
+
     /**
      * 获取所有分类数据，包含每个分类的文章数量
      *
@@ -98,18 +90,14 @@ public class CategoryServiceImpl implements CategoryService {
      */
     @Override
     public Response findAllCategories() {
-        // 查询所有分类
         List<CategoryDO> categoryDOS = categoryMapper.selectList(null);
-        
-        // DO 转 VO
+
         List<FindCategoryPageListRspVO> vos = null;
         if (!CollectionUtils.isEmpty(categoryDOS)) {
-            // 获取所有分类的ID
             List<Long> categoryIds = categoryDOS.stream()
                     .map(CategoryDO::getId)
                     .collect(Collectors.toList());
 
-            // 查询每个分类下的文章数量
             Map<Long, Integer> categoryArticleCountMap = articleCategoryRelMapper.selectList(
                             new LambdaQueryWrapper<ArticleCategoryRelDO>()
                                     .in(ArticleCategoryRelDO::getCategoryId, categoryIds))
@@ -125,6 +113,7 @@ public class CategoryServiceImpl implements CategoryService {
                             .name(categoryDO.getName())
                             .illustrate(categoryDO.getIllustrate())
                             .articleCount(categoryArticleCountMap.getOrDefault(categoryDO.getId(), 0))
+                            .showOnFront(!Boolean.FALSE.equals(categoryDO.getShowOnFront()))
                             .createTime(categoryDO.getCreateTime())
                             .build())
                     .collect(Collectors.toList());
@@ -132,7 +121,7 @@ public class CategoryServiceImpl implements CategoryService {
 
         return Response.success(vos);
     }
-    
+
     /**
      * 根据分类ID获取文章分页数据
      *
@@ -141,8 +130,6 @@ public class CategoryServiceImpl implements CategoryService {
      */
     @Override
     public PageResponse findArticlePageListByCategoryId(FindCategoryArticleReqVO findCategoryArticleReqVO) {
-        // Simply return an empty response as this should be handled by ArticleService
-        // In a real implementation, this would delegate to ArticleService
         Page page = new Page(findCategoryArticleReqVO.getCurrent(), findCategoryArticleReqVO.getSize());
         page.setTotal(0);
         return PageResponse.success(page, null);

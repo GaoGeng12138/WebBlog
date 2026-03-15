@@ -37,6 +37,11 @@ public class CategoryDO {
      */
     private String illustrate;
 
+    /**
+     * 是否在前台导航展示
+     */
+    private Boolean showOnFront;
+
     private LocalDateTime createTime;
 
     private LocalDateTime updateTime;

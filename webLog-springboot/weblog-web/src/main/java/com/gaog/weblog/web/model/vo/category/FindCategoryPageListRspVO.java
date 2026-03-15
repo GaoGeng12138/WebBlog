@@ -39,6 +39,11 @@ public class FindCategoryPageListRspVO {
     private Integer articleCount;
 
     /**
+     * 是否在前台展示
+     */
+    private Boolean showOnFront;
+
+    /**
      * 创建时间
      */
     private LocalDateTime createTime;

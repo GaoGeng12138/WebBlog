@@ -3,6 +3,7 @@ package com.gaog.weblog.admin.controller;
 import com.gaog.weblog.admin.model.vo.category.AddCategoryReqVO;
 import com.gaog.weblog.admin.model.vo.category.DeleteCategoryReqVO;
 import com.gaog.weblog.admin.model.vo.category.FindCategoryPageListReqVO;
+import com.gaog.weblog.admin.model.vo.category.UpdateCategoryShowOnFrontReqVO;
 import com.gaog.weblog.admin.service.AdminCategoryService;
 import com.gaog.weblog.common.aspect.ApiOperationLog;
 import com.gaog.weblog.common.utils.PageResponse;
@@ -61,5 +62,10 @@ public class AdminCategoryController {
         return categoryService.findCategorySelectList();
     }
 
-
+    @PostMapping("/category/update/showOnFront")
+    @ApiOperation(value = "更新分类前台展示状态")
+    @ApiOperationLog(description = "更新分类前台展示状态")
+    public Response updateCategoryShowOnFront(@RequestBody @Validated UpdateCategoryShowOnFrontReqVO updateCategoryShowOnFrontReqVO) {
+        return categoryService.updateCategoryShowOnFront(updateCategoryShowOnFrontReqVO);
+    }
 }

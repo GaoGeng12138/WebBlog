@@ -7,6 +7,7 @@ import com.gaog.weblog.admin.model.vo.category.AddCategoryReqVO;
 import com.gaog.weblog.admin.model.vo.category.DeleteCategoryReqVO;
 import com.gaog.weblog.admin.model.vo.category.FindCategoryPageListReqVO;
 import com.gaog.weblog.admin.model.vo.category.FindCategoryPageListRspVO;
+import com.gaog.weblog.admin.model.vo.category.UpdateCategoryShowOnFrontReqVO;
 import com.gaog.weblog.admin.service.AdminCategoryService;
 import com.gaog.weblog.common.domain.dos.CategoryDO;
 import com.gaog.weblog.common.domain.mapper.CategoryMapper;
@@ -60,7 +61,8 @@ public class AdminCategoryServiceimpl implements AdminCategoryService {
         // 构建 DO 类
         CategoryDO insertCategoryDO = CategoryDO.builder()
                 .name(addCategoryReqVO.getName().trim())
-                .illustrate(addCategoryReqVO.getIllustrate())
+                .illustrate(addCategoryReqVO.getIllustrate().trim())
+                .showOnFront(Boolean.TRUE.equals(addCategoryReqVO.getShowOnFront()))
                 .build();
 
         // 执行 insert
@@ -77,14 +79,10 @@ public class AdminCategoryServiceimpl implements AdminCategoryService {
      */
     @Override
     public PageResponse findCategoryList(FindCategoryPageListReqVO findCategoryPageListReqVO) {
-        // 获取当前页、以及每页需要展示的数据数量
         Long current = findCategoryPageListReqVO.getCurrent();
         Long size = findCategoryPageListReqVO.getSize();
 
-        // 分页对象(查询第几页、每页多少数据)
         Page<CategoryDO> page = new Page<>(current, size);
-
-        // 构建查询条件
         LambdaQueryWrapper<CategoryDO> wrapper = new LambdaQueryWrapper<>();
 
         String name = findCategoryPageListReqVO.getName();
@@ -92,21 +90,14 @@ public class AdminCategoryServiceimpl implements AdminCategoryService {
         LocalDate endDate = findCategoryPageListReqVO.getEndDate();
 
         wrapper
-                // like 模块查询
                 .like(StringUtils.isNotBlank(name), CategoryDO::getName, name.trim())
-                // 大于等于 startDate
                 .ge(Objects.nonNull(startDate), CategoryDO::getCreateTime, startDate)
-                // 小于等于 endDate
                 .le(Objects.nonNull(endDate), CategoryDO::getCreateTime, endDate)
-                // 按创建时间倒叙
                 .orderByDesc(CategoryDO::getCreateTime);
 
-        // 执行分页查询
         Page<CategoryDO> categoryDOPage = categoryMapper.selectPage(page, wrapper);
-
         List<CategoryDO> categoryDOS = categoryDOPage.getRecords();
 
-        // DO 转 VO
         List<FindCategoryPageListRspVO> vos = null;
         if (!CollectionUtils.isEmpty(categoryDOS)) {
             vos = categoryDOS.stream()
@@ -114,6 +105,7 @@ public class AdminCategoryServiceimpl implements AdminCategoryService {
                             .id(categoryDO.getId())
                             .name(categoryDO.getName())
                             .illustrate(categoryDO.getIllustrate())
+                            .showOnFront(!Boolean.FALSE.equals(categoryDO.getShowOnFront()))
                             .createTime(categoryDO.getCreateTime())
                             .build())
                     .collect(Collectors.toList());
@@ -130,12 +122,8 @@ public class AdminCategoryServiceimpl implements AdminCategoryService {
      */
     @Override
     public Response deleteCategory(DeleteCategoryReqVO deleteCategoryReqVO) {
-        // 分类 ID
         Long categoryId = deleteCategoryReqVO.getId();
-
-        // 删除分类
         categoryMapper.deleteById(categoryId);
-
         return Response.success();
     }
 
@@ -146,14 +134,10 @@ public class AdminCategoryServiceimpl implements AdminCategoryService {
      */
     @Override
     public Response findCategorySelectList() {
-        // 查询所有分类
         List<CategoryDO> categoryDOS = categoryMapper.selectList(null);
 
-        // DO 转 VO
         List<SelectRspVO> selectRspVOS = null;
-        // 如果分类数据不为空
         if (!CollectionUtils.isEmpty(categoryDOS)) {
-            // 将分类 ID 作为 Value 值，将分类名称作为 label 展示
             selectRspVOS = categoryDOS.stream()
                     .map(categoryDO -> SelectRspVO.builder()
                             .label(categoryDO.getName())
@@ -163,5 +147,21 @@ public class AdminCategoryServiceimpl implements AdminCategoryService {
         }
 
         return Response.success(selectRspVOS);
+    }
+
+    @Override
+    public Response updateCategoryShowOnFront(UpdateCategoryShowOnFrontReqVO updateCategoryShowOnFrontReqVO) {
+        Long categoryId = updateCategoryShowOnFrontReqVO.getId();
+        CategoryDO categoryDO = categoryMapper.selectById(categoryId);
+        if (Objects.isNull(categoryDO)) {
+            throw new BizException(ResponseCodeEnum.CATEGORY_NOT_EXISTED);
+        }
+
+        CategoryDO updateCategoryDO = CategoryDO.builder()
+                .id(categoryId)
+                .showOnFront(Boolean.TRUE.equals(updateCategoryShowOnFrontReqVO.getShowOnFront()))
+                .build();
+        categoryMapper.updateById(updateCategoryDO);
+        return Response.success();
     }
 }
