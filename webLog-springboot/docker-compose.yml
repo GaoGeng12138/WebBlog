@@ -25,3 +25,6 @@ services:
       APP_DATABASE_INIT_CREATE: "true"
       APP_DATABASE_INIT_INSERTS: "true"
       JAVA_OPTS: -Xms256m -Xmx512m
+      LOG_PATH: ${LOG_CONTAINER_PATH:-/app/logs}
+    volumes:
+      - ${LOG_HOST_PATH:-/data/logs/default/main}:${LOG_CONTAINER_PATH:-/app/logs}
