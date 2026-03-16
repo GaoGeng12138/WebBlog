@@ -1,7 +1,20 @@
 import axios from "axios";
 
+function getApiBaseURL() {
+  if (import.meta.env.VITE_API_BASE_URL) {
+    return import.meta.env.VITE_API_BASE_URL;
+  }
+
+  if (import.meta.env.PROD && typeof window !== "undefined") {
+    const apiPort = import.meta.env.VITE_API_PORT || "8088";
+    return `${window.location.protocol}//${window.location.hostname}:${apiPort}/webLog`;
+  }
+
+  return "/api";
+}
+
 const request = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || "/api",
+  baseURL: getApiBaseURL(),
   timeout: 15000,
 });
 
