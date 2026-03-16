@@ -7,8 +7,10 @@ import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
+  const base = env.VITE_BASE_URL || '/'
 
   return {
+    base,
     plugins: [
       vue(),
       AutoImport({
