@@ -38,7 +38,7 @@
         </root>
     </springProfile>
 
-    <!-- prod 环境（仅输出到文件中） -->
+    <!-- prod 环境（输出到控制台和文件） -->
     <springProfile name="prod">
         <include resource="org/springframework/boot/logging/logback/console-appender.xml"/>
         <root level="INFO">

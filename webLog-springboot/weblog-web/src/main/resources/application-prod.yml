@@ -38,14 +38,4 @@ app:
       create: ${APP_DATABASE_INIT_CREATE:true}
       inserts: ${APP_DATABASE_INIT_INSERTS:true}
 
-#=================================================================
-# log 日志
-#=================================================================
-logging:
-  config: classpath:logback-weblog.xml
-
-
-
-
-
 
