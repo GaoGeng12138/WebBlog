@@ -1,6 +1,48 @@
 version: "3.9"
 
 services:
+  mysql-server:
+    image: mysql:8.0
+    container_name: mysql-server
+    restart: unless-stopped
+    command:
+      - --default-authentication-plugin=mysql_native_password
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    ports:
+      - "${MYSQL_PORT:-3306}:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-95833414}
+      MYSQL_DATABASE: ${DB_NAME:-weblog}
+      TZ: Asia/Shanghai
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-p${MYSQL_ROOT_PASSWORD:-95833414}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks:
+      - weblog-network
+
+  minio:
+    image: minio/minio
+    container_name: minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    ports:
+      - "${MINIO_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESSKEY:-admin}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRETKEY:-95833414}
+      TZ: Asia/Shanghai
+    volumes:
+      - minio-data:/data
+    networks:
+      - weblog-network
+
   weblog-backend:
     build:
       context: .
@@ -8,24 +50,27 @@ services:
     image: weblog-backend:latest
     container_name: weblog-backend
     restart: unless-stopped
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+    depends_on:
+      mysql-server:
+        condition: service_healthy
+      minio:
+        condition: service_started
     ports:
-      - "8088:8088"
+      - "${SERVER_PORT:-8088}:${SERVER_PORT:-8088}"
     environment:
       SPRING_PROFILES_ACTIVE: prod
-      SERVER_PORT: 8088
+      SERVER_PORT: ${SERVER_PORT:-8088}
       SERVER_SERVLET_CONTEXT_PATH: /webLog
       SPRING_DATASOURCE_DRIVER_CLASS_NAME: com.mysql.cj.jdbc.Driver
-      DB_HOST: ${DB_HOST:-mysql-server}
+      DB_HOST: mysql-server
       DB_PORT: ${DB_PORT:-3306}
       DB_NAME: ${DB_NAME:-weblog}
-      SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: 95833414
-      MINIO_HOST: ${MINIO_HOST:-minio}
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_USERNAME:-root}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD:-95833414}
+      MINIO_HOST: minio
       MINIO_PORT: ${MINIO_PORT:-9000}
-      MINIO_ACCESSKEY: admin
-      MINIO_SECRETKEY: 95833414
+      MINIO_ACCESSKEY: ${MINIO_ACCESSKEY:-admin}
+      MINIO_SECRETKEY: ${MINIO_SECRETKEY:-95833414}
       MINIO_BUCKETNAME: weblog
       APP_DATABASE_INIT_CREATE: "true"
       APP_DATABASE_INIT_INSERTS: "true"
@@ -33,3 +78,13 @@ services:
       LOG_PATH: ${LOG_CONTAINER_PATH:-/app/logs}
     volumes:
       - ${LOG_HOST_PATH:-/data/logs/default/main}:${LOG_CONTAINER_PATH:-/app/logs}
+    networks:
+      - weblog-network
+
+volumes:
+  mysql-data:
+  minio-data:
+
+networks:
+  weblog-network:
+    driver: bridge
