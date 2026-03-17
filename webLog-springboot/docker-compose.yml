@@ -16,7 +16,7 @@ services:
       MYSQL_DATABASE: ${DB_NAME:-weblog}
       TZ: Asia/Shanghai
     volumes:
-      - mysql-data:/var/lib/mysql
+      - ${MYSQL_DATA_HOST_PATH:-/opt/mysql}:/var/lib/mysql
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-p${MYSQL_ROOT_PASSWORD:-95833414}"]
       interval: 10s
@@ -39,7 +39,7 @@ services:
       MINIO_ROOT_PASSWORD: ${MINIO_SECRETKEY:-95833414}
       TZ: Asia/Shanghai
     volumes:
-      - minio-data:/data
+      - ${MINIO_DATA_HOST_PATH:-/opt/minio}:/data
     networks:
       - weblog-network
 
@@ -77,13 +77,9 @@ services:
       JAVA_OPTS: -Xms256m -Xmx512m
       LOG_PATH: ${LOG_CONTAINER_PATH:-/app/logs}
     volumes:
-      - ${LOG_HOST_PATH:-/data/logs/default/main}:${LOG_CONTAINER_PATH:-/app/logs}
+      - ${LOG_HOST_PATH:-/opt/deploy/logs}:${LOG_CONTAINER_PATH:-/app/logs}
     networks:
       - weblog-network
-
-volumes:
-  mysql-data:
-  minio-data:
 
 networks:
   weblog-network:
