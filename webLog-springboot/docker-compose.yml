@@ -17,10 +17,13 @@ services:
       SERVER_PORT: 8088
       SERVER_SERVLET_CONTEXT_PATH: /webLog
       SPRING_DATASOURCE_DRIVER_CLASS_NAME: com.mysql.cj.jdbc.Driver
-      SPRING_DATASOURCE_URL: jdbc:mysql://${DB_HOST:-host.docker.internal}:${DB_PORT:-3306}/${DB_NAME:-weblog}?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&useSSL=false&zeroDateTimeBehavior=convertToNull&serverTimezone=Asia/Shanghai
+      DB_HOST: ${DB_HOST:-mysql-server}
+      DB_PORT: ${DB_PORT:-3306}
+      DB_NAME: ${DB_NAME:-weblog}
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: 95833414
-      MINIO_ENDPOINT: http://${MINIO_HOST:-host.docker.internal}:${MINIO_PORT:-9000}
+      MINIO_HOST: ${MINIO_HOST:-minio}
+      MINIO_PORT: ${MINIO_PORT:-9000}
       MINIO_ACCESSKEY: admin
       MINIO_SECRETKEY: 95833414
       MINIO_BUCKETNAME: weblog
