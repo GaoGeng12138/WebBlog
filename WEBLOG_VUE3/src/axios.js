@@ -7,17 +7,12 @@ function getApiBaseURL() {
         return import.meta.env.VITE_API_BASE_URL;
     }
 
-    if (import.meta.env.PROD && typeof window !== "undefined") {
-        const apiPort = import.meta.env.VITE_API_PORT || "8088";
-        return `${window.location.protocol}//${window.location.hostname}:${apiPort}/webLog`;
-    }
-
-    return "/api";
+    return import.meta.env.PROD ? "/weblog/api" : "/api";
 }
 
 // 创建 Axios 实例
 const instance = axios.create({
-    baseURL: getApiBaseURL(), // prd 环境默认走当前域名的 8088 端口
+    baseURL: getApiBaseURL(),
     timeout: 7000, // 请求超时时间
 })
 
