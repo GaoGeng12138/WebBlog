@@ -15,10 +15,10 @@ services:
       SERVER_PORT: 8088
       SERVER_SERVLET_CONTEXT_PATH: /webLog
       SPRING_DATASOURCE_DRIVER_CLASS_NAME: com.mysql.cj.jdbc.Driver
-      SPRING_DATASOURCE_URL: jdbc:mysql://49.232.228.55:3306/weblog?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&useSSL=false&zeroDateTimeBehavior=convertToNull&serverTimezone=Asia/Shanghai
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-server:3306/weblog?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&useSSL=false&zeroDateTimeBehavior=convertToNull&serverTimezone=Asia/Shanghai
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: 95833414
-      MINIO_ENDPOINT: http://49.232.228.55:9000
+      MINIO_ENDPOINT: http://minio:9000
       MINIO_ACCESSKEY: admin
       MINIO_SECRETKEY: 95833414
       MINIO_BUCKETNAME: weblog

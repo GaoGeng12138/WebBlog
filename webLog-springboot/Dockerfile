@@ -24,9 +24,10 @@ WORKDIR /app
 ENV TZ=Asia/Shanghai
 ENV SPRING_PROFILES_ACTIVE=prod
 ENV JAVA_OPTS=""
+ENV LOG_PATH=/app/logs
 
 COPY --from=builder /app/weblog-web/target/weblog-web-*.jar /app/app.jar
 
 EXPOSE 8080
 
-ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar /app/app.jar --spring.profiles.active=${SPRING_PROFILES_ACTIVE:-prod}"]
+ENTRYPOINT ["sh", "-c", "mkdir -p \"${LOG_PATH:-/app/logs}\" && exec java $JAVA_OPTS -jar /app/app.jar --spring.profiles.active=${SPRING_PROFILES_ACTIVE:-prod}"]
