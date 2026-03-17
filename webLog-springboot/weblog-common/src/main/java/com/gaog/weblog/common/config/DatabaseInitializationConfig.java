@@ -26,6 +26,8 @@ import java.util.regex.Pattern;
 @Configuration
 @Slf4j
 public class DatabaseInitializationConfig {
+    private static final Pattern INSERT_STATEMENT_PATTERN =
+            Pattern.compile("(?i)^INSERT\\s+(?:IGNORE\\s+)?INTO\\b");
 
     private final DataSource dataSource;
     private JdbcTemplate jdbcTemplate;
@@ -110,7 +112,7 @@ public class DatabaseInitializationConfig {
                 List<String> createTableSqlStatements = parseSqlFile("sql/CreateTable.sql");
                 for (String sql : createTableSqlStatements) {
                     String trimmedSql = sql.trim();
-                    if (trimmedSql.toUpperCase().startsWith("INSERT INTO")) {
+                    if (isInsertStatement(trimmedSql)) {
                         insertStatements.add(trimmedSql);
                     }
                 }
@@ -119,7 +121,7 @@ public class DatabaseInitializationConfig {
                 List<String> insertDataStatements = parseSqlFile("sql/InsertData.sql");
                 for (String sql : insertDataStatements) {
                     String trimmedSql = sql.trim();
-                    if (trimmedSql.toUpperCase().startsWith("INSERT INTO")) {
+                    if (isInsertStatement(trimmedSql)) {
                         insertStatements.add(trimmedSql);
                     }
                 }
@@ -281,5 +283,9 @@ public class DatabaseInitializationConfig {
         } catch (Exception e) {
             log.error("Failed to remove unused column {}.{}", tableName, columnName, e);
         }
+    }
+
+    private boolean isInsertStatement(String sql) {
+        return INSERT_STATEMENT_PATTERN.matcher(sql).find();
     }
 }
