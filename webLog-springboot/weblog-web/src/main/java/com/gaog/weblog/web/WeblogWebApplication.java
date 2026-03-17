@@ -21,7 +21,7 @@ import java.net.UnknownHostException;
  * Description：
  */
 @SpringBootApplication
-@ComponentScan({"com.gaog.weblog.*"})
+@ComponentScan("com.gaog.weblog")
 @EnableScheduling
 @EnableAspectJAutoProxy
 @Slf4j
