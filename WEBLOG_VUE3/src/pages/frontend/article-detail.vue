@@ -7,14 +7,17 @@
     <main class="flex-1 max-w-[1720px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
       <div class="flex gap-5 lg:gap-6">
         <!-- 左侧导航栏（文章目录） -->
-        <aside v-if="article && headings.length > 0" class="hidden 2xl:block w-56 shrink-0">
+        <aside v-if="article" class="hidden xl:block w-60 shrink-0">
           <div class="sticky top-24">
             <div class="bg-white/60 backdrop-blur-xl rounded-2xl shadow-sm border border-gray-100 p-5">
               <h3 class="text-sm font-bold text-gray-900 mb-4 flex items-center gap-2">
                 <el-icon class="text-blue-500"><Menu /></el-icon>
                 文章目录
               </h3>
-              <nav class="space-y-1 max-h-[calc(100vh-200px)] overflow-y-auto pr-2 custom-scrollbar">
+              <nav
+                v-if="headings.length > 0"
+                class="space-y-1 max-h-[calc(100vh-200px)] overflow-y-auto pr-2 custom-scrollbar"
+              >
                 <a
                   v-for="(heading, index) in headings"
                   :key="index"
@@ -22,7 +25,7 @@
                   @click.prevent="scrollToHeading(heading.id)"
                   :class="[
                     'block py-2 px-3 text-sm rounded-xl transition-all duration-300 relative',
-                    heading.level === 2 ? 'pl-3' : heading.level === 3 ? 'pl-6' : 'pl-9',
+                    heading.level === 1 ? 'pl-3' : heading.level === 2 ? 'pl-6' : heading.level === 3 ? 'pl-9' : 'pl-12',
                     activeHeading === heading.id 
                       ? 'bg-blue-50 text-blue-700 font-semibold' 
                       : 'text-gray-600 hover:bg-gray-50/80 hover:text-blue-600'
@@ -32,6 +35,9 @@
                   <span class="truncate block">{{ heading.text }}</span>
                 </a>
               </nav>
+              <div v-else class="rounded-2xl border border-dashed border-gray-200 bg-gray-50/70 px-4 py-5 text-sm leading-6 text-gray-500">
+                正文里暂时没有识别到可导航的标题，等内容渲染完成后目录会自动出现。
+              </div>
             </div>
           </div>
         </aside>
@@ -46,8 +52,8 @@
             </div>
 
             <div v-else-if="article" class="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 sm:p-10 lg:p-14">
-              <!-- 无标题且无摘要时，优先展示封面 -->
-              <div v-if="showCoverBeforeHeader" class="mb-10 rounded-2xl overflow-hidden bg-gray-50 border border-gray-100 shadow-sm relative group">
+              <!-- 封面图 -->
+              <div v-if="article.cover" class="mb-10 rounded-2xl overflow-hidden bg-gray-50 border border-gray-100 shadow-sm relative group">
                 <img :src="article.cover" :alt="article.title || article.summary || '文章封面'" class="w-full h-auto max-h-[500px] object-cover transition-transform duration-700 group-hover:scale-105">
               </div>
 
@@ -106,11 +112,6 @@
                   </span>
                 </div>
               </header>
-
-              <!-- 封面图 -->
-              <div v-if="showCoverAfterHeader" class="mb-10 rounded-2xl overflow-hidden bg-gray-50 border border-gray-100 shadow-sm relative group">
-                <img :src="article.cover" :alt="article.title || article.summary || '文章封面'" class="w-full h-auto max-h-[500px] object-cover transition-transform duration-700 group-hover:scale-105">
-              </div>
 
               <!-- 正文内容 -->
               <div ref="articleContentRef" class="prose prose-blue prose-lg max-w-none article-content" v-viewer v-html="article.content"></div>
@@ -233,18 +234,6 @@ const displayNextArticle = computed(() => {
     return categoryNeighbors.value.nextArticle
   }
   return article.value?.nextArticle || null
-})
-
-const hasArticleTitle = computed(() => !!article.value?.title?.trim())
-
-const hasArticleSummary = computed(() => !!article.value?.summary?.trim())
-
-const showCoverBeforeHeader = computed(() => {
-  return !!article.value?.cover && !hasArticleTitle.value && !hasArticleSummary.value
-})
-
-const showCoverAfterHeader = computed(() => {
-  return !!article.value?.cover && !showCoverBeforeHeader.value
 })
 
 onMounted(() => {
@@ -609,7 +598,7 @@ function extractHeadings() {
   window.removeEventListener('scroll', updateActiveHeading)
   
   const contentEl = articleContentRef.value
-  const headingElements = contentEl.querySelectorAll('h2, h3, h4')
+  const headingElements = contentEl.querySelectorAll('h1, h2, h3, h4')
   
   headings.value = Array.from(headingElements).map((el, index) => {
     // 为每个标题添加 ID

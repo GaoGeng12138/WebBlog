@@ -371,8 +371,16 @@
                                 <h3 class="text-lg font-bold text-gray-800">我的文章 <span
                                         class="text-gray-400 font-normal text-sm ml-2">共 {{ articles.length }} 篇</span>
                                 </h3>
-                                <el-button v-if="siteConfig.isFeatureEnabled('userPublishEnabled')" type="primary"
-                                    icon="EditPen" round class="shadow-sm" @click="goToPublish">写文章</el-button>
+                                <div class="flex items-center gap-3">
+                                    <span v-if="!siteConfig.isFeatureEnabled('userPublishEnabled')" class="text-xs text-amber-600 bg-amber-50 border border-amber-100 rounded-full px-3 py-1">
+                                        当前已关闭前台投稿
+                                    </span>
+                                    <el-button type="primary" icon="EditPen" round class="shadow-sm"
+                                        :disabled="!siteConfig.isFeatureEnabled('userPublishEnabled')"
+                                        @click="goToPublish">
+                                        写文章
+                                    </el-button>
+                                </div>
                             </div>
 
                             <el-empty v-if="!articles.length" description="暂无文章" />
@@ -833,6 +841,10 @@ const isLoggedIn = computed(() => {
 })
 
 onMounted(() => {
+    siteConfig.fetchPermissions().catch((error) => {
+        console.error('Failed to load publish permissions:', error)
+    })
+
     // Load frontend user info first, then load articles
     userStore.setFrontendUserInfo().then(() => {
         loadStatistics()

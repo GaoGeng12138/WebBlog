@@ -56,8 +56,22 @@
 
                 <!-- 文章内容 -->
                 <el-form-item label="文章内容" prop="content">
-                    <!-- Markdown 编辑器 -->
-                    <MdEditor v-model="form.content" @onUploadImg="onUploadImg" editorId="publishArticleEditor" />
+                    <div class="admin-editor-shell">
+                        <div class="admin-editor-shell__meta">
+                            <div>
+                                <p class="admin-editor-shell__eyebrow">Markdown Workspace</p>
+                                <h3 class="admin-editor-shell__title">正文编辑器</h3>
+                            </div>
+                            <span class="admin-editor-shell__badge">后台发布</span>
+                        </div>
+                        <MarkdownEditorSurface
+                            v-model="form.content"
+                            editor-id="publishArticleEditor"
+                            height="760px"
+                            placeholder="请输入文章正文，建议用标题层级把内容结构整理清楚。"
+                            :upload-handler="onUploadImg"
+                        />
+                    </div>
                 </el-form-item>
 
                 <!-- 提交按钮 -->
@@ -80,10 +94,9 @@ import { getTagSelectList } from '@/api/admin/tag'
 import { useTagList } from '@/composables/useTagList'
 import { showMessage } from '@/composables/util'
 import { ArrowLeft, Plus } from '@element-plus/icons-vue'
-import { MdEditor } from 'md-editor-v3'
-import 'md-editor-v3/lib/style.css'
 import { onBeforeUnmount, onMounted, reactive, ref, shallowRef } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import MarkdownEditorSurface from '@/components/article/MarkdownEditorSurface.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -339,7 +352,49 @@ const loadArticleDetail = () => {
     text-align: center;
 }
 
-:deep(.md-editor-footer) {
+.admin-editor-shell {
+    width: 100%;
+    border-radius: 24px;
+    overflow: hidden;
+    border: 1px solid rgba(226, 232, 240, 0.9);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.96));
+    box-shadow: 0 18px 38px rgba(15, 23, 42, 0.06);
+}
+
+.admin-editor-shell__meta {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid rgba(226, 232, 240, 0.92);
+}
+
+.admin-editor-shell__eyebrow {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: #94a3b8;
+}
+
+.admin-editor-shell__title {
+    margin-top: 6px;
+    font-size: 20px;
+    font-weight: 800;
+    color: #0f172a;
+}
+
+.admin-editor-shell__badge {
+    display: inline-flex;
     align-items: center;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #2563eb, #0ea5e9);
+    color: #fff;
+    padding: 0.45rem 0.8rem;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
 }
 </style>

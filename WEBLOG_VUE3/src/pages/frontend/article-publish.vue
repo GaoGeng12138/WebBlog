@@ -1,150 +1,299 @@
 <template>
-    <div class="min-h-screen bg-[#F5F7FA] pb-20">
-        <div class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50 border-b border-gray-100">
-            <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-                <div class="flex items-center cursor-pointer group" @click="goBack">
-                    <div
-                        class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center group-hover:bg-blue-50 text-gray-500 group-hover:text-blue-600 transition-colors mr-3">
-                        <el-icon>
-                            <ArrowLeft />
-                        </el-icon>
-                    </div>
-                    <span
-                        class="text-sm font-medium text-gray-600 group-hover:text-blue-600 transition-colors">返回</span>
-                </div>
-                <div class="text-xs text-gray-400 font-mono bg-gray-50 px-2 py-1 rounded">{{ isEdit ? 'EDIT MODE' :
-                    'CREATE MODE' }}</div>
+  <div class="article-publish-page min-h-screen bg-[#f6f8fc] pb-24">
+    <div class="sticky top-0 z-40 border-b border-slate-200/80 bg-white/88 backdrop-blur-xl">
+      <div class="mx-auto flex max-w-[1600px] items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
+        <div class="flex min-w-0 items-center gap-4">
+          <button
+            type="button"
+            class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:text-blue-600"
+            @click="goBack"
+          >
+            <el-icon><ArrowLeft /></el-icon>
+          </button>
+
+          <div class="min-w-0">
+            <div class="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">
+              <span>Creator Workspace</span>
+              <span class="rounded-full bg-slate-100 px-2 py-1 tracking-[0.14em] text-slate-500">
+                {{ isEdit ? 'EDIT MODE' : 'CREATE MODE' }}
+              </span>
             </div>
+            <h1 class="mt-2 text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">
+              {{ isEdit ? '打磨这篇文章' : '开始一篇新作品' }}
+            </h1>
+            <p class="mt-1 text-sm text-slate-500">
+              先定封面与摘要，再进入正文创作。前台与后台的 Markdown 体验现在保持一致。
+            </p>
+          </div>
         </div>
 
-        <div class="max-w-6xl mx-auto px-4 py-8">
-            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8">
-
-                <div
-                    class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 border-b border-gray-100 pb-6">
-                    <div>
-                        <h1 class="text-2xl font-bold text-gray-800">{{ isEdit ? '编辑文章' : '撰写新文章' }}</h1>
-                    </div>
-                    <div class="bg-gray-100 p-1 rounded-lg flex items-center">
-                        <button v-for="type in ['markdown', 'richtext']" :key="type"
-                            @click="handleManualTypeChange(type)"
-                            class="px-4 py-2 text-sm font-medium rounded-md transition-all duration-200"
-                            :class="form.editorType === type ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'">
-                            {{ type === 'markdown' ? 'Markdown' : '富文本' }}
-                        </button>
-                    </div>
-                </div>
-
-                <el-form ref="formRef" :model="form" :rules="rules" label-position="top" size="large">
-
-                    <el-form-item class="mb-8">
-                        <input v-model="form.title" placeholder="请输入文章标题（选填）..."
-                            class="w-full text-3xl font-bold border-none outline-none placeholder-gray-300 border-b border-gray-100 focus:border-gray-100 bg-transparent py-4 transition-colors" />
-                        <p class="mt-2 text-sm text-gray-400">可不填写标题，仅展示封面与正文内容。</p>
-                    </el-form-item>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-                        <el-form-item label="文章分类" prop="categoryId">
-                            <el-select v-model="form.categoryId" placeholder="选择分类" class="w-full">
-                                <el-option v-for="cat in categories" :key="cat.id" :label="cat.name" :value="cat.id" />
-                            </el-select>
-                        </el-form-item>
-                        <el-form-item label="文章标签" prop="tags">
-                            <el-select v-model="form.tags" multiple filterable placeholder="选择标签" class="w-full">
-                                <el-option v-for="tag in tags" :key="tag.id" :label="tag.name" :value="tag.id" />
-                            </el-select>
-                        </el-form-item>
-                    </div>
-
-                    <el-form-item label="文章来源">
-                        <el-tag type="info" size="large">{{ isEdit ? (form.articleSourceLabel || '前台发布') : '前台发布' }}</el-tag>
-                    </el-form-item>
-
-                    <el-form-item label="文章摘要" prop="summary">
-                        <el-input v-model="form.summary" type="textarea" :rows="3" placeholder="编写一段引人入胜的摘要（选填）"
-                            maxlength="200" show-word-limit />
-                    </el-form-item>
-
-                    <el-form-item label="文章封面" prop="cover">
-                        <el-upload class="w-full" :show-file-list="false" :on-change="handleCoverChange"
-                        :auto-upload="false" :before-upload="beforeUpload" accept="image/*">
-                            <div v-if="form.cover"
-                                class="relative group w-full md:w-80 h-48 rounded-xl overflow-hidden border border-gray-200 cursor-pointer">
-                                <img :src="form.cover" class="w-full h-full object-cover" />
-                                <div
-                                    class="absolute inset-0 bg-black/40 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-white">
-                                    <el-icon class="text-2xl mb-2">
-                                        <Picture />
-                                    </el-icon>
-                                    <span class="text-sm font-medium">点击更换封面</span>
-                                </div>
-                            </div>
-                            <div v-else
-                                class="w-full md:w-80 h-48 border-2 border-dashed border-gray-200 rounded-xl flex flex-col items-center justify-center hover:border-blue-400 hover:bg-blue-50/50 transition-all cursor-pointer bg-gray-50 text-gray-400 hover:text-blue-500">
-                                <el-icon class="text-3xl mb-3">
-                                    <Picture />
-                                </el-icon>
-                                <span class="text-sm font-medium">点击上传封面图</span>
-                            </div>
-                        </el-upload>
-                    </el-form-item>
-                    <el-form-item label="正文内容" prop="content" class="mt-8">
-
-                        <div v-if="form.editorType === 'markdown'"
-                            class="w-full bg-white rounded-xl border border-gray-200 shadow-sm relative z-0">
-                            <MdEditor v-model="form.content" :theme="isDark ? 'dark' : 'light'"
-                                placeholder="开始使用 Markdown 写作..." @onUploadImg="onMdUploadImg" style="height: 650px;"
-                                class="w-full rounded-xl overflow-hidden" :toolbarsExclude="['github']" />
-                        </div>
-
-                        <div v-else
-                            class="w-full bg-white rounded-xl border border-gray-200 shadow-sm flex flex-col relative z-0 wang-editor-wrapper">
-                            <Toolbar style="border-bottom: 1px solid #f1f5f9;" :editor="editorRef"
-                                :defaultConfig="toolbarConfig" mode="default" class="bg-gray-50/50 rounded-t-xl" />
-                            <div class="h-[600px] overflow-hidden rounded-b-xl relative pb-2">
-                                <Editor style="height: 100%; overflow-y: hidden;" v-model="form.content"
-                                    :defaultConfig="editorConfig" mode="default" @onCreated="handleCreated" />
-                            </div>
-                        </div>
-
-                    </el-form-item>
-
-                    <div class="flex justify-end items-center gap-4 mt-8 pt-8 border-t border-gray-100">
-                        <span class="text-sm text-gray-400 mr-auto" v-if="form.content.length > 0">
-                            当前模式: {{ form.editorType === 'markdown' ? 'Markdown' : '富文本' }}
-                        </span>
-                        <el-button size="large" @click="goBack" round>取消</el-button>
-                        <el-button size="large" @click="resetForm" round>重置</el-button>
-                        <el-button type="primary" size="large" round :loading="submitting" @click="onSubmit"
-                            class="px-10 shadow-lg shadow-blue-500/20">
-                            {{ isEdit ? '保存修改' : '立即发布' }}
-                        </el-button>
-                    </div>
-
-                </el-form>
-            </div>
+        <div class="hidden items-center gap-3 xl:flex">
+          <div class="workspace-stat">
+            <span class="workspace-stat__label">字数</span>
+            <strong class="workspace-stat__value">{{ contentWordCount }}</strong>
+          </div>
+          <div class="workspace-stat">
+            <span class="workspace-stat__label">阅读</span>
+            <strong class="workspace-stat__value">{{ estimatedReadMinutes }} 分钟</strong>
+          </div>
+          <div class="workspace-stat">
+            <span class="workspace-stat__label">模式</span>
+            <strong class="workspace-stat__value">{{ editorModeLabel }}</strong>
+          </div>
         </div>
+      </div>
     </div>
+
+    <div class="mx-auto max-w-[1600px] px-4 py-8 sm:px-6 lg:px-8">
+      <el-form ref="formRef" :model="form" :rules="rules" label-position="top" class="grid gap-8 xl:grid-cols-[380px_minmax(0,1fr)]">
+        <aside class="space-y-6">
+          <section class="editor-panel">
+            <div class="editor-panel__header">
+              <div>
+                <p class="editor-panel__eyebrow">文章设置</p>
+                <h2 class="editor-panel__title">基础信息</h2>
+              </div>
+              <div class="editor-pill">{{ editorModeLabel }}</div>
+            </div>
+
+            <el-form-item label="文章标题" class="mb-6">
+              <input
+                v-model="form.title"
+                placeholder="给这篇文章起个名字，也可以留空"
+                class="editor-title-input"
+              />
+              <p class="editor-help">标题可选。如果你想做更偏海报感或图片流的内容，也可以只展示封面与正文。</p>
+            </el-form-item>
+
+            <el-form-item label="文章分类" prop="categoryId" class="mb-5">
+              <el-select v-model="form.categoryId" placeholder="选择一个分类" class="w-full" size="large">
+                <el-option v-for="cat in categories" :key="cat.id" :label="cat.name" :value="cat.id" />
+              </el-select>
+            </el-form-item>
+
+            <el-form-item label="文章标签" prop="tags" class="mb-5">
+              <el-select
+                v-model="form.tags"
+                multiple
+                filterable
+                placeholder="给文章贴上标签"
+                class="w-full"
+                size="large"
+              >
+                <el-option v-for="tag in tags" :key="tag.id" :label="tag.name" :value="tag.id" />
+              </el-select>
+              <p class="editor-help">选择已有标签即可，后续内容筛选和聚合会更准确。</p>
+            </el-form-item>
+
+            <div class="mb-5 grid gap-4 sm:grid-cols-2">
+              <div class="rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
+                <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">文章来源</p>
+                <div class="mt-3 inline-flex rounded-full bg-white px-3 py-1.5 text-sm font-semibold text-slate-700 shadow-sm">
+                  {{ isEdit ? (form.articleSourceLabel || '前台发布') : '前台发布' }}
+                </div>
+              </div>
+
+              <div class="rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
+                <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">编辑器模式</p>
+                <div class="mt-3 flex rounded-2xl bg-white p-1 shadow-sm">
+                  <button
+                    v-for="type in ['markdown', 'richtext']"
+                    :key="type"
+                    type="button"
+                    class="editor-mode-button"
+                    :class="{ 'editor-mode-button--active': form.editorType === type }"
+                    @click="handleManualTypeChange(type)"
+                  >
+                    {{ type === 'markdown' ? 'Markdown' : '富文本' }}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <el-form-item label="文章摘要" prop="summary" class="mb-0">
+              <el-input
+                v-model="form.summary"
+                type="textarea"
+                :rows="5"
+                resize="none"
+                maxlength="200"
+                show-word-limit
+                placeholder="用 2 到 4 句话总结文章亮点、场景和结论"
+              />
+            </el-form-item>
+          </section>
+
+          <section class="editor-panel">
+            <div class="editor-panel__header">
+              <div>
+                <p class="editor-panel__eyebrow">封面区域</p>
+                <h2 class="editor-panel__title">视觉入口</h2>
+              </div>
+            </div>
+
+            <el-form-item label="文章封面" prop="cover" class="mb-0">
+              <el-upload
+                class="w-full"
+                :show-file-list="false"
+                :on-change="handleCoverChange"
+                :auto-upload="false"
+                :before-upload="beforeUpload"
+                accept="image/*"
+              >
+                <div v-if="form.cover" class="cover-uploader cover-uploader--filled">
+                  <img :src="form.cover" class="h-full w-full object-cover" />
+                  <div class="cover-uploader__overlay">
+                    <el-icon class="mb-2 text-2xl"><Picture /></el-icon>
+                    <span>点击更换封面</span>
+                  </div>
+                </div>
+
+                <div v-else class="cover-uploader">
+                  <div class="cover-uploader__icon">
+                    <el-icon><Picture /></el-icon>
+                  </div>
+                  <h3 class="text-lg font-bold text-slate-800">上传封面图</h3>
+                  <p class="mt-2 text-sm leading-6 text-slate-500">建议比例 16:9，推荐 800 × 450，支持 JPG / PNG，大小不超过 2MB。</p>
+                </div>
+              </el-upload>
+            </el-form-item>
+          </section>
+
+          <section class="editor-panel editor-panel--tips">
+            <div class="editor-panel__header">
+              <div>
+                <p class="editor-panel__eyebrow">写作提示</p>
+                <h2 class="editor-panel__title">发布前检查</h2>
+              </div>
+            </div>
+
+            <ul class="space-y-3 text-sm leading-6 text-slate-600">
+              <li class="editor-tip-item">
+                <span class="editor-tip-item__dot"></span>
+                封面、分类和正文是必填项，摘要建议写清楚受众和收获。
+              </li>
+              <li class="editor-tip-item">
+                <span class="editor-tip-item__dot"></span>
+                Markdown 更适合技术文章、教程和长文；富文本更适合轻量排版。
+              </li>
+              <li class="editor-tip-item">
+                <span class="editor-tip-item__dot"></span>
+                当前字数 {{ contentWordCount }}，预估阅读 {{ estimatedReadMinutes }} 分钟。
+              </li>
+            </ul>
+          </section>
+        </aside>
+
+        <section class="space-y-6">
+          <div class="editor-panel">
+            <div class="editor-panel__header">
+              <div>
+                <p class="editor-panel__eyebrow">正文创作</p>
+                <h2 class="editor-panel__title">内容编辑区</h2>
+              </div>
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="editor-outline-chip">{{ form.title?.trim() || '未命名文章' }}</span>
+                <span class="editor-outline-chip">{{ form.summary?.trim() ? '已写摘要' : '摘要待补充' }}</span>
+              </div>
+            </div>
+
+            <div class="mb-6 grid gap-4 md:grid-cols-3">
+              <div class="editor-metric-card">
+                <span class="editor-metric-card__label">正文字符</span>
+                <strong class="editor-metric-card__value">{{ contentWordCount }}</strong>
+              </div>
+              <div class="editor-metric-card">
+                <span class="editor-metric-card__label">摘要字符</span>
+                <strong class="editor-metric-card__value">{{ summaryWordCount }}</strong>
+              </div>
+              <div class="editor-metric-card">
+                <span class="editor-metric-card__label">当前模式</span>
+                <strong class="editor-metric-card__value">{{ editorModeLabel }}</strong>
+              </div>
+            </div>
+
+            <el-form-item label="正文内容" prop="content" class="mb-0">
+              <div class="w-full">
+                <MarkdownEditorSurface
+                  v-if="form.editorType === 'markdown'"
+                  v-model="form.content"
+                  editor-id="frontend-article-editor"
+                  height="780px"
+                  placeholder="从场景、问题、步骤、结果开始写。支持粘贴截图、代码块、表格和标题结构。"
+                  :upload-handler="onMdUploadImg"
+                />
+
+                <div v-else class="rich-editor-shell">
+                  <div class="rich-editor-shell__meta">
+                    <div>
+                      <p class="editor-panel__eyebrow">可视化排版</p>
+                      <h3 class="text-lg font-bold text-slate-900">富文本编辑器</h3>
+                    </div>
+                    <span class="editor-pill editor-pill--soft">适合轻量图文</span>
+                  </div>
+
+                  <Toolbar
+                    :editor="editorRef"
+                    :defaultConfig="toolbarConfig"
+                    mode="default"
+                    class="rich-editor-shell__toolbar"
+                  />
+                  <div class="rich-editor-shell__content">
+                    <Editor
+                      v-model="form.content"
+                      :defaultConfig="editorConfig"
+                      mode="default"
+                      style="height: 100%; overflow-y: hidden;"
+                      @onCreated="handleCreated"
+                    />
+                  </div>
+                </div>
+              </div>
+            </el-form-item>
+          </div>
+
+          <div class="editor-action-bar">
+            <div>
+              <p class="text-sm font-semibold text-slate-700">准备发布了吗？</p>
+              <p class="mt-1 text-sm text-slate-500">{{ publishHint }}</p>
+            </div>
+
+            <div class="flex flex-wrap items-center justify-end gap-3">
+              <el-button size="large" round @click="goBack">取消</el-button>
+              <el-button size="large" round @click="resetForm">重置</el-button>
+              <el-button
+                type="primary"
+                size="large"
+                round
+                :loading="submitting"
+                class="!px-10 shadow-lg shadow-blue-500/20"
+                @click="onSubmit"
+              >
+                {{ isEdit ? '保存修改' : '立即发布' }}
+              </el-button>
+            </div>
+          </div>
+        </section>
+      </el-form>
+    </div>
+  </div>
 </template>
 
 <script setup>
-// JS 部分保持不变，无需修改
-import { ref, reactive, onMounted, shallowRef, onBeforeUnmount,computed } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
+import { computed, onBeforeUnmount, onMounted, reactive, ref, shallowRef } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { ArrowLeft, Picture } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import '@wangeditor/editor/dist/css/style.css'
+import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
 
 import { publishArticle, getArticleDetail, updateArticle } from '@/api/frontend/article'
 import { getAllCategoryList } from '@/api/frontend/category'
 import { getAllTagList } from '@/api/frontend/tag'
 import { uploadFile } from '@/api/frontend/file'
-
-import { MdEditor } from 'md-editor-v3';
-import 'md-editor-v3/lib/style.css';
-
-import '@wangeditor/editor/dist/css/style.css'
-import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
 import { useUserStore } from '@/stores/user'
+import MarkdownEditorSurface from '@/components/article/MarkdownEditorSurface.vue'
+
 const userStore = useUserStore()
 const user = computed(() => userStore.frontendUserInfo)
 
@@ -154,299 +303,572 @@ const route = useRoute()
 const formRef = ref()
 const isEdit = ref(false)
 const submitting = ref(false)
-const isDark = ref(false)
 
 const categories = ref([])
 const tags = ref([])
 
-const form = reactive({
-    title: '',
-    cover: '',
-    categoryId: null,
-    tags: [],
-    summary: '',
-    content: '',
-    userId:user.value.userId || null,
-    editorType: 'markdown',
-    articleSource: 2,
-    articleSourceLabel: '前台发布'
+const createDefaultForm = () => ({
+  title: '',
+  cover: '',
+  categoryId: null,
+  tags: [],
+  summary: '',
+  content: '',
+  userId: user.value?.userId || null,
+  editorType: 'markdown',
+  articleSource: 2,
+  articleSourceLabel: '前台发布'
 })
+
+const form = reactive(createDefaultForm())
 
 const editorRef = shallowRef()
 const toolbarConfig = {}
 const editorConfig = {
-    placeholder: '请输入正文内容...',
-    MENU_CONF: {
-        uploadImage: {
-            async customUpload(file, insertFn) {
-                const reader = new FileReader()
-                reader.onload = (e) => {
-                    insertFn(e.target.result, 'image', e.target.result)
-                }
-                reader.readAsDataURL(file)
-            }
-        }
+  placeholder: '请输入正文内容...',
+  MENU_CONF: {
+    uploadImage: {
+      async customUpload(file, insertFn) {
+        const url = await uploadSingleImage(file)
+        insertFn(url, 'image', url)
+      }
     }
+  }
 }
 
+const rules = {
+  categoryId: [{ required: true, message: '请选择分类', trigger: 'change' }],
+  cover: [{ required: true, message: '请上传封面图片', trigger: 'change' }],
+  content: [{ required: true, message: '文章内容不能为空', trigger: 'blur' }]
+}
+
+const editorModeLabel = computed(() => (form.editorType === 'markdown' ? 'Markdown' : '富文本'))
+
+const contentWordCount = computed(() => {
+  const text = String(form.content || '')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/[#>*`\-\[\]\(\)!]/g, ' ')
+    .replace(/\s+/g, '')
+
+  return text.length
+})
+
+const summaryWordCount = computed(() => String(form.summary || '').trim().length)
+
+const estimatedReadMinutes = computed(() => Math.max(1, Math.ceil(contentWordCount.value / 450)))
+
+const publishHint = computed(() => {
+  if (!form.cover) return '先补一个封面图，文章列表和详情页的第一眼会更完整。'
+  if (!form.categoryId) return '再选一个分类，方便归档和导航。'
+  if (!String(form.content || '').trim()) return '正文还是空的，至少写下核心步骤或观点。'
+  return `当前内容完成度不错，可以${isEdit.value ? '保存修改' : '发布'}了。`
+})
+
 const handleCreated = (editor) => {
-    editorRef.value = editor
+  editorRef.value = editor
+}
+
+async function uploadSingleImage(file) {
+  const formData = new FormData()
+  formData.append('file', file)
+  const res = await uploadFile(formData)
+
+  if (!res?.success || !res?.data?.url) {
+    throw new Error(res?.message || '图片上传失败')
+  }
+
+  return res.data.url
 }
 
 const onMdUploadImg = async (files, callback) => {
-    const res = await Promise.all(
-        files.map((file) => {
-            return new Promise((resolve) => {
-                const reader = new FileReader()
-                reader.onload = (e) => resolve(e.target.result)
-                reader.readAsDataURL(file)
-            });
-        })
-    );
-    callback(res);
-};
-
-const rules = {
-    categoryId: [{ required: true, message: '请选择分类', trigger: 'change' }],
-    cover: [{ required: true, message: '请上传封面图片', trigger: 'change' }],
-    content: [{ required: true, message: '文章内容不能为空', trigger: 'blur' }]
+  try {
+    const urls = await Promise.all(files.map((file) => uploadSingleImage(file)))
+    callback(urls)
+  } catch (error) {
+    console.error('Markdown 图片上传失败:', error)
+    ElMessage.error(error.message || '图片上传失败')
+  }
 }
 
 const handleManualTypeChange = (type) => {
-    if (form.editorType === type) return;
-    if (form.content && form.content !== '<p><br></p>') {
-        ElMessageBox.confirm(
-            '切换编辑器可能会导致格式丢失。建议在空内容时切换。确认继续吗？',
-            '提示',
-            { confirmButtonText: '确定切换', cancelButtonText: '取消', type: 'warning' }
-        ).then(() => { form.editorType = type }).catch(() => { })
-    } else {
-        form.editorType = type
-    }
+  if (form.editorType === type) return
+
+  const hasContent = String(form.content || '').trim() && form.content !== '<p><br></p>'
+
+  if (hasContent) {
+    ElMessageBox.confirm(
+      '切换编辑器可能会造成部分排版格式丢失，确认继续切换吗？',
+      '切换编辑器',
+      {
+        confirmButtonText: '继续切换',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    ).then(() => {
+      form.editorType = type
+    }).catch(() => {})
+    return
+  }
+
+  form.editorType = type
 }
 
 const loadCategoriesAndTags = async () => {
-    try {
-        const [catRes, tagRes] = await Promise.all([getAllCategoryList(), getAllTagList()])
-        if (catRes?.success) categories.value = catRes.data || []
-        if (tagRes?.success) tags.value = tagRes.data || []
-    } catch (e) {
-        console.error(e)
-    }
+  try {
+    const [catRes, tagRes] = await Promise.all([getAllCategoryList(), getAllTagList()])
+    if (catRes?.success) categories.value = catRes.data || []
+    if (tagRes?.success) tags.value = tagRes.data || []
+  } catch (error) {
+    console.error('加载分类或标签失败:', error)
+  }
 }
 
 const loadArticle = async (id) => {
-    try {
-        const res = await getArticleDetail(id)
-        if (res && res.success && res.data) {
-            const article = res.data
-            Object.assign(form, {
-                title: article.title || '',
-                cover: article.cover || '',
-                categoryId: article.categoryId || null,
-                tags: article.tags || [],
-                summary: article.summary || '',
-                content: article.content || '',
-                editorType: article.editorType || 'markdown',
-                articleSource: article.articleSource || 2,
-                articleSourceLabel: article.articleSourceLabel || '前台发布'
-            })
-        }
-    } catch (e) {
-        console.error(e)
+  try {
+    const res = await getArticleDetail(Number(id))
+    if (res?.success && res.data) {
+      const article = res.data
+      Object.assign(form, {
+        title: article.title || '',
+        cover: article.cover || '',
+        categoryId: article.categoryId || article.category?.id || null,
+        tags: Array.isArray(article.tags)
+          ? article.tags.map((tag) => tag.id || tag.tagId || tag)
+          : [],
+        summary: article.summary || '',
+        content: article.content || '',
+        userId: article.userId || user.value?.userId || null,
+        editorType: article.editorType || 'markdown',
+        articleSource: article.articleSource || 2,
+        articleSourceLabel: article.articleSourceLabel || '前台发布'
+      })
     }
+  } catch (error) {
+    console.error('加载文章失败:', error)
+    ElMessage.error('加载文章失败')
+  }
 }
 
 const onSubmit = async () => {
-    if (!formRef.value) return
-    await formRef.value.validate()
+  if (!formRef.value) return
 
-    if (form.editorType === 'richtext' && editorRef.value.isEmpty()) {
-        ElMessage.warning('请输入文章内容')
-        return
+  await formRef.value.validate()
+
+  if (form.editorType === 'richtext' && editorRef.value?.isEmpty?.()) {
+    ElMessage.warning('请输入文章内容')
+    return
+  }
+
+  submitting.value = true
+
+  try {
+    const payload = {
+      title: form.title?.trim() || '',
+      cover: form.cover,
+      categoryId: form.categoryId,
+      tags: form.tags,
+      summary: form.summary,
+      content: form.content,
+      userId: form.userId || user.value?.userId || null,
+      editorType: form.editorType
     }
 
-    submitting.value = true
-    try {
-        const payload = {
-            title: form.title?.trim() || '',
-            cover: form.cover,
-            categoryId: form.categoryId,
-            tags: form.tags,
-            summary: form.summary,
-            content: form.content,
-            userId: form.userId,
-            editorType: form.editorType
-        }
-        const api = isEdit.value && route.params.id ? updateArticle(route.params.id, payload) : publishArticle(payload)
-        const res = await api
+    const res = isEdit.value && route.params.id
+      ? await updateArticle(route.params.id, payload)
+      : await publishArticle(payload)
 
-        if (res?.success) {
-            ElMessage.success('操作成功')
-            setTimeout(() => router.push('/user'), 1000)
-        } else {
-            ElMessage.error(res?.message || '失败')
-        }
-    } catch (e) {
-        ElMessage.error('提交发生错误')
-    } finally {
-        submitting.value = false
+    if (res?.success) {
+      ElMessage.success(isEdit.value ? '文章修改成功' : '文章发布成功')
+      setTimeout(() => router.push('/user'), 800)
+    } else {
+      ElMessage.error(res?.message || '提交失败')
     }
+  } catch (error) {
+    console.error('提交文章失败:', error)
+    ElMessage.error('提交发生错误')
+  } finally {
+    submitting.value = false
+  }
 }
 
-// 上传文件前校验
 const beforeUpload = (file) => {
-    const isJPG = file.type === 'image/jpeg' || file.type === 'image/png'
-    const isLt2M = file.size / 1024 / 1024 < 2
+  const isAllowed = ['image/jpeg', 'image/png', 'image/webp'].includes(file.type)
+  const isLt2M = file.size / 1024 / 1024 < 2
 
-    if (!isJPG) {
-        showMessage('封面图片只能是 JPG/PNG 格式!', 'error')
-    }
-    if (!isLt2M) {
-        showMessage('封面图片大小不能超过 2MB!', 'error')
-    }
-    return isJPG && isLt2M
+  if (!isAllowed) {
+    ElMessage.error('封面图片只能是 JPG、PNG 或 WEBP 格式')
+  }
+
+  if (!isLt2M) {
+    ElMessage.error('封面图片大小不能超过 2MB')
+  }
+
+  return isAllowed && isLt2M
 }
 
-// 上传文章封面图片
-const handleCoverChange = (file) => {
-    // 表单对象
-    let formData = new FormData()
-    // 添加 file 字段，并将文件传入 
-    formData.append('file', file.raw)
-    uploadFile(formData).then((e) => {
-        // 响参失败，提示错误消息
-        if (e.success == false) {
-            let message = e.message
-            showMessage(message, 'error')
-            return
-        }
-
-        // 成功则设置表单对象中的封面链接，并提示上传成功
-        form.cover = e.data.url
-        showMessage('上传成功')
-    })
+const handleCoverChange = async (file) => {
+  try {
+    const url = await uploadSingleImage(file.raw)
+    form.cover = url
+    ElMessage.success('封面上传成功')
+  } catch (error) {
+    console.error('封面上传失败:', error)
+    ElMessage.error(error.message || '封面上传失败')
+  }
 }
 
 const goBack = () => router.back()
-const resetForm = () => formRef.value?.resetFields()
 
-onMounted(() => {
-    loadCategoriesAndTags()
-    if (route.params.id) {
-        isEdit.value = true
-        loadArticle(route.params.id)
-    }
+const resetForm = () => {
+  const nextState = createDefaultForm()
+  Object.assign(form, nextState)
+
+  if (isEdit.value && route.params.id) {
+    loadArticle(route.params.id)
+  }
+
+  formRef.value?.clearValidate?.()
+}
+
+onMounted(async () => {
+  await userStore.setFrontendUserInfo().catch((error) => {
+    console.error('获取用户信息失败:', error)
+  })
+
+  form.userId = user.value?.userId || null
+  await loadCategoriesAndTags()
+
+  if (route.params.id) {
+    isEdit.value = true
+    await loadArticle(route.params.id)
+  }
 })
 
 onBeforeUnmount(() => {
-    if (editorRef.value) editorRef.value.destroy()
+  if (editorRef.value) {
+    editorRef.value.destroy()
+  }
 })
 </script>
 
 <style scoped>
-/* MdEditor 样式微调：去除默认边框 */
-:deep(.md-editor) {
-    border: none !important;
+.workspace-stat {
+  display: flex;
+  min-width: 110px;
+  flex-direction: column;
+  gap: 0.4rem;
+  border-radius: 1.25rem;
+  border: 1px solid rgba(226, 232, 240, 0.92);
+  background: rgba(255, 255, 255, 0.92);
+  padding: 0.85rem 1rem;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.05);
 }
 
-/* 修复 MdEditor 预览区样式 */
-:deep(.md-editor-preview ul),
-:deep(.md-editor-preview ol) {
-    margin: 1rem 0;
-    padding-left: 1.75rem;
+.workspace-stat__label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #94a3b8;
 }
 
-:deep(.md-editor-preview ul) {
-    list-style-type: disc;
+.workspace-stat__value {
+  font-size: 1rem;
+  color: #0f172a;
 }
 
-:deep(.md-editor-preview ol) {
-    list-style-type: decimal;
+.editor-panel {
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at top left, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.98)),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 1));
+  padding: 1.5rem;
+  box-shadow: 0 20px 48px rgba(15, 23, 42, 0.06);
 }
 
-:deep(.md-editor-preview li) {
-    display: list-item;
-    margin: 0.35rem 0;
+.editor-panel--tips {
+  background: linear-gradient(145deg, #fffaf0, #ffffff);
 }
 
-:deep(.md-editor-preview ul ul) {
-    list-style-type: circle;
+.editor-panel__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
 }
 
-:deep(.md-editor-preview ul ul ul) {
-    list-style-type: square;
+.editor-panel__eyebrow {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #94a3b8;
 }
 
-:deep(.md-editor-preview h1) {
-    font-size: 2em;
-    font-weight: bold;
-    border-bottom: 1px solid #eaecef;
-    padding-bottom: 0.3em;
+.editor-panel__title {
+  margin-top: 0.35rem;
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #0f172a;
 }
 
-:deep(.md-editor-preview h2) {
-    font-size: 1.5em;
-    font-weight: bold;
-    border-bottom: 1px solid #eaecef;
-    padding-bottom: 0.3em;
+.editor-pill {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #2563eb, #0ea5e9);
+  color: white;
+  padding: 0.45rem 0.85rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
-/* WangEditor 样式修复 */
-.wang-editor-wrapper :deep(.w-e-text-container) {
-    ul {
-        list-style: disc inside;
-        margin-bottom: 10px;
-    }
-
-    ol {
-        list-style: decimal inside;
-        margin-bottom: 10px;
-    }
-
-    h1 {
-        font-size: 2em;
-        font-weight: bold;
-        margin: 0.67em 0;
-    }
-
-    h2 {
-        font-size: 1.5em;
-        font-weight: bold;
-        margin: 0.75em 0;
-    }
-
-    p {
-        margin-bottom: 10px;
-        line-height: 1.6;
-    }
+.editor-pill--soft {
+  background: #eff6ff;
+  color: #2563eb;
 }
 
-/* 修复 Toolbar 圆角 */
-.wang-editor-wrapper :deep(.w-e-toolbar) {
-    border-radius: 12px 12px 0 0;
+.editor-title-input {
+  width: 100%;
+  border: none;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.95);
+  background: transparent;
+  padding: 0.75rem 0 1rem;
+  color: #0f172a;
+  font-size: clamp(1.7rem, 2.3vw, 2.55rem);
+  font-weight: 900;
+  line-height: 1.2;
+  outline: none;
 }
 
-/* 全屏层级修复 */
-:deep(.md-editor-fullscreen),
-:deep(.w-e-full-screen-container) {
-    z-index: 9999 !important;
+.editor-title-input::placeholder {
+  color: #cbd5e1;
 }
 
-input:focus {
-    border-color: #3b82f6;
+.editor-help {
+  margin-top: 0.65rem;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: #94a3b8;
 }
 
-/* 强制修正 MdEditor 底部状态栏的高度和可见性 */
-:deep(.md-editor-footer) {
-    height: auto !important;
-    padding: 4px 10px !important;
-    border-top: 1px solid #f1f1f1;
-    background-color: #fff;
+.editor-mode-button {
+  flex: 1;
+  border: none;
+  background: transparent;
+  padding: 0.7rem 0.9rem;
+  border-radius: 1rem;
+  color: #64748b;
+  font-size: 0.92rem;
+  font-weight: 700;
+  transition: all 0.25s ease;
 }
 
-/* 确保没有元素覆盖在底部 */
-:deep(.md-editor) {
-    z-index: 1; 
+.editor-mode-button--active {
+  background: linear-gradient(135deg, #eff6ff, #ffffff);
+  color: #2563eb;
+  box-shadow: 0 10px 24px rgba(37, 99, 235, 0.12);
+}
+
+.cover-uploader {
+  display: flex;
+  min-height: 240px;
+  width: 100%;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px dashed rgba(148, 163, 184, 0.45);
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at top, rgba(59, 130, 246, 0.08), transparent 48%),
+    linear-gradient(180deg, rgba(248, 250, 252, 0.9), rgba(255, 255, 255, 0.98));
+  padding: 1.5rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.cover-uploader:hover {
+  border-color: rgba(37, 99, 235, 0.45);
+  transform: translateY(-2px);
+}
+
+.cover-uploader--filled {
+  position: relative;
+  min-height: 250px;
+  padding: 0;
+  overflow: hidden;
+}
+
+.cover-uploader__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 1.25rem;
+  background: white;
+  color: #2563eb;
+  font-size: 1.4rem;
+  box-shadow: 0 18px 32px rgba(37, 99, 235, 0.12);
+  margin-bottom: 1rem;
+}
+
+.cover-uploader__overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.18), rgba(15, 23, 42, 0.55));
+  color: white;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.cover-uploader--filled:hover .cover-uploader__overlay {
+  opacity: 1;
+}
+
+.editor-tip-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.editor-tip-item__dot {
+  width: 0.55rem;
+  height: 0.55rem;
+  margin-top: 0.55rem;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #f59e0b, #f97316);
+  box-shadow: 0 0 0 5px rgba(245, 158, 11, 0.14);
+  flex-shrink: 0;
+}
+
+.editor-outline-chip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  border: 1px solid rgba(226, 232, 240, 0.96);
+  background: white;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.editor-metric-card {
+  border-radius: 22px;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(248, 250, 252, 0.95));
+  padding: 1rem 1.1rem;
+}
+
+.editor-metric-card__label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.editor-metric-card__value {
+  display: block;
+  margin-top: 0.5rem;
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.rich-editor-shell {
+  overflow: hidden;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 24px;
+  background: white;
+  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.06);
+}
+
+.rich-editor-shell__meta {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.9);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.95));
+}
+
+.rich-editor-shell__toolbar {
+  border-bottom: 1px solid rgba(226, 232, 240, 0.9);
+  background: rgba(248, 250, 252, 0.88);
+}
+
+.rich-editor-shell__content {
+  height: 780px;
+  overflow: hidden;
+}
+
+.editor-action-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.96);
+  padding: 1.25rem 1.4rem;
+  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.05);
+}
+
+:deep(.el-form-item__label) {
+  font-weight: 700;
+  color: #334155;
+}
+
+:deep(.el-select__wrapper),
+:deep(.el-textarea__inner) {
+  border-radius: 18px !important;
+  box-shadow: none !important;
+}
+
+:deep(.el-textarea__inner) {
+  min-height: 140px !important;
+  padding-top: 0.9rem;
+  line-height: 1.75;
+}
+
+:deep(.w-e-toolbar),
+:deep(.w-e-text-container),
+:deep(.w-e-scroll) {
+  border: none !important;
+}
+
+:deep(.w-e-text-container [data-slate-editor]) {
+  padding: 1.2rem 1.25rem 2rem !important;
+}
+
+@media (max-width: 1280px) {
+  .editor-action-bar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 768px) {
+  .editor-panel {
+    padding: 1.1rem;
+    border-radius: 22px;
+  }
+
+  .rich-editor-shell__content {
+    height: 620px;
+  }
 }
 </style>
