@@ -47,7 +47,7 @@ public interface ArticleService {
      * @param findArticleDetailReqVO
      * @return
      */
-    Response findArticleDetail(FindArticleDetailReqVO findArticleDetailReqVO);
+    Response findArticleDetail(FindArticleDetailReqVO findArticleDetailReqVO, HttpServletRequest request);
 
     /**
      * 发布文章

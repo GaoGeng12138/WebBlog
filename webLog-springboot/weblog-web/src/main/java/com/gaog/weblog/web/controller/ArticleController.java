@@ -62,8 +62,9 @@ public class ArticleController {
     @PostMapping("/article/detail")
     @ApiOperation(value = "获取文章详情")
     @ApiOperationLog(description = "获取文章详情")
-    public Response findArticleDetail(@RequestBody @Valid FindArticleDetailReqVO findArticleDetailReqVO) {
-        return articleService.findArticleDetail(findArticleDetailReqVO);
+    public Response findArticleDetail(@RequestBody @Valid FindArticleDetailReqVO findArticleDetailReqVO,
+                                      HttpServletRequest request) {
+        return articleService.findArticleDetail(findArticleDetailReqVO, request);
     }
 
 

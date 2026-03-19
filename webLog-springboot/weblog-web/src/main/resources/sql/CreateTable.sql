@@ -35,6 +35,20 @@ CREATE TABLE `t_article_content`
     PRIMARY KEY (`id`) USING BTREE,
     KEY          `idx_article_id` (`article_id`) USING BTREE
 ) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 ROW_FORMAT=DYNAMIC COMMENT='文章内容表';
+-- t_article_read_log ddl
+CREATE TABLE `t_article_read_log`
+(
+    `id`          bigint(20) unsigned NOT NULL AUTO_INCREMENT COMMENT 'id',
+    `article_id`  bigint(20) unsigned NOT NULL COMMENT '文章ID',
+    `user_id`     bigint(20) unsigned DEFAULT NULL COMMENT '用户ID（登录用户）',
+    `ip_address`  varchar(50) NOT NULL COMMENT 'IP地址',
+    `read_date`   date        NOT NULL COMMENT '阅读日期',
+    `create_time` datetime    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    PRIMARY KEY (`id`) USING BTREE,
+    UNIQUE KEY `uk_article_user_date` (`article_id`,`user_id`,`read_date`) USING BTREE,
+    UNIQUE KEY `uk_article_ip_date` (`article_id`,`ip_address`,`read_date`) USING BTREE,
+    KEY           `idx_read_date` (`read_date`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 ROW_FORMAT=DYNAMIC COMMENT='文章阅读记录表';
 -- t_article_tag_rel ddl
 CREATE TABLE `t_article_tag_rel`
 (

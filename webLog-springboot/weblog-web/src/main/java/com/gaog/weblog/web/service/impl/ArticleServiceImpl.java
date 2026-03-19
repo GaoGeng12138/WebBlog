@@ -9,6 +9,7 @@ import com.gaog.weblog.admin.model.vo.article.UpdateArticleReqVO;
 import com.gaog.weblog.common.domain.dos.ArticleCategoryRelDO;
 import com.gaog.weblog.common.domain.dos.ArticleContentDO;
 import com.gaog.weblog.common.domain.dos.ArticleDO;
+import com.gaog.weblog.common.domain.dos.ArticleReadLogDO;
 import com.gaog.weblog.common.domain.dos.ArticleTagRelDO;
 import com.gaog.weblog.common.domain.dos.BlogSettingDO;
 import com.gaog.weblog.common.domain.dos.CategoryDO;
@@ -17,6 +18,7 @@ import com.gaog.weblog.common.domain.dos.VisitorLogDO;
 import com.gaog.weblog.common.domain.mapper.ArticleCategoryRelMapper;
 import com.gaog.weblog.common.domain.mapper.ArticleContentMapper;
 import com.gaog.weblog.common.domain.mapper.ArticleMapper;
+import com.gaog.weblog.common.domain.mapper.ArticleReadLogMapper;
 import com.gaog.weblog.common.domain.mapper.ArticleTagRelMapper;
 import com.gaog.weblog.common.domain.mapper.CategoryMapper;
 import com.gaog.weblog.common.domain.mapper.SiteSettingMapper;
@@ -74,6 +76,8 @@ public class ArticleServiceImpl implements ArticleService {
 
     @Autowired
     private ArticleMapper articleMapper;
+    @Autowired
+    private ArticleReadLogMapper articleReadLogMapper;
     @Autowired
     private ArticleContentMapper articleContentMapper;
     @Autowired
@@ -326,7 +330,7 @@ public class ArticleServiceImpl implements ArticleService {
      * @return
      */
     @Override
-    public Response findArticleDetail(FindArticleDetailReqVO findArticleDetailReqVO) {
+    public Response findArticleDetail(FindArticleDetailReqVO findArticleDetailReqVO, HttpServletRequest request) {
         Long articleId = findArticleDetailReqVO.getArticleId();
 
         ArticleDO articleDO = articleMapper.selectById(articleId);
@@ -337,10 +341,10 @@ public class ArticleServiceImpl implements ArticleService {
             throw new BizException(ResponseCodeEnum.ARTICLE_NOT_FOUND);
         }
 
-        // 增加文章阅读数
-        articleMapper.increaseReadNum(articleId);
-        // 重新查询文章以获取更新后的阅读数
-        articleDO = articleMapper.selectById(articleId);
+        // 单日内同一登录用户或同一匿名IP仅增加一次文章阅读数
+        if (increaseArticleReadNumIfNeeded(articleId, request)) {
+            articleDO = articleMapper.selectById(articleId);
+        }
 
         // 查询正文
         ArticleContentDO articleContentDO = articleContentMapper.selectByArticleId(articleId);
@@ -811,6 +815,57 @@ public class ArticleServiceImpl implements ArticleService {
                 // 忽略重复插入错误（并发情况下可能出现）
                 log.warn("==> 访客记录已存在，忽略: userId={}, ip={}, date={}", currentUserId, ipAddress, today);
             }
+        }
+    }
+
+    /**
+     * 单日内按“登录用户 / 匿名IP + 文章”维度去重统计阅读数
+     *
+     * @param articleId 文章ID
+     * @param request HttpServletRequest
+     * @return 本次是否成功增加阅读数
+     */
+    private boolean increaseArticleReadNumIfNeeded(Long articleId, HttpServletRequest request) {
+        LocalDate today = LocalDate.now();
+        String ipAddress = IpUtil.getClientIp(request);
+
+        Long currentUserId = null;
+        try {
+            currentUserId = SecurityContextUtil.getCurrentUserId();
+        } catch (Exception e) {
+            // 未登录用户，忽略
+        }
+
+        LambdaQueryWrapper<ArticleReadLogDO> wrapper = Wrappers.<ArticleReadLogDO>lambdaQuery()
+                .eq(ArticleReadLogDO::getArticleId, articleId)
+                .eq(ArticleReadLogDO::getReadDate, today);
+
+        if (Objects.nonNull(currentUserId)) {
+            wrapper.eq(ArticleReadLogDO::getUserId, currentUserId);
+        } else {
+            wrapper.eq(ArticleReadLogDO::getIpAddress, ipAddress);
+        }
+
+        Long count = articleReadLogMapper.selectCount(wrapper);
+        if (Objects.nonNull(count) && count > 0) {
+            return false;
+        }
+
+        ArticleReadLogDO articleReadLog = ArticleReadLogDO.builder()
+                .articleId(articleId)
+                .userId(currentUserId)
+                .ipAddress(ipAddress)
+                .readDate(today)
+                .build();
+
+        try {
+            articleReadLogMapper.insert(articleReadLog);
+            articleMapper.increaseReadNum(articleId);
+            return true;
+        } catch (Exception e) {
+            log.warn("==> 文章阅读记录已存在，忽略: articleId={}, userId={}, ip={}, date={}",
+                    articleId, currentUserId, ipAddress, today);
+            return false;
         }
     }
 }
