@@ -5,8 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.validator.constraints.Length;
 
-import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.util.List;
 
@@ -26,7 +26,7 @@ public class FrontendUpdateArticleReqVO {
     @NotNull(message = "文章 ID 不能为空")
     private Long id;
 
-    @NotBlank(message = "文章标题不能为空")
+    @Length(max = 40, message = "文章标题字数需小于 40")
     private String title;
 
     @NotBlank(message = "文章内容不能为空")

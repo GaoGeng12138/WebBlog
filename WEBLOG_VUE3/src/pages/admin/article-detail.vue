@@ -9,8 +9,9 @@
         <el-card shadow="never" class="admin-card mt-5">
             <el-form ref="formRef" :model="form" :rules="rules" label-width="80px" size="large">
                 <!-- 文章标题 -->
-                <el-form-item label="文章标题" prop="title">
-                    <el-input v-model="form.title" placeholder="请输入文章标题" maxlength="50" show-word-limit clearable class="admin-input" />
+                <el-form-item label="文章标题">
+                    <el-input v-model="form.title" placeholder="请输入文章标题（选填）" maxlength="40" show-word-limit clearable class="admin-input" />
+                    <el-text class="mx-1" type="info" size="small">可留空，仅展示封面与正文内容</el-text>
                 </el-form-item>
 
                 <!-- 文章封面 -->
@@ -110,10 +111,6 @@ const form = reactive({
 
 // 表单校验规则
 const rules = {
-    title: [
-        { required: true, message: '请输入文章标题', trigger: 'blur' },
-        { min: 1, max: 50, message: '标题长度在 1 到 50 个字符', trigger: 'blur' }
-    ],
     content: [
         { required: true, message: '请输入文章内容', trigger: 'blur' }
     ],
@@ -238,7 +235,7 @@ const onSubmit = () => {
         btnLoading.value = true
         // 将 tagIds 从标签名称数组转换为后端需要的格式
         const submitData = {
-            title: form.title,
+            title: form.title?.trim() || '',
             cover: form.cover,
             categoryId: form.categoryId,
             summary: form.summary,
@@ -298,7 +295,7 @@ const loadArticleDetail = () => {
     getArticleDetail(articleId.value).then((res) => {
         if (res.success) {
             const article = res.data
-            form.title = article.title
+            form.title = article.title || ''
             form.cover = article.cover
             form.categoryId = article.categoryId
             // 将标签 ID 数组转换为标签名称数组

@@ -46,6 +46,7 @@ import com.gaog.weblog.web.model.vo.article.FrontendUpdateArticleReqVO;
 import com.gaog.weblog.web.service.ArticleService;
 import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -546,7 +547,7 @@ public class ArticleServiceImpl implements ArticleService {
         }
 
         ArticleDO articleDO = ArticleDO.builder()
-                .title(publishArticleReqVO.getTitle())
+                .title(StringUtils.trimToEmpty(publishArticleReqVO.getTitle()))
                 .cover(publishArticleReqVO.getCover())
                 .summary(publishArticleReqVO.getSummary())
                 .author(nickName)
@@ -713,7 +714,7 @@ public class ArticleServiceImpl implements ArticleService {
         // 2. 更新文章基本信息
         ArticleDO updateArticleDO = ArticleDO.builder()
                 .id(articleId)
-                .title(updateArticleReqVO.getTitle())
+                .title(StringUtils.trimToEmpty(updateArticleReqVO.getTitle()))
                 .cover(updateArticleReqVO.getCover())
                 .summary(updateArticleReqVO.getSummary())
                 .status(setting != null && Boolean.TRUE.equals(setting.getArticleReviewRequired())

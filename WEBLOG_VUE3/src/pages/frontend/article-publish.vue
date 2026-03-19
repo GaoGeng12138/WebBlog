@@ -37,9 +37,10 @@
 
                 <el-form ref="formRef" :model="form" :rules="rules" label-position="top" size="large">
 
-                    <el-form-item prop="title" class="mb-8">
-                        <input v-model="form.title" placeholder="请输入文章标题..."
+                    <el-form-item class="mb-8">
+                        <input v-model="form.title" placeholder="请输入文章标题（选填）..."
                             class="w-full text-3xl font-bold border-none outline-none placeholder-gray-300 border-b border-gray-100 focus:border-gray-100 bg-transparent py-4 transition-colors" />
+                        <p class="mt-2 text-sm text-gray-400">可不填写标题，仅展示封面与正文内容。</p>
                     </el-form-item>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
@@ -206,7 +207,6 @@ const onMdUploadImg = async (files, callback) => {
 };
 
 const rules = {
-    title: [{ required: true, message: '请输入文章标题', trigger: 'blur' }],
     categoryId: [{ required: true, message: '请选择分类', trigger: 'change' }],
     cover: [{ required: true, message: '请上传封面图片', trigger: 'change' }],
     content: [{ required: true, message: '文章内容不能为空', trigger: 'blur' }]
@@ -269,7 +269,7 @@ const onSubmit = async () => {
     submitting.value = true
     try {
         const payload = {
-            title: form.title,
+            title: form.title?.trim() || '',
             cover: form.cover,
             categoryId: form.categoryId,
             tags: form.tags,

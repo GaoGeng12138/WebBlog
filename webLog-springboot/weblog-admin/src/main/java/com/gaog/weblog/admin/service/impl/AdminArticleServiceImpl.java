@@ -84,7 +84,7 @@ public class AdminArticleServiceImpl implements AdminArticleService {
         String nickname = SecurityContextUtil.getCurrentUserNickname();
 
         ArticleDO articleDO = ArticleDO.builder()
-                .title(publishArticleReqVO.getTitle())
+                .title(StringUtils.trimToEmpty(publishArticleReqVO.getTitle()))
                 .cover(publishArticleReqVO.getCover())
                 .summary(publishArticleReqVO.getSummary())
                 .status(ArticleStatusEnum.PUBLISH.getCode())
@@ -457,7 +457,7 @@ public class AdminArticleServiceImpl implements AdminArticleService {
         // 2. 更新文章基本信息
         ArticleDO updateArticleDO = ArticleDO.builder()
                 .id(articleId)
-                .title(updateArticleReqVO.getTitle())
+                .title(StringUtils.trimToEmpty(updateArticleReqVO.getTitle()))
                 .cover(updateArticleReqVO.getCover())
                 .summary(updateArticleReqVO.getSummary())
                 .updateTime(LocalDateTime.now())

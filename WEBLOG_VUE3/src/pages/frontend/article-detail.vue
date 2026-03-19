@@ -68,7 +68,7 @@
                 </div>
 
                 <div class="flex justify-between items-start gap-4">
-                  <h1 class="text-3xl sm:text-4xl font-extrabold text-gray-900 leading-tight">{{ article.title }}</h1>
+                  <h1 v-if="article.title" class="text-3xl sm:text-4xl font-extrabold text-gray-900 leading-tight">{{ article.title }}</h1>
                   
                   <!-- 收藏按钮 - 仅在功能开启且用户登录时显示 -->
                   <button 
@@ -100,7 +100,7 @@
 
               <!-- 封面图 -->
               <div v-if="article.cover" class="mb-10 rounded-2xl overflow-hidden bg-gray-50 border border-gray-100 shadow-sm relative group">
-                <img :src="article.cover" :alt="article.title" class="w-full h-auto max-h-[500px] object-cover transition-transform duration-700 group-hover:scale-105">
+                <img :src="article.cover" :alt="article.title || article.summary || '文章封面'" class="w-full h-auto max-h-[500px] object-cover transition-transform duration-700 group-hover:scale-105">
               </div>
 
               <!-- 正文内容 -->
@@ -113,7 +113,7 @@
                   <router-link v-if="displayPreArticle" :to="`/article/${displayPreArticle.articleId}`"
                     class="group flex flex-col p-5 rounded-2xl border border-gray-100 bg-gray-50/50 hover:bg-white hover:border-blue-200 hover:shadow-md transition-all duration-300">
                     <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 group-hover:text-blue-500 transition-colors">Previous</span>
-                    <span class="text-base font-bold text-gray-900 line-clamp-2 group-hover:text-blue-600">{{ displayPreArticle.articleTitle }}</span>
+                    <span class="text-base font-bold text-gray-900 line-clamp-2 group-hover:text-blue-600">{{ displayPreArticle.articleTitle || '无标题文章' }}</span>
                   </router-link>
                   <div v-else class="flex flex-col p-5 rounded-2xl border border-dashed border-gray-200 bg-gray-50/30">
                     <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Previous</span>
@@ -124,7 +124,7 @@
                   <router-link v-if="displayNextArticle" :to="`/article/${displayNextArticle.articleId}`"
                     class="group flex flex-col md:text-right p-5 rounded-2xl border border-gray-100 bg-gray-50/50 hover:bg-white hover:border-blue-200 hover:shadow-md transition-all duration-300">
                     <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 group-hover:text-blue-500 transition-colors">Next</span>
-                    <span class="text-base font-bold text-gray-900 line-clamp-2 group-hover:text-blue-600">{{ displayNextArticle.articleTitle }}</span>
+                    <span class="text-base font-bold text-gray-900 line-clamp-2 group-hover:text-blue-600">{{ displayNextArticle.articleTitle || '无标题文章' }}</span>
                   </router-link>
                   <div v-else class="flex flex-col md:text-right p-5 rounded-2xl border border-dashed border-gray-200 bg-gray-50/30">
                     <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Next</span>
@@ -502,7 +502,7 @@ async function loadArticle() {
       await resolveCategoryNeighbors()
       
       // 动态更新浏览器标签页标题
-      document.title = `${article.value.title} - ThoughtFlow`
+      document.title = `${article.value.title || '文章详情'} - ThoughtFlow`
       
       // 检查是否已收藏（只有登录用户才会检查）
       if (isLoggedIn.value) {

@@ -9,7 +9,7 @@
       <img
         v-if="article.cover"
         :src="article.cover"
-        :alt="article.title"
+        :alt="articleAlt"
         class="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
       />
       <div v-else class="card-fallback">
@@ -31,14 +31,7 @@
 
     <div class="flex min-w-0 flex-col justify-between p-3 sm:p-3.5">
       <div>
-        <h2
-          class="line-clamp-2 text-[0.93rem] font-medium leading-[1.35rem] tracking-[0.01em] text-slate-800 transition-colors duration-300 group-hover:text-amber-600"
-          :class="{ 'text-amber-600': isCurrentArticle }"
-        >
-          {{ article.title }}
-        </h2>
-
-        <p class="mt-1.5 line-clamp-2 text-[0.84rem] leading-[1.35rem] text-green-600/95">
+        <p class="line-clamp-3 text-[0.9rem] leading-[1.45rem] text-slate-700/95">
           {{ articleContentPreview }}
         </p>
       </div>
@@ -73,7 +66,7 @@
       <img
         v-if="article.cover"
         :src="article.cover"
-        :alt="article.title"
+        :alt="articleAlt"
         class="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
       />
       <div v-else class="featured-fallback">
@@ -103,10 +96,7 @@
     <div class="flex flex-col justify-between p-6 sm:p-8">
       <div>
         <p class="text-sm font-semibold uppercase tracking-[0.25em] text-slate-400">焦点文章</p>
-        <h2 class="mt-4 text-2xl font-black leading-tight text-slate-950 transition-colors duration-300 group-hover:text-blue-600 sm:text-[2rem]">
-          {{ article.title }}
-        </h2>
-        <p class="mt-4 line-clamp-4 text-[15px] leading-8 text-slate-600">
+        <p class="mt-4 line-clamp-5 text-[15px] leading-8 text-slate-600">
           {{ articleSummary }}
         </p>
       </div>
@@ -142,7 +132,7 @@
       <img
         v-if="article.cover"
         :src="article.cover"
-        :alt="article.title"
+        :alt="articleAlt"
         class="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
       />
       <div v-else class="card-fallback">
@@ -157,13 +147,9 @@
     </div>
 
     <div class="px-3.5 py-3">
-      <h2
-        class="line-clamp-2 min-h-[2.35rem] text-[13.5px] font-medium leading-5 tracking-[0.01em] text-slate-800 transition-colors duration-300 group-hover:text-amber-600"
-        :class="{ 'text-amber-600': isCurrentArticle }"
-      >
-        {{ article.title }}
-      </h2>
-
+      <p class="line-clamp-3 min-h-[3.6rem] text-[13.5px] leading-5 text-slate-700/95">
+        {{ articleSummary }}
+      </p>
       <div class="mt-1.5 flex flex-wrap items-center gap-2 text-[11px] text-slate-500">
         <span v-if="article.author" class="inline-flex items-center gap-1.5">
           <svg class="h-3 w-3 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -242,6 +228,10 @@ const articleSummary = computed(() => {
 
 const articleContentPreview = computed(() => {
   return trimContent(article.value.content, 120)
+})
+
+const articleAlt = computed(() => {
+  return article.value.title || article.value.summary || '文章封面'
 })
 
 const readTimeText = computed(() => {
