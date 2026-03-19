@@ -47,8 +47,11 @@
             <el-dropdown class="flex items-center justify-center h-full" @command="handleCommand">
                 <span class="el-dropdown-link flex items-center justify-center text-gray-700 text-sm cursor-pointer h-full px-3 hover:bg-gray-100 transition-colors rounded-md outline-none" style="outline: none !important;">
                     <!-- 头像 Avatar -->
-                    <el-avatar class="mr-2" :size="32"
-                        src="https://img.quanxiaoha.com/quanxiaoha/f97361c0429d4bb1bc276ab835843065.jpg" />
+                    <img
+                        :src="displayAvatar"
+                        @error="handleAvatarError"
+                        alt="avatar"
+                        class="mr-2 w-8 h-8 rounded-full object-cover border border-gray-200" />
                     <span class="hidden md:inline mr-1">{{ userStore.userInfo.username }}</span>
                     <el-icon class="el-icon--right hidden md:inline">
                         <arrow-down />
@@ -101,7 +104,7 @@ import { useMenuStore } from '@/stores/menu';
 import { showMessage, showModel } from '@/composables/util';
 import { useUserStore } from '@/stores/user.js';
 import { useFullscreen } from '@vueuse/core';
-import { reactive, ref, watch, onBeforeUnmount, onMounted, } from 'vue';
+import { computed, reactive, ref, watch, onBeforeUnmount, onMounted, } from 'vue';
 import { useRouter } from 'vue-router';
 import { updateAdminPassword } from '@/api/admin/user.js';
 // Import House icon
@@ -110,6 +113,8 @@ import { House } from '@element-plus/icons-vue';
 // 引入了用户 Store
 const userStore = useUserStore()
 const router = useRouter()
+const defaultAvatar = `${import.meta.env.BASE_URL}default-avatar.svg`
+const displayAvatar = computed(() => userStore.userInfo?.avatar || defaultAvatar)
 
 // 对话框是否显示
 const dialogVisible = ref(false)
@@ -119,6 +124,13 @@ const { isFullscreen, toggle } = useFullscreen()
 
 // 刷新页面
 const handleRefresh = () => location.reload()
+
+const handleAvatarError = (event) => {
+    if (event.target.src.endsWith('default-avatar.svg')) {
+        return
+    }
+    event.target.src = defaultAvatar
+}
 
 // 回到前台页面
 const goToFrontend = () => {

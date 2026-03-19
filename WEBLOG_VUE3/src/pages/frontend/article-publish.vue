@@ -353,9 +353,29 @@ onBeforeUnmount(() => {
 /* 修复 MdEditor 预览区样式 */
 :deep(.md-editor-preview ul),
 :deep(.md-editor-preview ol) {
-    list-style: revert;
-    margin: revert;
-    padding: revert;
+    margin: 1rem 0;
+    padding-left: 1.75rem;
+}
+
+:deep(.md-editor-preview ul) {
+    list-style-type: disc;
+}
+
+:deep(.md-editor-preview ol) {
+    list-style-type: decimal;
+}
+
+:deep(.md-editor-preview li) {
+    display: list-item;
+    margin: 0.35rem 0;
+}
+
+:deep(.md-editor-preview ul ul) {
+    list-style-type: circle;
+}
+
+:deep(.md-editor-preview ul ul ul) {
+    list-style-type: square;
 }
 
 :deep(.md-editor-preview h1) {

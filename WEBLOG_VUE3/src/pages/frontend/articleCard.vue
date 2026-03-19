@@ -22,15 +22,15 @@
 
       <div class="absolute inset-0 bg-gradient-to-t from-slate-950/50 via-slate-900/5 to-transparent"></div>
 
-      <div class="absolute left-2.5 top-2.5">
-        <span v-if="displayCategory" class="category-chip" :class="categoryToneClass">
-          {{ displayCategory }}
-        </span>
-      </div>
     </div>
 
     <div class="flex min-w-0 flex-col justify-between p-3 sm:p-3.5">
       <div>
+        <div v-if="displayCategory" class="mb-2">
+          <span class="category-chip" :class="categoryToneClass">
+            {{ displayCategory }}
+          </span>
+        </div>
         <p class="line-clamp-3 text-[0.9rem] leading-[1.45rem] text-slate-700/95">
           {{ articleContentPreview }}
         </p>

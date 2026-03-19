@@ -46,6 +46,11 @@
             </div>
 
             <div v-else-if="article" class="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 sm:p-10 lg:p-14">
+              <!-- 无标题且无摘要时，优先展示封面 -->
+              <div v-if="showCoverBeforeHeader" class="mb-10 rounded-2xl overflow-hidden bg-gray-50 border border-gray-100 shadow-sm relative group">
+                <img :src="article.cover" :alt="article.title || article.summary || '文章封面'" class="w-full h-auto max-h-[500px] object-cover transition-transform duration-700 group-hover:scale-105">
+              </div>
+
               <!-- 文章头部信息 -->
               <header class="mb-10">
                 <div class="flex flex-wrap items-center gap-3 text-sm text-gray-500 mb-6">
@@ -90,6 +95,10 @@
                   </button>
                 </div>
 
+                <p v-if="article.summary" class="mt-5 max-w-3xl text-base leading-8 text-slate-600">
+                  {{ article.summary }}
+                </p>
+
                 <div v-if="article.tags && article.tags.length" class="flex flex-wrap gap-2 mt-6">
                   <span v-for="tag in article.tags" :key="tag.id || tag.name" 
                     class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors cursor-pointer">
@@ -99,7 +108,7 @@
               </header>
 
               <!-- 封面图 -->
-              <div v-if="article.cover" class="mb-10 rounded-2xl overflow-hidden bg-gray-50 border border-gray-100 shadow-sm relative group">
+              <div v-if="showCoverAfterHeader" class="mb-10 rounded-2xl overflow-hidden bg-gray-50 border border-gray-100 shadow-sm relative group">
                 <img :src="article.cover" :alt="article.title || article.summary || '文章封面'" class="w-full h-auto max-h-[500px] object-cover transition-transform duration-700 group-hover:scale-105">
               </div>
 
@@ -224,6 +233,18 @@ const displayNextArticle = computed(() => {
     return categoryNeighbors.value.nextArticle
   }
   return article.value?.nextArticle || null
+})
+
+const hasArticleTitle = computed(() => !!article.value?.title?.trim())
+
+const hasArticleSummary = computed(() => !!article.value?.summary?.trim())
+
+const showCoverBeforeHeader = computed(() => {
+  return !!article.value?.cover && !hasArticleTitle.value && !hasArticleSummary.value
+})
+
+const showCoverAfterHeader = computed(() => {
+  return !!article.value?.cover && !showCoverBeforeHeader.value
 })
 
 onMounted(() => {
@@ -719,9 +740,26 @@ function handleCollectClickForGuest() {
   padding-left: 1.5rem;
 }
 
+::v-deep(.article-content ul) {
+  list-style-type: disc;
+}
+
+::v-deep(.article-content ol) {
+  list-style-type: decimal;
+}
+
 ::v-deep(.article-content li) {
+  display: list-item;
   margin: 0.55rem 0;
   padding-left: 0.2rem;
+}
+
+::v-deep(.article-content ul ul) {
+  list-style-type: circle;
+}
+
+::v-deep(.article-content ul ul ul) {
+  list-style-type: square;
 }
 
 ::v-deep(.article-content blockquote) {
