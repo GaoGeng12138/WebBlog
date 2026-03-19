@@ -24,7 +24,7 @@ spring:
 # minio
 #=================================================================
 minio:
-  endpoint: ${MINIO_ENDPOINT:http://${MINIO_HOST:minio}:${MINIO_PORT:9000}}
+  endpoint: ${MINIO_ENDPOINT:https://glris.online/minio}
   accessKey: ${MINIO_ACCESSKEY:root}
   secretKey: ${MINIO_SECRETKEY:95833414}
   bucketName: ${MINIO_BUCKETNAME:weblog}
