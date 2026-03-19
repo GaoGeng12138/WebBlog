@@ -48,10 +48,10 @@ instance.interceptors.response.use(response => {
         if (resp.data && resp.data.message) {
             message = resp.data.message
         }
-        
+
         // 检查特定的认证错误模式 (errorCode: 20002, message包含"无访问权限，请先登录！")
         if ((resp.data && resp.data.errorCode === '20002' && message && message.includes('无访问权限')) ||
-            resp.status === 401 || 
+            resp.status === 401 ||
             (message && /失效|未授权|Unauthorized/i.test(message))) {
             try {
                 removeToken()

@@ -173,7 +173,7 @@ const routes = [
 // 创建路由实例
 const router = createRouter({
     // 指定路由的历史管理方式，hash 模式指的是 URL 的路径是通过 hash 符号（#）进行标识
-    history: createWebHistory(),
+    history: createWebHistory(import.meta.env.BASE_URL),
     // routes: routes 的缩写
     routes
 });
