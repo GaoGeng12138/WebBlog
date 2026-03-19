@@ -19,7 +19,7 @@
                 v-if="item.cover"
                 :src="item.cover"
                 :alt="item.title"
-                class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                class="h-full w-full bg-slate-950 object-contain transition-transform duration-500 group-hover:scale-[1.02]"
               />
               <div v-else class="sidebar-hot-cover__fallback">
                 <span class="sidebar-hot-cover__glow"></span>

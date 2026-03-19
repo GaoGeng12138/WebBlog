@@ -10,7 +10,7 @@
         v-if="article.cover"
         :src="article.cover"
         :alt="articleAlt"
-        class="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+        class="h-full w-full bg-slate-950 object-contain transition-transform duration-500 ease-out group-hover:scale-[1.02]"
       />
       <div v-else class="card-fallback">
         <div class="card-fallback__shape card-fallback__shape--one"></div>
@@ -31,7 +31,10 @@
             {{ displayCategory }}
           </span>
         </div>
-        <p class="line-clamp-3 text-[0.9rem] leading-[1.45rem] text-slate-700/95">
+        <h3 class="line-clamp-2 text-[0.98rem] font-bold leading-6 text-slate-900">
+          {{ article.title || '未命名文章' }}
+        </h3>
+        <p class="mt-1.5 line-clamp-3 text-[0.9rem] leading-[1.45rem] text-slate-600/95">
           {{ articleContentPreview }}
         </p>
       </div>
@@ -67,7 +70,7 @@
         v-if="article.cover"
         :src="article.cover"
         :alt="articleAlt"
-        class="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+        class="h-full w-full bg-slate-950 object-contain transition-transform duration-700 ease-out group-hover:scale-[1.02]"
       />
       <div v-else class="featured-fallback">
         <div class="featured-fallback__orb"></div>
@@ -133,7 +136,7 @@
         v-if="article.cover"
         :src="article.cover"
         :alt="articleAlt"
-        class="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+        class="h-full w-full bg-slate-950 object-contain transition-transform duration-500 ease-out group-hover:scale-[1.02]"
       />
       <div v-else class="card-fallback">
         <div class="card-fallback__shape card-fallback__shape--one"></div>
@@ -147,7 +150,10 @@
     </div>
 
     <div class="px-3.5 py-3">
-      <p class="line-clamp-3 min-h-[3.6rem] text-[13.5px] leading-5 text-slate-700/95">
+      <h3 class="line-clamp-2 min-h-[2.7rem] text-[15px] font-bold leading-5 text-slate-900">
+        {{ article.title || '未命名文章' }}
+      </h3>
+      <p class="mt-1.5 line-clamp-2 min-h-[2.8rem] text-[13px] leading-5 text-slate-600/95">
         {{ articleSummary }}
       </p>
       <div class="mt-1.5 flex flex-wrap items-center gap-2 text-[11px] text-slate-500">
