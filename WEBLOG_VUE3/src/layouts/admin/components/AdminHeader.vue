@@ -122,8 +122,8 @@ const handleRefresh = () => location.reload()
 
 // 回到前台页面
 const goToFrontend = () => {
-    // Navigate to the frontend home page
-    window.open('/', '_blank');
+    const frontendHome = router.resolve({ path: '/' }).href
+    window.open(frontendHome, '_blank')
 }
 
 //引入菜单 store

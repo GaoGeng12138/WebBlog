@@ -9,7 +9,7 @@
         
         <div class="relative z-10 flex justify-center mb-4 mt-2">
           <div class="relative">
-            <el-avatar :size="80" :src="user.avatar || 'https://api.dicebear.com/7.x/shapes/svg?seed=DefaultUser&backgroundColor=c0aede'"
+            <el-avatar :size="80" :src="displayAvatar"
               class="border-4 border-white shadow-md z-10 relative group-hover:scale-105 transition-transform duration-500" />
             <!-- 头像呼吸发光效果 -->
             <div class="absolute inset-0 bg-blue-400 rounded-full blur-md opacity-20 group-hover:opacity-40 animate-pulse-slow z-0"></div>
@@ -126,6 +126,8 @@ const router = useRouter()
 const userStore = useUserStore()
 const siteConfig = useSiteConfigStore()
 const user = computed(() => userStore.frontendUserInfo)
+const defaultAvatar = `${import.meta.env.BASE_URL}default-avatar.svg`
+const displayAvatar = computed(() => user.value?.avatar || defaultAvatar)
 
 // 检查是否有任何社交链接需要显示
 const hasSocialLinks = computed(() => {

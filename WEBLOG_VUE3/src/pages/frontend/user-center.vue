@@ -38,7 +38,7 @@
                         <div class="relative -mt-20 md:-mt-24 mb-4 md:mb-0 md:mr-6 flex-shrink-0">
                             <div
                                 class="w-32 h-32 md:w-40 md:h-40 rounded-full border-[6px] border-white bg-white shadow-md overflow-hidden group cursor-pointer relative">
-                                <img :src="user.avatar || '/pics/default-avatar.png'"
+                                <img :src="displayAvatar" @error="handleAvatarError"
                                     class="w-full h-full object-cover" />
                                 <div
                                     class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
@@ -666,6 +666,8 @@ const userStore = useUserStore()
 const siteConfig = useSiteConfigStore()
 const user = computed(() => userStore.frontendUserInfo)
 const router = useRouter()
+const defaultAvatar = `${import.meta.env.BASE_URL}default-avatar.svg`
+const displayAvatar = computed(() => user.value?.avatar || defaultAvatar)
 
 const articleCount = ref(0)
 const articlePagination = reactive({
@@ -1120,6 +1122,13 @@ const loadActivityTrend = (timeRange = 'week') => {
 
 const goHome = () => {
     router.push('/')
+}
+
+const handleAvatarError = (event) => {
+    if (event.target.src.endsWith('default-avatar.svg')) {
+        return
+    }
+    event.target.src = defaultAvatar
 }
 
 const logout = () => {

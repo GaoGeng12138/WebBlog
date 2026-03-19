@@ -6,7 +6,7 @@
     <div v-else-if="user && user.nickname" class="flex items-center gap-2">
       <el-dropdown trigger="click">
         <div class="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
-          <img :src="user.avatar || '/pics/default-avatar.png'" alt="avatar" class="w-8 h-8 rounded-full object-cover border border-gray-200" />
+          <img :src="displayAvatar" @error="handleAvatarError" alt="avatar" class="w-8 h-8 rounded-full object-cover border border-gray-200" />
         </div>
         <template #dropdown>
           <el-dropdown-menu>
@@ -41,6 +41,15 @@ const router = useRouter()
 const userStore = useUserStore()
 const user = computed(() => userStore.frontendUserInfo)
 const loading = computed(() => false)
+const defaultAvatar = `${import.meta.env.BASE_URL}default-avatar.svg`
+const displayAvatar = computed(() => user.value?.avatar || defaultAvatar)
+
+const handleAvatarError = (event) => {
+  if (event.target.src.endsWith('default-avatar.svg')) {
+    return
+  }
+  event.target.src = defaultAvatar
+}
 
 // 跳转登录页
 const goLogin = () => {

@@ -20,6 +20,20 @@ import { createRouter, createWebHistory } from "vue-router";
 import { useSiteConfigStore } from '@/stores/siteConfig'
 import { ElMessage } from 'element-plus'
 
+const frontendFavicon = `${import.meta.env.BASE_URL}thoughtflow_logo.png`
+const adminFavicon = `${import.meta.env.BASE_URL}thoughtflow-admin.svg`
+
+function setFavicon(href) {
+    let favicon = document.querySelector('link[data-app-favicon="true"]')
+    if (!favicon) {
+        favicon = document.createElement('link')
+        favicon.setAttribute('rel', 'icon')
+        favicon.setAttribute('data-app-favicon', 'true')
+        document.head.appendChild(favicon)
+    }
+    favicon.setAttribute('type', href.endsWith('.svg') ? 'image/svg+xml' : 'image/png')
+    favicon.setAttribute('href', href)
+}
 
 // 统一在这里声明所有路由
 const routes = [
@@ -206,7 +220,11 @@ router.beforeEach((to, from, next) => {
 // 动态设置页面标题
 router.afterEach((to) => {
     const pageTitle = to.meta.title || 'ThoughtFlow'
-    document.title = pageTitle + ' - ThoughtFlow'
+    const isAdminRoute = to.path.startsWith('/admin')
+    document.title = isAdminRoute
+        ? `${pageTitle} - ThoughtFlow 管理台`
+        : `${pageTitle} - ThoughtFlow`
+    setFavicon(isAdminRoute ? adminFavicon : frontendFavicon)
 })
 
 // ES6 模块导出语句，它用于将 router 对象导出，以便其他文件可以导入和使用这个对象

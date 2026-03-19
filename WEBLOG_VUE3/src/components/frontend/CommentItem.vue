@@ -4,7 +4,7 @@
       <!-- User Avatar -->
       <div class="flex-shrink-0">
         <div v-if="comment.avatar" class="w-10 h-10 rounded-full overflow-hidden">
-          <img :src="comment.avatar" :alt="comment.nickname" class="w-full h-full object-cover" />
+          <img :src="comment.avatar" :alt="comment.nickname" class="w-full h-full object-cover" @error="handleAvatarError" />
         </div>
         <div v-else class="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold">
           {{ comment.nickname?.charAt(0) || 'U' }}
@@ -255,6 +255,10 @@ function handleReply() {
 
 function handleDelete() {
   emit('delete', props.comment.id)
+}
+
+function handleAvatarError(event) {
+  event.target.src = `${import.meta.env.BASE_URL}default-avatar.svg`
 }
 </script>
 
