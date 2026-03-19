@@ -27,6 +27,15 @@ public class MinioUtil {
     @Autowired
     private MinioClient minioClient;
 
+    private String getFileAccessBaseUrl() {
+        String publicEndpoint = minioProperties.getPublicEndpoint();
+        String baseUrl = (publicEndpoint != null && !publicEndpoint.trim().isEmpty())
+                ? publicEndpoint
+                : minioProperties.getEndpoint();
+
+        return baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl;
+    }
+
     /**
      * 上传文件
      *
@@ -71,7 +80,7 @@ public class MinioUtil {
                 .build());
 
         // 返回文件的访问链接
-        String url = String.format("%s/%s/%s", minioProperties.getEndpoint(), minioProperties.getBucketName(), objectName);
+        String url = String.format("%s/%s/%s", getFileAccessBaseUrl(), minioProperties.getBucketName(), objectName);
         log.info("==> 上传文件至 Minio 成功，访问路径: {}", url);
         return url;
     }
