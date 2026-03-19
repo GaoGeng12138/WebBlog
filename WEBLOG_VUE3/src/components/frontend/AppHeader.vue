@@ -82,7 +82,7 @@ import UserBadge from '@/components/frontend/UserBadge.vue'
 import { useUserStore } from '@/stores/user'
 import { useSiteConfigStore } from '@/stores/siteConfig'
 
-const fallbackLogo = '/thoughtflow_logo.png'
+const fallbackLogo = `${import.meta.env.BASE_URL}thoughtflow_logo.png`
 
 const userStore = useUserStore()
 const siteConfig = useSiteConfigStore()
