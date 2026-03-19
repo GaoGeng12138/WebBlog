@@ -53,14 +53,22 @@
 
             <div v-else-if="article" class="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 sm:p-10 lg:p-14">
               <!-- 封面图 -->
-              <div v-if="article.cover" class="mb-10 rounded-2xl overflow-hidden bg-gray-50 border border-gray-100 shadow-sm relative group">
-                <img :src="article.cover" :alt="article.title || article.summary || '文章封面'" class="w-full h-auto max-h-[500px] object-cover transition-transform duration-700 group-hover:scale-105">
+              <div v-if="article.cover" class="mb-8 rounded-[28px] overflow-hidden border border-slate-200/80 bg-slate-950 shadow-[0_24px_70px_rgba(15,23,42,0.12)]">
+                <img :src="article.cover" :alt="article.title || article.summary || '文章封面'" class="article-hero-image w-full h-auto max-h-[560px] object-contain">
               </div>
 
               <!-- 文章头部信息 -->
               <header class="mb-10">
-                <div class="flex flex-wrap items-center gap-3 text-sm text-gray-500 mb-6">
-                   <div v-if="article.category" class="bg-blue-50 text-blue-600 px-3 py-1 rounded-full font-medium text-xs">
+                <div v-if="article.title || article.summary" class="mb-6 space-y-5">
+                  <h1 v-if="article.title" class="text-3xl sm:text-4xl font-extrabold text-gray-900 leading-tight">{{ article.title }}</h1>
+
+                  <p v-if="article.summary" class="max-w-3xl text-base leading-8 text-slate-600">
+                    {{ article.summary }}
+                  </p>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-3 sm:gap-4 text-sm text-gray-500">
+                   <div v-if="article.category" class="bg-blue-50 text-blue-600 px-3 py-1 rounded-full font-medium text-xs shadow-sm">
                      {{ typeof article.category === 'string' ? article.category : article.category.name }}
                    </div>
                    <span class="flex items-center gap-1.5">
@@ -69,41 +77,35 @@
                      </svg>
                      {{ formatDate(article.createTime) }}
                    </span>
-                   <span v-if="article.readNum !== undefined" class="flex items-center gap-1.5 ml-auto">
+                   <span v-if="article.readNum !== undefined" class="flex items-center gap-1.5">
                      <svg class="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                      </svg>
                      {{ article.readNum }} 次阅读
                    </span>
-                </div>
 
-                <div class="flex justify-between items-start gap-4">
-                  <h1 v-if="article.title" class="text-3xl sm:text-4xl font-extrabold text-gray-900 leading-tight">{{ article.title }}</h1>
-                  
                   <!-- 收藏按钮 - 仅在功能开启且用户登录时显示 -->
                   <button 
                     v-if="siteConfig.isFeatureEnabled('favoriteEnabled') && isLoggedIn"
                     @click="toggleCollect"
                     :disabled="collectLoading"
-                    class="shrink-0 p-2.5 rounded-full transition-all duration-300 border focus:outline-none"
-                    :class="isCollected ? 'bg-orange-50 border-orange-200 text-orange-500 hover:bg-orange-100 hover:scale-105' : 'bg-white border-gray-200 text-gray-400 hover:text-orange-500 hover:border-orange-200 hover:bg-orange-50'"
+                    class="inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition-all duration-300 focus:outline-none sm:ml-auto"
+                    :class="isCollected ? 'bg-orange-50 border-orange-200 text-orange-600 hover:bg-orange-100 hover:-translate-y-0.5 shadow-sm' : 'bg-white border-gray-200 text-gray-500 hover:text-orange-500 hover:border-orange-200 hover:bg-orange-50 hover:-translate-y-0.5'"
                   >
-                    <el-icon class="text-xl leading-none"><StarFilled v-if="isCollected" /><Star v-else /></el-icon>
+                    <el-icon class="text-base leading-none"><StarFilled v-if="isCollected" /><Star v-else /></el-icon>
+                    <span>{{ isCollected ? '已收藏' : '收藏文章' }}</span>
                   </button>
                   <!-- 未登录用户提示 -->
                   <button 
                     v-else-if="siteConfig.isFeatureEnabled('favoriteEnabled') && !isLoggedIn"
                     @click="handleCollectClickForGuest"
-                    class="shrink-0 p-2.5 rounded-full bg-white border border-gray-200 text-gray-400 hover:text-orange-500 hover:border-orange-200 hover:bg-orange-50 transition-all duration-300 focus:outline-none"
+                    class="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-500 hover:text-orange-500 hover:border-orange-200 hover:bg-orange-50 transition-all duration-300 focus:outline-none hover:-translate-y-0.5 sm:ml-auto"
                   >
-                     <el-icon class="text-xl leading-none"><Star /></el-icon>
+                     <el-icon class="text-base leading-none"><Star /></el-icon>
+                     <span>登录后收藏</span>
                   </button>
                 </div>
-
-                <p v-if="article.summary" class="mt-5 max-w-3xl text-base leading-8 text-slate-600">
-                  {{ article.summary }}
-                </p>
 
                 <div v-if="article.tags && article.tags.length" class="flex flex-wrap gap-2 mt-6">
                   <span v-for="tag in article.tags" :key="tag.id || tag.name" 
@@ -662,6 +664,12 @@ function handleCollectClickForGuest() {
 </script>
 
 <style scoped>
+.article-hero-image {
+  background:
+    radial-gradient(circle at top left, rgba(59, 130, 246, 0.18), transparent 28%),
+    linear-gradient(180deg, rgba(15, 23, 42, 0.88), rgba(15, 23, 42, 0.96));
+}
+
 ::v-deep(.article-content) {
   color: #334155;
   font-size: 1.02rem;

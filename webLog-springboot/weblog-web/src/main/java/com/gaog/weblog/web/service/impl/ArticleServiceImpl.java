@@ -353,6 +353,8 @@ public class ArticleServiceImpl implements ArticleService {
         FindArticleDetailRspVO vo = FindArticleDetailRspVO.builder()
                 .id(articleId)
                 .title(articleDO.getTitle())
+                .cover(articleDO.getCover())
+                .summary(articleDO.getSummary())
                 .createTime(articleDO.getCreateTime())
                 .content(MarkdownHelper.convertMarkdown2Html(articleContentDO.getContent()))
                 .readNum(articleDO.getReadNum())
