@@ -8,6 +8,26 @@ const cookie = useCookies()
 // 存储在 Cookie 中的 Token 的 key
 const TOKEN_KEY = 'Authorization'
 
+function getAppBasePath() {
+    const base = import.meta.env.BASE_URL || '/'
+    const normalizedBase = base.endsWith('/') && base.length > 1
+        ? base.slice(0, -1)
+        : base
+
+    return normalizedBase || '/'
+}
+
+function getCookiePaths() {
+    const pathSet = new Set(['/'])
+    const basePath = getAppBasePath()
+
+    if (basePath !== '/') {
+        pathSet.add(basePath)
+    }
+
+    return Array.from(pathSet)
+}
+
 function normalizeTokenValue(token) {
     if (typeof token !== 'string') {
         return token
@@ -36,26 +56,32 @@ export function getToken() {
 
 // 设置 Token 到 Cookie 中
 export function setToken(token) {
-    return cookie.set(TOKEN_KEY, normalizeTokenValue(token), {
-        path: '/'
+    const normalizedToken = normalizeTokenValue(token)
+
+    getCookiePaths().forEach((path) => {
+        cookie.set(TOKEN_KEY, normalizedToken, { path })
     })
+
+    return normalizedToken
 }
 
 // 删除 Token
 export function removeToken() {
     
     try {
-        // 使用 @vueuse 的 cookie 操作删除
-        cookie.remove(TOKEN_KEY)
+        getCookiePaths().forEach((path) => {
+            cookie.remove(TOKEN_KEY, { path })
+        })
            
         // 验证 Token 是否被删除
         const tokenAfterRemove = getToken()
         
         if (tokenAfterRemove) {
             console.warn('==> Token 未被成功删除，尝试使用原生方法')
-            // 使用原生 document.cookie 作为兜底方案
-            document.cookie = `${TOKEN_KEY}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 UTC;`
-            document.cookie = `${TOKEN_KEY}=; Path=/; Domain=${window.location.hostname}; Expires=Thu, 01 Jan 1970 00:00:00 UTC;`
+            getCookiePaths().forEach((path) => {
+                document.cookie = `${TOKEN_KEY}=; Path=${path}; Expires=Thu, 01 Jan 1970 00:00:00 UTC;`
+                document.cookie = `${TOKEN_KEY}=; Path=${path}; Domain=${window.location.hostname}; Expires=Thu, 01 Jan 1970 00:00:00 UTC;`
+            })
         } 
     } catch (e) {
         console.error('==> 删除 Token 失败:', e)

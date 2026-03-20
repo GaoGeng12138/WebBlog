@@ -124,6 +124,7 @@ import { setToken } from '@/composables/cookie.js';
 import { showMessage } from '@/composables/util';
 import { useUserStore } from '@/stores/user';
 import { useSiteConfigStore } from '@/stores/siteConfig';
+import { decryptTransportValue, isEncryptedTransportValue } from '@/utils/transportCrypto';
 import { Lock, User } from '@element-plus/icons-vue';
 import { onBeforeUnmount, onMounted, reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
@@ -245,6 +246,9 @@ const onSubmit = () => {
 
                 //存储token到cookie
                 let token = response.data.token;
+                if (isEncryptedTransportValue(token)) {
+                    token = await decryptTransportValue(token)
+                }
                 setToken(token);
 
                 //获取用户信息并存储到 Pinia (等待异步完成)
