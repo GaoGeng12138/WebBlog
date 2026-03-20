@@ -10,12 +10,19 @@ function buildAppPath(path) {
     return normalizedBase ? `${normalizedBase}${normalizedPath}` : normalizedPath
 }
 
+function buildScopedBasePath(segment) {
+    const base = import.meta.env.BASE_URL || '/'
+    const normalizedBase = base.endsWith('/') ? base.slice(0, -1) : base
+    const normalizedSegment = segment.startsWith('/') ? segment : `/${segment}`
+    return normalizedBase ? `${normalizedBase}${normalizedSegment}` : normalizedSegment
+}
+
 function getApiBaseURL() {
     if (import.meta.env.VITE_API_BASE_URL) {
         return import.meta.env.VITE_API_BASE_URL;
     }
 
-    return import.meta.env.PROD ? "/webLog" : "/api";
+    return import.meta.env.PROD ? buildScopedBasePath('api') : "/api";
 }
 
 // 创建 Axios 实例
