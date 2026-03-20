@@ -41,7 +41,7 @@ public class TransportDecryptionFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        if (!hasJsonBody(request) || !shouldDecryptTransportBody(request)) {
+        if (!hasJsonBody(request)) {
             return true;
         }
 
@@ -109,10 +109,6 @@ public class TransportDecryptionFilter extends OncePerRequestFilter {
     private boolean hasJsonBody(HttpServletRequest request) {
         String contentType = request.getContentType();
         return contentType != null && contentType.toLowerCase().contains(MediaType.APPLICATION_JSON_VALUE);
-    }
-
-    private boolean shouldDecryptTransportBody(HttpServletRequest request) {
-        return "true".equalsIgnoreCase(request.getHeader("X-Transport-Encrypted"));
     }
 
     private boolean equalsText(String left, String right) {
