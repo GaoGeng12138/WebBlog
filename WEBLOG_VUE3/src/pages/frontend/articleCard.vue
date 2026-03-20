@@ -31,10 +31,10 @@
             {{ displayCategory }}
           </span>
         </div>
-        <h3 class="line-clamp-2 text-[0.98rem] font-bold leading-6 text-slate-900">
-          {{ article.title || '未命名文章' }}
+        <h3 v-if="hasTitle" class="line-clamp-2 text-[0.98rem] font-bold leading-6 text-slate-900">
+          {{ displayTitle }}
         </h3>
-        <p class="mt-1.5 line-clamp-3 text-[0.9rem] leading-[1.45rem] text-slate-600/95">
+        <p class="line-clamp-3 text-[0.9rem] leading-[1.45rem] text-slate-600/95" :class="hasTitle ? 'mt-1.5' : 'mt-0'">
           {{ articleContentPreview }}
         </p>
       </div>
@@ -150,10 +150,15 @@
     </div>
 
     <div class="px-3.5 py-3">
-      <h3 class="line-clamp-2 min-h-[2.7rem] text-[15px] font-bold leading-5 text-slate-900">
-        {{ article.title || '未命名文章' }}
+      <h3 v-if="hasTitle" class="line-clamp-2 min-h-[2.7rem] text-[15px] font-bold leading-5 text-slate-900">
+        {{ displayTitle }}
       </h3>
-      <p class="mt-1.5 line-clamp-2 min-h-[2.8rem] text-[13px] leading-5 text-slate-600/95">
+      <p
+        class="line-clamp-2 text-[13px] leading-5 text-slate-600/95"
+        :class="[
+          hasTitle ? 'mt-1.5 min-h-[2.8rem]' : 'mt-0 min-h-[3.4rem]'
+        ]"
+      >
         {{ articleSummary }}
       </p>
       <div class="mt-1.5 flex flex-wrap items-center gap-2 text-[11px] text-slate-500">
@@ -228,6 +233,13 @@ const displayCategory = computed(() => {
   return typeof category === 'string' ? category : (category.name || '')
 })
 
+const displayTitle = computed(() => {
+  const rawTitle = article.value?.title
+  return typeof rawTitle === 'string' ? rawTitle.trim() : ''
+})
+
+const hasTitle = computed(() => !!displayTitle.value)
+
 const articleSummary = computed(() => {
   return article.value.summary || article.value.description || trimContent(article.value.content)
 })
@@ -237,11 +249,11 @@ const articleContentPreview = computed(() => {
 })
 
 const articleAlt = computed(() => {
-  return article.value.title || article.value.summary || '文章封面'
+  return displayTitle.value || article.value.summary || '文章封面'
 })
 
 const readTimeText = computed(() => {
-  const source = `${article.value.title || ''} ${article.value.summary || ''} ${trimContent(article.value.content || '')}`
+  const source = `${displayTitle.value || ''} ${article.value.summary || ''} ${trimContent(article.value.content || '')}`
   const plainText = source.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim()
   const words = plainText.length
   const minutes = Math.max(1, Math.round(words / 320))
@@ -249,7 +261,7 @@ const readTimeText = computed(() => {
 })
 
 const categoryToneClass = computed(() => {
-  const text = displayCategory.value || article.value.title || ''
+  const text = displayCategory.value || displayTitle.value || ''
   const tones = [
     'category-chip--blue',
     'category-chip--emerald',
