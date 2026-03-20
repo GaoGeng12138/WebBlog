@@ -54,8 +54,13 @@
                                     {{ user.nickname || user.username || '未登录' }}
                                 </h1>
                                 <div class="flex items-center justify-center md:justify-start gap-2">
-                                    <el-tag v-if="hasRole('ROLE_ADMIN')" effect="dark" type="danger" size="small" round
-                                        class="!border-0 !bg-[var(--theme-primary-deep)] !text-white">管理员</el-tag>
+                                    <span v-if="hasRole('ROLE_ADMIN')" class="admin-identity-badge">
+                                        <span class="admin-identity-badge__glow"></span>
+                                        <el-icon class="admin-identity-badge__icon">
+                                            <Setting />
+                                        </el-icon>
+                                        <span class="admin-identity-badge__text">管理员</span>
+                                    </span>
                                     <el-tag v-else effect="light" type="primary" size="small" round
                                         class="!border-[rgba(116,149,195,0.18)] !bg-[rgba(116,149,195,0.12)] !text-[var(--theme-primary-deep)]">Lv.3 作者</el-tag>
                                     <span class="rounded-md bg-[rgba(240,245,251,0.95)] px-2 py-0.5 text-xs text-slate-400">ID:{{
@@ -1334,6 +1339,52 @@ onMounted(() => {
 <style scoped>
 .animate-fade-in {
     animation: fadeIn 0.4s ease-out;
+}
+
+.admin-identity-badge {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.42rem;
+    overflow: hidden;
+    border-radius: 999px;
+    border: 1px solid rgba(53, 82, 122, 0.16);
+    background: linear-gradient(135deg, rgba(44, 71, 109, 0.96), rgba(74, 110, 165, 0.94));
+    padding: 0.34rem 0.8rem 0.34rem 0.52rem;
+    box-shadow: 0 14px 28px rgba(66, 93, 136, 0.18);
+    color: #f8fbff;
+}
+
+.admin-identity-badge__glow {
+    position: absolute;
+    inset: auto auto -16px -10px;
+    width: 56px;
+    height: 32px;
+    border-radius: 999px;
+    background: radial-gradient(circle, rgba(174, 214, 255, 0.42), transparent 70%);
+    pointer-events: none;
+}
+
+.admin-identity-badge__icon {
+    position: relative;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.16);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+    font-size: 11px;
+}
+
+.admin-identity-badge__text {
+    position: relative;
+    z-index: 1;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
 }
 
 .profile-stat-card {

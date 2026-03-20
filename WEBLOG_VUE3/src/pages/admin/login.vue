@@ -88,12 +88,24 @@
 
                         <el-form class="login-form mt-8" ref="formRef" :rules="rules" :model="form">
                             <el-form-item prop="username">
-                                <el-input size="large" v-model="form.username" placeholder="请输入用户名" :prefix-icon="User"
-                                    clearable />
+                                <div class="login-cyber-input" :class="{ 'is-typing': typingField === 'username' }">
+                                    <span class="login-cyber-input__pixel login-cyber-input__pixel--a"></span>
+                                    <span class="login-cyber-input__pixel login-cyber-input__pixel--b"></span>
+                                    <span class="login-cyber-input__pixel login-cyber-input__pixel--c"></span>
+                                    <span class="login-cyber-input__pixel login-cyber-input__pixel--d"></span>
+                                    <el-input size="large" v-model="form.username" placeholder="请输入用户名" :prefix-icon="User"
+                                        clearable @input="triggerTypingEffect('username')" />
+                                </div>
                             </el-form-item>
                             <el-form-item prop="password">
-                                <el-input size="large" type="password" v-model="form.password" placeholder="请输入密码"
-                                    :prefix-icon="Lock" clearable show-password />
+                                <div class="login-cyber-input" :class="{ 'is-typing': typingField === 'password' }">
+                                    <span class="login-cyber-input__pixel login-cyber-input__pixel--a"></span>
+                                    <span class="login-cyber-input__pixel login-cyber-input__pixel--b"></span>
+                                    <span class="login-cyber-input__pixel login-cyber-input__pixel--c"></span>
+                                    <span class="login-cyber-input__pixel login-cyber-input__pixel--d"></span>
+                                    <el-input size="large" type="password" v-model="form.password" placeholder="请输入密码"
+                                        :prefix-icon="Lock" clearable show-password @input="triggerTypingEffect('password')" />
+                                </div>
                             </el-form-item>
                             <el-form-item class="mb-0">
                                 <el-button class="theme-btn-primary w-full !h-[46px] !rounded-2xl !border-0 text-[14px] font-medium tracking-[0.02em] transition-all duration-300"
@@ -177,6 +189,9 @@ const loginHighlights = [
     '持续创作'
 ]
 
+const typingField = ref('')
+let typingEffectTimer = null
+
 
 
 
@@ -215,6 +230,10 @@ onMounted(() => {
 // 移除键盘监听
 onBeforeUnmount(() => {
     document.removeEventListener('keyup', onKeyUp)
+    if (typingEffectTimer) {
+        clearTimeout(typingEffectTimer)
+        typingEffectTimer = null
+    }
 })
 
 //表单引用
@@ -225,6 +244,17 @@ const loading = ref(false);
 const router = useRouter();
 const userStore = useUserStore()
 const { userInfo } = storeToRefs(userStore);
+
+function triggerTypingEffect(field) {
+    typingField.value = field
+    if (typingEffectTimer) {
+        clearTimeout(typingEffectTimer)
+    }
+    typingEffectTimer = setTimeout(() => {
+        typingField.value = ''
+        typingEffectTimer = null
+    }, 240)
+}
 
 // 提交表单函数
 const onSubmit = () => {
@@ -408,11 +438,12 @@ const onSubmit = () => {
 }
 
 .login-form :deep(.el-input__wrapper) {
+    position: relative;
     min-height: 48px;
     border-radius: 18px;
     box-shadow: 0 0 0 1px rgba(149, 171, 210, 0.16);
     background: rgba(250, 252, 255, 0.92);
-    transition: box-shadow 0.3s ease, transform 0.3s ease, background 0.3s ease;
+    transition: box-shadow 0.3s ease, transform 0.3s ease, background 0.3s ease, border-color 0.3s ease;
 }
 
 .login-form :deep(.el-input__wrapper:hover) {
@@ -424,6 +455,120 @@ const onSubmit = () => {
     background: white;
     box-shadow: 0 0 0 4px rgba(116, 149, 195, 0.12);
     transform: translateY(-1px);
+}
+
+.login-form :deep(.el-input__inner) {
+    color: #334155;
+    font-weight: 500;
+}
+
+.login-form :deep(.el-input__inner::placeholder) {
+    color: rgba(100, 116, 139, 0.65);
+}
+
+.login-form :deep(.el-input__prefix-inner),
+.login-form :deep(.el-input__suffix-inner) {
+    color: rgba(100, 116, 139, 0.7);
+}
+
+.login-cyber-input {
+    position: relative;
+    width: 100%;
+    border-radius: 18px;
+}
+
+.login-cyber-input::before {
+    content: "";
+    position: absolute;
+    inset: auto 22px 6px;
+    height: 2px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, rgba(122, 168, 255, 0), rgba(122, 168, 255, 0.82), rgba(255, 144, 220, 0.72), rgba(122, 168, 255, 0));
+    opacity: 0;
+    pointer-events: none;
+    transform: scaleX(0.35);
+    transform-origin: center;
+    transition: opacity 0.22s ease, transform 0.22s ease;
+}
+
+.login-cyber-input::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(120deg, rgba(122, 168, 255, 0), rgba(122, 168, 255, 0.78), rgba(255, 149, 225, 0.72), rgba(122, 168, 255, 0));
+    opacity: 0;
+    pointer-events: none;
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+}
+
+.login-cyber-input.is-typing::before {
+    opacity: 1;
+    transform: scaleX(1);
+    animation: typingUnderlinePulse 0.24s ease-out;
+}
+
+.login-cyber-input__pixel {
+    position: absolute;
+    right: 24px;
+    top: 50%;
+    width: 6px;
+    height: 6px;
+    border-radius: 1px;
+    opacity: 0;
+    pointer-events: none;
+    transform: translate3d(-4px, -50%, 0) scale(0.7);
+}
+
+.login-cyber-input__pixel--a {
+    right: 54px;
+    background: #7aa8ff;
+}
+
+.login-cyber-input__pixel--b {
+    right: 42px;
+    width: 5px;
+    height: 5px;
+    background: #88f0ff;
+}
+
+.login-cyber-input__pixel--c {
+    right: 30px;
+    width: 5px;
+    height: 5px;
+    background: #ff8fd8;
+}
+
+.login-cyber-input__pixel--d {
+    right: 20px;
+    width: 4px;
+    height: 4px;
+    background: #a9b8ff;
+}
+
+.login-cyber-input.is-typing::after {
+    opacity: 1;
+    animation: typingBorderSweep 0.24s ease-out;
+}
+
+.login-cyber-input.is-typing .login-cyber-input__pixel--a {
+    animation: typingPixelBurst 0.42s ease-out;
+}
+
+.login-cyber-input.is-typing .login-cyber-input__pixel--b {
+    animation: typingPixelBurst 0.42s ease-out 0.04s;
+}
+
+.login-cyber-input.is-typing .login-cyber-input__pixel--c {
+    animation: typingPixelBurst 0.42s ease-out 0.08s;
+}
+
+.login-cyber-input.is-typing .login-cyber-input__pixel--d {
+    animation: typingPixelBurst 0.42s ease-out 0.12s;
 }
 
 @keyframes loginFloat {
@@ -443,6 +588,50 @@ const onSubmit = () => {
 
     50% {
         transform: translate3d(0, -6px, 0);
+    }
+}
+
+@keyframes typingPixelBurst {
+    0% {
+        opacity: 0;
+        transform: translate3d(-6px, -50%, 0) scale(0.55);
+    }
+
+    25% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0;
+        transform: translate3d(14px, calc(-50% - 10px), 0) scale(1);
+    }
+}
+
+@keyframes typingUnderlinePulse {
+    0% {
+        opacity: 0;
+        transform: scaleX(0.2);
+    }
+
+    100% {
+        opacity: 1;
+        transform: scaleX(1);
+    }
+}
+
+@keyframes typingBorderSweep {
+    0% {
+        opacity: 0;
+        filter: blur(4px);
+    }
+
+    35% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0;
+        filter: blur(0);
     }
 }
 </style>

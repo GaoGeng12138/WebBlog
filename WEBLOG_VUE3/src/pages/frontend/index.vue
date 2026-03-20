@@ -52,11 +52,23 @@
             <div
               v-for="item in heroFacts"
               :key="item.label"
-              class="rounded-[16px] border border-[rgba(149,171,210,0.16)] bg-[rgba(255,255,255,0.64)] p-3 backdrop-blur-xl"
+              class="hero-fact-card rounded-[18px] border border-[rgba(149,171,210,0.16)] bg-[rgba(255,255,255,0.64)] p-3 backdrop-blur-xl"
             >
-              <p class="text-[11px] font-medium text-[var(--cosmic-muted)]">{{ item.label }}</p>
-              <p class="mt-1 text-[1.42rem] font-semibold tracking-[-0.03em] text-[var(--cosmic-text-light)]">{{ item.value }}</p>
-              <p class="mt-1 text-[12px] leading-5 text-[var(--cosmic-text-light-muted)]">{{ item.hint }}</p>
+              <div class="flex items-start justify-between gap-3">
+                <div>
+                  <p class="text-[11px] font-medium tracking-[0.14em] text-[var(--cosmic-muted)]">{{ item.label }}</p>
+                  <p class="mt-1 text-[1.42rem] font-semibold tracking-[-0.03em] text-[var(--cosmic-text-light)]">{{ item.value }}</p>
+                </div>
+                <span class="hero-fact-card__meta">{{ item.meta }}</span>
+              </div>
+              <div class="hero-fact-card__footer">
+                <div class="hero-fact-card__bars" aria-hidden="true">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+                <span class="hero-fact-card__caption">{{ item.caption }}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -68,20 +80,24 @@
         </aside>
 
         <section class="min-w-0 flex-1">
-          <div class="mb-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-            <div>
+          <div class="section-heading-shell mb-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+            <div class="min-w-0">
               <p class="text-[11px] font-medium uppercase tracking-[0.2em] text-[var(--cosmic-muted)]">
                 {{ keyword ? 'Search Result' : 'Latest Writing' }}
               </p>
-              <h2 class="mt-2 text-[2rem] font-semibold tracking-[-0.03em] text-[var(--cosmic-text-strong)]">
-                {{ sectionTitle }}
-              </h2>
-              <p class="mt-2 text-[13px] leading-6 text-[var(--cosmic-text-light-muted)]">
-                {{ sectionDescription }}
-              </p>
+              <div class="mt-2 flex flex-wrap items-center gap-3">
+                <h2 class="text-[2rem] font-semibold tracking-[-0.03em] text-[var(--cosmic-text-strong)]">
+                  {{ sectionTitle }}
+                </h2>
+                <span class="section-status-pill">
+                  <span class="section-status-pill__dot"></span>
+                  {{ sectionMeta }}
+                </span>
+              </div>
+              <div class="section-heading__line" aria-hidden="true"></div>
             </div>
 
-            <div class="flex flex-wrap items-center gap-2 text-[13px] text-[var(--cosmic-muted)]">
+            <div class="section-sort-panel flex flex-wrap items-center gap-2 text-[13px] text-[var(--cosmic-muted)]">
               <span class="font-medium text-[var(--cosmic-text-light)]">排序</span>
               <button
                 v-for="item in sortOptions"
@@ -229,12 +245,14 @@ const heroFacts = computed(() => ([
   {
     label: '本页内容',
     value: `${total.value || sortedArticles.value.length}`,
-    hint: '支持搜索、排序和分页快速定位。'
+    meta: 'ART',
+    caption: keyword.value ? '筛选结果' : '内容总览'
   },
   {
     label: '最新更新',
     value: latestDateText.value,
-    hint: '首页默认优先展示最近有变化的文章。'
+    meta: 'SYNC',
+    caption: sortKey.value === 'update' ? '实时排序' : '时间锚点'
   }
 ]))
 
@@ -256,21 +274,21 @@ const sectionTitle = computed(() => {
   }
 })
 
-const sectionDescription = computed(() => {
+const sectionMeta = computed(() => {
   if (keyword.value) {
-    return `共找到 ${total.value || sortedArticles.value.length} 篇相关文章，继续切换排序可以更快缩小范围。`
+    return `${total.value || sortedArticles.value.length} 篇结果`
   }
 
   switch (sortKey.value) {
     case 'views':
-      return '按浏览热度查看当前最受关注的内容，方便快速定位热门文章。'
+      return '按热度浏览'
     case 'likes':
-      return '按点赞数量排序，优先浏览读者反馈更集中的精选内容。'
+      return '按点赞浏览'
     case 'comments':
-      return '按评论数量排序，优先查看讨论度更高的话题文章。'
+      return '按讨论浏览'
     case 'update':
     default:
-      return '按更新时间排序，优先查看最近发布或最近更新的文章。'
+      return `更新于 ${latestDateText.value}`
   }
 })
 
@@ -387,6 +405,156 @@ watch(() => siteConfigStore.siteInfo.frontendArticlePageSize, (newVal) => {
   color: transparent;
 }
 
+.hero-fact-card {
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 12px 28px rgba(120, 146, 186, 0.08);
+}
+
+.hero-fact-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.24), transparent 44%),
+    linear-gradient(90deg, rgba(148, 176, 231, 0.08), transparent 50%);
+  pointer-events: none;
+}
+
+.hero-fact-card::after {
+  content: "";
+  position: absolute;
+  inset: auto -12px -18px auto;
+  width: 72px;
+  height: 72px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(148, 176, 231, 0.2), transparent 72%);
+}
+
+.hero-fact-card__meta {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  height: 24px;
+  border-radius: 999px;
+  padding: 0 0.55rem;
+  background: rgba(255, 255, 255, 0.7);
+  box-shadow: inset 0 0 0 1px rgba(149, 171, 210, 0.14);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: #7a8da9;
+}
+
+.hero-fact-card__footer {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 0.9rem;
+  padding-top: 0.72rem;
+  border-top: 1px solid rgba(149, 171, 210, 0.12);
+}
+
+.hero-fact-card__bars {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 0.28rem;
+}
+
+.hero-fact-card__bars span {
+  display: block;
+  width: 16px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(110, 146, 216, 0.92), rgba(255, 155, 227, 0.68));
+  box-shadow: 0 6px 14px rgba(110, 146, 216, 0.16);
+}
+
+.hero-fact-card__bars span:nth-child(1) {
+  height: 6px;
+}
+
+.hero-fact-card__bars span:nth-child(2) {
+  height: 10px;
+}
+
+.hero-fact-card__bars span:nth-child(3) {
+  height: 7px;
+}
+
+.hero-fact-card__caption {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  color: var(--cosmic-text-light-muted);
+}
+
+.section-heading-shell {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(149, 171, 210, 0.14);
+  border-radius: 24px;
+  padding: 1rem 1.1rem;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.74), rgba(246, 249, 255, 0.7)),
+    radial-gradient(circle at top right, rgba(148, 176, 231, 0.12), transparent 26%);
+  box-shadow: 0 18px 34px rgba(120, 146, 186, 0.08);
+}
+
+.section-heading-shell::after {
+  content: "";
+  position: absolute;
+  inset: auto 1.1rem 0 1.1rem;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(148, 176, 231, 0.42), rgba(148, 176, 231, 0));
+}
+
+.section-heading__line {
+  width: min(220px, 100%);
+  height: 8px;
+  margin-top: 0.85rem;
+  border-radius: 999px;
+  background:
+    linear-gradient(90deg, rgba(110, 146, 216, 0.18), rgba(255, 155, 227, 0.14), transparent 78%);
+}
+
+.section-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  border-radius: 999px;
+  border: 1px solid rgba(149, 171, 210, 0.16);
+  background: rgba(255, 255, 255, 0.72);
+  padding: 0.42rem 0.85rem;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--cosmic-text-light-muted);
+  box-shadow: 0 10px 22px rgba(120, 146, 186, 0.08);
+}
+
+.section-status-pill__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--cosmic-blue), #ff9be3);
+  box-shadow: 0 0 0 4px rgba(148, 176, 231, 0.12);
+}
+
+.section-sort-panel {
+  position: relative;
+  z-index: 1;
+  padding: 0.55rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.54);
+  box-shadow: inset 0 0 0 1px rgba(149, 171, 210, 0.12);
+  backdrop-filter: blur(10px);
+}
+
 .reveal-item {
   animation: revealUp 0.7s ease both;
 }
@@ -417,6 +585,16 @@ watch(() => siteConfigStore.siteInfo.frontendArticlePageSize, (newVal) => {
   .hero-search-button {
     padding-left: 1rem;
     padding-right: 1rem;
+  }
+
+  .section-heading-shell {
+    padding: 0.9rem;
+    border-radius: 20px;
+  }
+
+  .section-sort-panel {
+    width: 100%;
+    border-radius: 18px;
   }
 }
 

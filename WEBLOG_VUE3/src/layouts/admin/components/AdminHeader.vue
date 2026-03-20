@@ -18,7 +18,8 @@
             <el-tooltip class="box-item" effect="dark" content="刷新" placement="bottom">
                 <div class="admin-header-action"
                     @click="handleRefresh">
-                    <el-icon class="text-[17px]">
+                    <span class="admin-header-action__halo"></span>
+                    <el-icon class="admin-header-action__icon text-[17px]">
                         <Refresh />
                     </el-icon>
                 </div>
@@ -28,7 +29,8 @@
             <el-tooltip class="box-item" effect="dark" content="全屏" placement="bottom">
                 <div class="admin-header-action"
                     @click="toggle">
-                    <el-icon class="text-[17px]">
+                    <span class="admin-header-action__halo"></span>
+                    <el-icon class="admin-header-action__icon text-[17px]">
                         <FullScreen v-if="!isFullscreen" />
                         <CircleClose v-else />
                     </el-icon>
@@ -39,7 +41,8 @@
             <el-tooltip class="box-item" effect="dark" content="回到前台" placement="bottom">
                 <div class="admin-header-action"
                     @click="goToFrontend">
-                    <el-icon class="text-[17px]">
+                    <span class="admin-header-action__halo"></span>
+                    <el-icon class="admin-header-action__icon text-[17px]">
                         <House />
                     </el-icon>
                 </div>
@@ -277,17 +280,60 @@ const logout = () => {
 }
 
 .admin-header-action {
+    position: relative;
+    overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 40px;
-    height: 40px;
+    width: 42px;
+    height: 42px;
     cursor: pointer;
     color: var(--cosmic-text-light);
-    border-radius: 16px;
-    border: 1px solid rgba(149, 171, 210, 0.14);
-    background: rgba(255, 255, 255, 0.52);
-    box-shadow: 0 10px 24px rgba(120, 146, 186, 0.08);
+    border-radius: 18px;
+    border: 1px solid rgba(149, 171, 210, 0.18);
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(244, 248, 253, 0.82));
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.82),
+        0 10px 24px rgba(120, 146, 186, 0.08);
     transition: transform 0.28s ease, background 0.28s ease, box-shadow 0.28s ease, border-color 0.28s ease, color 0.28s ease;
+}
+
+.admin-header-action::before {
+    content: "";
+    position: absolute;
+    inset: 1px;
+    border-radius: 17px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.16));
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.admin-header-action__halo {
+    position: absolute;
+    inset: auto auto -14px -8px;
+    width: 38px;
+    height: 20px;
+    border-radius: 999px;
+    background: radial-gradient(circle, rgba(148, 176, 231, 0.32), transparent 72%);
+    opacity: 0;
+    transition: opacity 0.28s ease, transform 0.28s ease;
+    pointer-events: none;
+}
+
+.admin-header-action__icon {
+    position: relative;
+    z-index: 1;
+    transition: transform 0.28s ease, color 0.28s ease;
+}
+
+.admin-header-action:hover .admin-header-action__icon {
+    transform: scale(1.06);
+    color: var(--cosmic-blue-deep);
+}
+
+.admin-header-action:hover .admin-header-action__halo {
+    opacity: 1;
+    transform: translate3d(2px, -2px, 0);
 }
 </style>

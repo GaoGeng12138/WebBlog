@@ -73,6 +73,7 @@ blockquote {
   align-items: center;
   min-height: 2.5rem;
   padding: 0 1rem;
+  border-radius: 999px;
   background: linear-gradient(135deg, #5d7fac, #7f9fcc);
   color: white;
   font-size: 0.84rem;
@@ -84,6 +85,8 @@ blockquote {
 .sidebar-heading__track {
   flex: 1;
   height: 2px;
+  margin-left: 0.6rem;
+  border-radius: 999px;
   background: linear-gradient(90deg, rgba(116, 149, 195, 0.85), rgba(116, 149, 195, 0.12));
 }
 </style>
