@@ -33,6 +33,8 @@ export const useSiteConfigStore = defineStore('siteConfig', () => {
     })
 
     const loading = ref(false)
+    const initialized = ref(false)
+    let initPromise = null
 
     const fetchSiteInfo = async () => {
         try {
@@ -81,11 +83,29 @@ export const useSiteConfigStore = defineStore('siteConfig', () => {
 
     const initConfig = async () => {
         loading.value = true
-        await Promise.all([
-            fetchSiteInfo(),
-            fetchPermissions()
-        ])
-        loading.value = false
+        try {
+            await Promise.all([
+                fetchSiteInfo(),
+                fetchPermissions()
+            ])
+            initialized.value = true
+        } finally {
+            loading.value = false
+        }
+    }
+
+    const ensureConfigReady = async () => {
+        if (initialized.value) {
+            return
+        }
+
+        if (!initPromise) {
+            initPromise = initConfig().finally(() => {
+                initPromise = null
+            })
+        }
+
+        await initPromise
     }
 
     const isFeatureEnabled = (featureName) => {
@@ -96,9 +116,11 @@ export const useSiteConfigStore = defineStore('siteConfig', () => {
         siteInfo,
         permissions,
         loading,
+        initialized,
         fetchSiteInfo,
         fetchPermissions,
         initConfig,
+        ensureConfigReady,
         isFeatureEnabled
     }
 }, {

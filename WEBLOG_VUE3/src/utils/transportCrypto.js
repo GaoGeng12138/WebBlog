@@ -1,5 +1,9 @@
 const ENCRYPTED_PREFIX = 'ENC::'
 const DEFAULT_TRANSPORT_KEY = 'WebLogTransportKey2026Secret!!@#'
+let cachedCryptoKeyPromise = null
+let cachedTransportKeyMeta = null
+let hasWarnedInvalidEnvKey = false
+let hasWarnedDefaultKeyUsage = false
 
 function sanitizeTransportKey(rawKey) {
   if (typeof rawKey !== 'string') {
@@ -17,16 +21,11 @@ function sanitizeTransportKey(rawKey) {
   return trimmedKey
 }
 
-function getTransportKey() {
-  const envKey = sanitizeTransportKey(import.meta.env.VITE_TRANSPORT_CRYPTO_KEY)
-  if (envKey) {
-    return envKey
+function normalizeKeyBytes(rawKey) {
+  if (!rawKey) {
+    return null
   }
 
-  return sanitizeTransportKey(DEFAULT_TRANSPORT_KEY)
-}
-
-function normalizeKeyBytes(rawKey) {
   const keyBytes = new TextEncoder().encode(rawKey)
   if ([16, 24, 32].includes(keyBytes.length)) {
     return keyBytes
@@ -35,37 +34,91 @@ function normalizeKeyBytes(rawKey) {
   return null
 }
 
-function toBase64(bytes) {
-  let binary = ''
-  bytes.forEach((byte) => {
-    binary += String.fromCharCode(byte)
-  })
-  return btoa(binary)
+function isStrictTransportCryptoMode() {
+  return import.meta.env.PROD
 }
 
-function fromBase64(base64) {
-  const binary = atob(base64)
-  const bytes = new Uint8Array(binary.length)
-  for (let i = 0; i < binary.length; i += 1) {
-    bytes[i] = binary.charCodeAt(i)
+function resolveTransportKeyMeta() {
+  if (cachedTransportKeyMeta) {
+    return cachedTransportKeyMeta
   }
-  return bytes
+
+  const envKey = sanitizeTransportKey(import.meta.env.VITE_TRANSPORT_CRYPTO_KEY)
+  const normalizedEnvKey = normalizeKeyBytes(envKey)
+  if (normalizedEnvKey) {
+    cachedTransportKeyMeta = {
+      keyBytes: normalizedEnvKey,
+      source: 'env'
+    }
+    return cachedTransportKeyMeta
+  }
+
+  if (envKey && !hasWarnedInvalidEnvKey) {
+    hasWarnedInvalidEnvKey = true
+    console.warn('[transport-crypto] invalid env key length, fallback to configured default key')
+  }
+
+  const defaultKey = sanitizeTransportKey(DEFAULT_TRANSPORT_KEY)
+  const normalizedDefaultKey = normalizeKeyBytes(defaultKey)
+  if (normalizedDefaultKey) {
+    cachedTransportKeyMeta = {
+      keyBytes: normalizedDefaultKey,
+      source: 'default'
+    }
+    return cachedTransportKeyMeta
+  }
+
+  cachedTransportKeyMeta = {
+    keyBytes: null,
+    source: 'none'
+  }
+  return cachedTransportKeyMeta
 }
 
 async function importAesKey() {
-  const normalizedKey = normalizeKeyBytes(getTransportKey())
-  if (!normalizedKey) {
-    console.warn('[transport-crypto] invalid key length, fallback to plain transport')
+  if (cachedCryptoKeyPromise) {
+    return cachedCryptoKeyPromise
+  }
+
+  const { keyBytes, source } = resolveTransportKeyMeta()
+
+  if (!keyBytes) {
+    const error = new Error('[transport-crypto] no valid AES key configured')
+    if (isStrictTransportCryptoMode()) {
+      throw error
+    }
+    console.warn(`${error.message}, fallback to plain transport in development`)
     return null
   }
 
-  return crypto.subtle.importKey(
+  if (source === 'default' && !hasWarnedDefaultKeyUsage) {
+    hasWarnedDefaultKeyUsage = true
+    console.warn('[transport-crypto] using default AES key; configure VITE_TRANSPORT_CRYPTO_KEY for stronger isolation')
+  }
+
+  cachedCryptoKeyPromise = crypto.subtle.importKey(
     'raw',
-    normalizedKey,
+    keyBytes,
     { name: 'AES-CBC' },
     false,
     ['encrypt', 'decrypt']
-  )
+  ).catch((error) => {
+    cachedCryptoKeyPromise = null
+    if (isStrictTransportCryptoMode()) {
+      throw error
+    }
+    console.warn('[transport-crypto] failed to import AES key, fallback to plain transport in development', error)
+    return null
+  })
+
+  return cachedCryptoKeyPromise
+}
+
+export function resetTransportCryptoCache() {
+  cachedCryptoKeyPromise = null
+  cachedTransportKeyMeta = null
+  hasWarnedInvalidEnvKey = false
+  hasWarnedDefaultKeyUsage = false
 }
 
 export function isEncryptedTransportValue(value) {
@@ -91,6 +144,23 @@ export async function encryptTransportValue(value) {
   const encrypted = await crypto.subtle.encrypt({ name: 'AES-CBC', iv }, key, payload)
 
   return `${ENCRYPTED_PREFIX}${toBase64(iv)}::${toBase64(new Uint8Array(encrypted))}`
+}
+
+function toBase64(bytes) {
+  let binary = ''
+  bytes.forEach((byte) => {
+    binary += String.fromCharCode(byte)
+  })
+  return btoa(binary)
+}
+
+function fromBase64(base64) {
+  const binary = atob(base64)
+  const bytes = new Uint8Array(binary.length)
+  for (let i = 0; i < binary.length; i += 1) {
+    bytes[i] = binary.charCodeAt(i)
+  }
+  return bytes
 }
 
 export async function decryptTransportValue(value) {

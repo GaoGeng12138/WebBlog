@@ -9,6 +9,8 @@ export const useUserStore = defineStore('user', () => {
     // 用户信息
     const userInfo = ref({})
     const frontendUserInfo = ref({})
+    let adminUserInfoPromise = null
+    let frontendUserInfoPromise = null
 
     function hasEncryptedValue(target) {
         if (target === null || target === undefined) {
@@ -53,6 +55,27 @@ export const useUserStore = defineStore('user', () => {
         })
     }
 
+    function hasResolvedUserInfo(target) {
+        return !!target && typeof target === 'object' && Object.keys(target).length > 0 && !hasEncryptedValue(target)
+    }
+
+    function ensureUserInfoReady(force = false) {
+        if (!force && hasResolvedUserInfo(userInfo.value)) {
+            return Promise.resolve(userInfo.value)
+        }
+
+        if (!force && adminUserInfoPromise) {
+            return adminUserInfoPromise
+        }
+
+        adminUserInfoPromise = setUserInfo()
+            .finally(() => {
+                adminUserInfoPromise = null
+            })
+
+        return adminUserInfoPromise
+    }
+
     // 设置前台用户信息
     function setFrontendUserInfo() {
         return getUserInfoFrontend().then(async res => {
@@ -66,6 +89,23 @@ export const useUserStore = defineStore('user', () => {
         })
     }
 
+    function ensureFrontendUserInfoReady(force = false) {
+        if (!force && hasResolvedUserInfo(frontendUserInfo.value)) {
+            return Promise.resolve(frontendUserInfo.value)
+        }
+
+        if (!force && frontendUserInfoPromise) {
+            return frontendUserInfoPromise
+        }
+
+        frontendUserInfoPromise = setFrontendUserInfo()
+            .finally(() => {
+                frontendUserInfoPromise = null
+            })
+
+        return frontendUserInfoPromise
+    }
+
     // 退出登录
     function logout() {
         // 删除 cookie 中的 token 令牌
@@ -73,6 +113,8 @@ export const useUserStore = defineStore('user', () => {
         // 删除登录用户信息
         userInfo.value = {}
         frontendUserInfo.value = {}
+        adminUserInfoPromise = null
+        frontendUserInfoPromise = null
     }
 
     watch(userInfo, () => {
@@ -83,7 +125,7 @@ export const useUserStore = defineStore('user', () => {
         normalizeUserRef(frontendUserInfo)
     }, { deep: true, immediate: true })
 
-    return { userInfo, frontendUserInfo, setUserInfo, setFrontendUserInfo, logout }
+    return { userInfo, frontendUserInfo, setUserInfo, setFrontendUserInfo, ensureUserInfoReady, ensureFrontendUserInfoReady, logout }
 },
     {
         // 开启数据持久化

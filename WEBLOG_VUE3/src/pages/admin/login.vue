@@ -251,19 +251,19 @@ const onSubmit = () => {
                 }
                 setToken(token);
 
-                //获取用户信息并存储到 Pinia (等待异步完成)
-                await userStore.setUserInfo()
-                console.log('用户信息:', userInfo.value);
+                // 先进入后台，用户信息在后台静默补齐，避免 dev 环境登录后卡在此处
+                router.replace('/admin/index')
 
-                const isAdmin = hasAdminRole(userInfo.value);
+                userStore.ensureUserInfoReady(true).then((resolvedUserInfo) => {
+                    console.log('用户信息:', resolvedUserInfo || userInfo.value)
 
-                if (isAdmin) {
-                    // 是管理员 -> 放行
-                    router.push('/admin/index'); // 跳转到后台首页
-                } else {
-                    // 不是管理员 -> 踢回前台
-                    router.push('/'); // 跳转到前台首页
-                }
+                    if (!hasAdminRole(resolvedUserInfo || userInfo.value)) {
+                        router.replace('/')
+                    }
+                }).catch((error) => {
+                    console.error('加载后台用户信息失败:', error)
+                    showMessage('已登录，但加载后台用户信息较慢，请稍候重试', 'warning')
+                })
 
             } else {
                 // 登录失败后的逻辑

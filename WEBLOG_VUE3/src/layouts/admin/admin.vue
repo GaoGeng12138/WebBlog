@@ -4,8 +4,17 @@ import AdminFooter from './components/AdminFooter.vue';
 import AdminHeader from './components/AdminHeader.vue';
 import AdminMenu from './components/AdminMenu.vue';
 import AdminTagList from './components/AdminTagList.vue';
+import { useUserStore } from '@/stores/user'
 import { useMenuStore } from '@/stores/menu'
+import { onMounted } from 'vue'
 const menStore = useMenuStore()
+const userStore = useUserStore()
+
+onMounted(() => {
+    userStore.ensureUserInfoReady().catch((error) => {
+        console.error('后台用户信息初始化失败:', error)
+    })
+})
 </script>
 
 <template>

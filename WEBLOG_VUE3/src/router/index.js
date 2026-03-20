@@ -1,24 +1,25 @@
-import Index from "@/pages/frontend/index.vue";
-import CategoryList from "@/pages/frontend/category-list.vue";
-import TagList from "@/pages/frontend/tag-list.vue";
-import ArchiveList from "@/pages/frontend/archive-list.vue";
-import ArticleDetail from "@/pages/frontend/article-detail.vue";
-import CategoryArticles from "@/pages/frontend/category-articles.vue";  // Added
-import TagArticles from "@/pages/frontend/tag-articles.vue";  // Added
-import UserCenter from '@/pages/frontend/user-center.vue'
-import ArticlePublish from '@/pages/frontend/article-publish.vue'
-import login from "@/pages/admin/login.vue";
-import register from "@/pages/frontend/register.vue"; // Added registration page
-import AdminIndex from '@/pages/admin/index.vue'
 import Admin from "@/layouts/admin/admin.vue";
-import AdminArticleList from '@/pages/admin/article-list.vue'
-import AdminArticleDetail from '@/pages/admin/article-detail.vue'
-import AdminCategoryList from '@/pages/admin/category-list.vue'
-import AdminTagList from '@/pages/admin/tag-list.vue'
-import AdminBlogSetting from '@/pages/admin/blog-setting.vue'
 import { createRouter, createWebHistory } from "vue-router";
 import { useSiteConfigStore } from '@/stores/siteConfig'
 import { ElMessage } from 'element-plus'
+
+const Index = () => import("@/pages/frontend/index.vue")
+const CategoryList = () => import("@/pages/frontend/category-list.vue")
+const TagList = () => import("@/pages/frontend/tag-list.vue")
+const ArchiveList = () => import("@/pages/frontend/archive-list.vue")
+const ArticleDetail = () => import("@/pages/frontend/article-detail.vue")
+const CategoryArticles = () => import("@/pages/frontend/category-articles.vue")
+const TagArticles = () => import("@/pages/frontend/tag-articles.vue")
+const UserCenter = () => import('@/pages/frontend/user-center.vue')
+const ArticlePublish = () => import('@/pages/frontend/article-publish.vue')
+const Login = () => import("@/pages/admin/login.vue")
+const Register = () => import("@/pages/frontend/register.vue")
+const AdminIndex = () => import('@/pages/admin/index.vue')
+const AdminArticleList = () => import('@/pages/admin/article-list.vue')
+const AdminArticleDetail = () => import('@/pages/admin/article-detail.vue')
+const AdminCategoryList = () => import('@/pages/admin/category-list.vue')
+const AdminTagList = () => import('@/pages/admin/tag-list.vue')
+const AdminBlogSetting = () => import('@/pages/admin/blog-setting.vue')
 
 const frontendFavicon = `${import.meta.env.BASE_URL}thoughtflow-frontend.svg`
 const adminFavicon = `${import.meta.env.BASE_URL}thoughtflow-admin-tab.svg`
@@ -99,13 +100,13 @@ const routes = [
         }
     }, {
         path: "/login",//登录页
-        component: login,
+        component: Login,
         meta: {
             title: "登录"
         }
     }, {
         path: "/register",//注册页
-        component: register,
+        component: Register,
         meta: {
             title: "WebLog 注册页"
         }
@@ -200,11 +201,12 @@ const router = createRouter({
 });
 
 // 添加全局路由守卫
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
     const siteConfig = useSiteConfigStore()
     
     // 检查是否允许用户注册
     if (to.path === '/register') {
+        await siteConfig.ensureConfigReady()
         if (!siteConfig.isFeatureEnabled('userRegisterEnabled')) {
             ElMessage.warning('系统暂时关闭了用户注册功能')
             next('/')
@@ -214,6 +216,7 @@ router.beforeEach((to, from, next) => {
     
     // 检查是否允许用户发布文章
     if (to.path === '/article/publish' || to.path.startsWith('/article/edit/')) {
+        await siteConfig.ensureConfigReady()
         if (!siteConfig.isFeatureEnabled('userPublishEnabled')) {
             ElMessage.warning('系统暂时关闭了用户发布文章功能')
             next('/')

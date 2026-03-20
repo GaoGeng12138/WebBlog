@@ -28,12 +28,10 @@ app.use(router)
 app.use(pinia)
 app.use(VueViewer)
 
-// 初始化网站配置
-const bootstrap = async () => {
-    const siteConfigStore = useSiteConfigStore()
-    await siteConfigStore.initConfig()
-    app.mount('#app')
-}
+app.mount('#app')
 
-bootstrap()
+const siteConfigStore = useSiteConfigStore()
+siteConfigStore.ensureConfigReady().catch((error) => {
+    console.error('初始化网站配置失败:', error)
+})
 
