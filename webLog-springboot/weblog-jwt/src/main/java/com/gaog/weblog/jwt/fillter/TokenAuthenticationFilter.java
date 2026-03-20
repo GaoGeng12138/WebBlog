@@ -1,5 +1,6 @@
 package com.gaog.weblog.jwt.fillter;
 
+import com.gaog.weblog.common.exception.BizException;
 import com.gaog.weblog.common.utils.TransportCryptoUtils;
 import com.gaog.weblog.jwt.utils.JwtTokenHelper;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -54,7 +55,12 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
         if (StringUtils.startsWith(header, "Bearer")) {
             // 截取 Token 令牌
             String token = StringUtils.substring(header, 7);
-            token = transportCryptoUtils.decryptIfNecessary(token);
+            try {
+                token = transportCryptoUtils.decryptIfNecessary(token);
+            } catch (BizException ex) {
+                authenticationEntryPoint.commence(request, response, new AuthenticationServiceException(ex.getErrorMessage(), ex));
+                return;
+            }
             log.info("Token: {}", token);
 
             // 判空 Token

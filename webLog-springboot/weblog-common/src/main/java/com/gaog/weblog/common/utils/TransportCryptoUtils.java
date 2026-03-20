@@ -1,6 +1,8 @@
 package com.gaog.weblog.common.utils;
 
 import com.gaog.weblog.common.config.TransportCryptoProperties;
+import com.gaog.weblog.common.enums.ResponseCodeEnum;
+import com.gaog.weblog.common.exception.BizException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -31,7 +33,8 @@ public class TransportCryptoUtils {
 
     @PostConstruct
     public void init() {
-        this.keyBytes = properties.getKey().getBytes(StandardCharsets.UTF_8);
+        String normalizedKey = sanitizeTransportKey(properties.getKey());
+        this.keyBytes = normalizedKey.getBytes(StandardCharsets.UTF_8);
         if (!(keyBytes.length == 16 || keyBytes.length == 24 || keyBytes.length == 32)) {
             throw new IllegalStateException("transport.crypto.key length must be 16, 24, or 32 bytes");
         }
@@ -74,9 +77,9 @@ public class TransportCryptoUtils {
 
         try {
             String payload = encryptedText.substring(ENCRYPTED_PREFIX.length());
-            String[] parts = payload.split("::");
+            String[] parts = payload.split("::", 2);
             if (parts.length != 2) {
-                return encryptedText;
+                throw new BizException(ResponseCodeEnum.TRANSPORT_DECRYPT_FAILED);
             }
 
             byte[] iv = Base64.getDecoder().decode(parts[0]);
@@ -87,13 +90,29 @@ public class TransportCryptoUtils {
             byte[] plainBytes = cipher.doFinal(cipherBytes);
 
             return new String(plainBytes, StandardCharsets.UTF_8);
+        } catch (BizException ex) {
+            throw ex;
         } catch (Exception ex) {
-            log.warn("Failed to decrypt transport payload, keep original value", ex);
-            return encryptedText;
+            log.warn("Failed to decrypt transport payload", ex);
+            throw new BizException(ResponseCodeEnum.TRANSPORT_DECRYPT_FAILED);
         }
     }
 
     private boolean isBlank(String value) {
         return value == null || value.trim().isEmpty();
+    }
+
+    private String sanitizeTransportKey(String rawKey) {
+        if (rawKey == null) {
+            return "";
+        }
+
+        String trimmedKey = rawKey.trim();
+        if ((trimmedKey.startsWith("\"") && trimmedKey.endsWith("\""))
+                || (trimmedKey.startsWith("'") && trimmedKey.endsWith("'"))) {
+            return trimmedKey.substring(1, trimmedKey.length() - 1).trim();
+        }
+
+        return trimmedKey;
     }
 }

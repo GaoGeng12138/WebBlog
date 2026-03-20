@@ -87,7 +87,7 @@ public class GlobalExceptionHandler {
                             .append(" ")
                             .append(error.getDefaultMessage())
                             .append(", 当前值: '")
-                            .append(error.getRejectedValue())
+                            .append(maskRejectedValue(error.getRejectedValue()))
                             .append("'; ")
 
             );
@@ -99,6 +99,19 @@ public class GlobalExceptionHandler {
         log.warn("{} request error, errorCode: {}, errorMessage: {}", request.getRequestURI(), errorCode, errorMessage);
 
         return Response.fail(errorCode, errorMessage);
+    }
+
+    private Object maskRejectedValue(Object rejectedValue) {
+        if (!(rejectedValue instanceof String)) {
+            return rejectedValue;
+        }
+
+        String value = (String) rejectedValue;
+        if (value.startsWith("ENC::")) {
+            return "[encrypted]";
+        }
+
+        return rejectedValue;
     }
 
 }

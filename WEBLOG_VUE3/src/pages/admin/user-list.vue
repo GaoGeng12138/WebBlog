@@ -207,10 +207,26 @@
           />
         </el-form-item>
         <el-form-item label="头像" prop="avatar">
-          <el-input
-            v-model="userForm.avatar"
-            placeholder="请输入头像 URL"
-          />
+          <div class="flex items-center gap-4">
+            <el-upload
+              class="avatar-uploader"
+              :show-file-list="false"
+              :on-change="handleAvatarChange"
+              :auto-upload="false"
+              :before-upload="beforeAvatarUpload"
+              :disabled="avatarUploading"
+            >
+              <img v-if="userForm.avatar" :src="userForm.avatar" class="avatar-preview" />
+              <el-icon v-else class="avatar-uploader-icon">
+                <Plus />
+              </el-icon>
+            </el-upload>
+            <div class="text-sm text-gray-500 leading-6">
+              <div>点击上传头像</div>
+              <div>支持 jpg、png，大小不超过 2MB</div>
+              <div v-if="avatarUploading" class="text-blue-500">头像上传中...</div>
+            </div>
+          </div>
         </el-form-item>
         <el-form-item label="Github" prop="githubUrl">
           <el-input
@@ -231,9 +247,9 @@
           />
         </el-form-item>
         <el-form-item label="角色">
-          <el-checkbox-group v-model="userForm.roles" class="flex flex-col gap-2">
+          <el-checkbox-group v-model="userForm.roleIds" class="flex flex-col gap-2">
             <div v-for="role in allRoles" :key="role.id" class="flex items-center">
-              <el-checkbox :label="role.name">
+              <el-checkbox :label="role.id">
                 <span class="ml-2">{{ role.name }}</span>
               </el-checkbox>
             </div>
@@ -392,6 +408,7 @@ import {
   deleteUser,
   updateUserStatus
 } from '@/api/admin/user'
+import { uploadFile } from '@/api/admin/file'
 import { getRoleList,assignRole } from '@/api/admin/role'
 import { Search, Plus, User, DocumentCopy } from '@element-plus/icons-vue'
 import moment from 'moment'
@@ -417,6 +434,7 @@ const loading = ref(false)
 const dialogVisible = ref(false)
 const dialogTitle = ref('')
 const submitLoading = ref(false)
+const avatarUploading = ref(false)
 
 // 授权对话框
 const authDialogVisible = ref(false)
@@ -479,7 +497,7 @@ const userForm = reactive({
   githubUrl: '',
   twitterUrl: '',
   weiboUrl: '',
-  roles: [],
+  roleIds: [],
   isEnabled: true
 })
 
@@ -583,7 +601,7 @@ const handleAddUser = () => {
     githubUrl: '',
     twitterUrl: '',
     weiboUrl: '',
-    roles: [],
+    roleIds: [],
     isEnabled: true
   })
   // 加载所有角色（如果沒有加载）
@@ -591,7 +609,8 @@ loadAllRoles()
 }
 
 // 编辑用户
-const handleEdit = (row) => {
+const handleEdit = async (row) => {
+  await loadAllRoles()
   dialogTitle.value = '编辑用户'
   dialogVisible.value = true
   // 填充表单数据
@@ -607,7 +626,9 @@ const handleEdit = (row) => {
     githubUrl: row.githubUrl || '',
     twitterUrl: row.twitterUrl || '',
     weiboUrl: row.weiboUrl || '',
-    roles: Array.isArray(row.roles) ? [...row.roles] : [],
+    roleIds: Array.isArray(row.roles)
+      ? allRoles.value.filter(role => row.roles.includes(role.name)).map(role => role.id)
+      : [],
     isEnabled: row.isEnabled
   })
 }
@@ -771,8 +792,55 @@ const handleChangeStatus = async (row) => {
   }
 }
 
+const beforeAvatarUpload = (file) => {
+  const isImage = file.type === 'image/jpeg' || file.type === 'image/png'
+  const isLt2M = file.size / 1024 / 1024 < 2
+
+  if (!isImage) {
+    ElMessage.error('头像图片只能是 JPG/PNG 格式')
+  }
+  if (!isLt2M) {
+    ElMessage.error('头像图片大小不能超过 2MB')
+  }
+
+  return isImage && isLt2M
+}
+
+const handleAvatarChange = (file) => {
+  if (!file?.raw || avatarUploading.value) {
+    return
+  }
+
+  if (!beforeAvatarUpload(file.raw)) {
+    return
+  }
+
+  const formData = new FormData()
+  formData.append('file', file.raw)
+  avatarUploading.value = true
+
+  uploadFile(formData).then((res) => {
+    if (res?.success && res?.data?.url) {
+      userForm.avatar = res.data.url
+      ElMessage.success('头像上传成功')
+      return
+    }
+    ElMessage.error(res?.message || '头像上传失败')
+  }).catch((error) => {
+    console.error('头像上传失败:', error)
+    ElMessage.error(error?.response?.data?.message || '头像上传失败')
+  }).finally(() => {
+    avatarUploading.value = false
+  })
+}
+
 // 提交表单
 const handleSubmit = () => {
+  if (avatarUploading.value) {
+    ElMessage.warning('头像上传中，请等待上传完成后再提交')
+    return
+  }
+
   userFormRef.value.validate(async (valid) => {
     if (!valid) return
     
@@ -847,6 +915,38 @@ onMounted(() => {
 .user-table :deep(.el-table__header th) {
   background-color: #f0f9ff !important;
   border-bottom: 2px solid #3b82f6 !important;
+}
+
+.avatar-uploader :deep(.el-upload) {
+  width: 96px;
+  height: 96px;
+  border: 1px dashed #cbd5e1;
+  border-radius: 14px;
+  overflow: hidden;
+  background: linear-gradient(135deg, #f8fbff 0%, #eef4ff 100%);
+  transition: all 0.25s ease;
+}
+
+.avatar-uploader :deep(.el-upload:hover) {
+  border-color: #4f7cff;
+  box-shadow: 0 8px 24px rgba(79, 124, 255, 0.14);
+}
+
+.avatar-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.avatar-uploader-icon {
+  width: 96px;
+  height: 96px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  color: #94a3b8;
 }
 
 .user-table :deep(.el-table__body tr:hover > td) {

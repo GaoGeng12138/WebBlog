@@ -2,8 +2,10 @@ package com.gaog.weblog.jwt.fillter;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.gaog.weblog.common.exception.BizException;
 import com.gaog.weblog.common.utils.TransportCryptoUtils;
 import com.gaog.weblog.jwt.exception.UsernameOrPasswordNullException;
+import org.springframework.security.authentication.AuthenticationServiceException;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -51,8 +53,14 @@ public class JwtAuthenticationFilter extends AbstractAuthenticationProcessingFil
             throw new UsernameOrPasswordNullException("用户名或密码不能为空");
         }
 
-        String username = transportCryptoUtils.decryptIfNecessary(usernameNode.asText());
-        String password = transportCryptoUtils.decryptIfNecessary(passwordNode.asText());
+        final String username;
+        final String password;
+        try {
+            username = transportCryptoUtils.decryptIfNecessary(usernameNode.asText());
+            password = transportCryptoUtils.decryptIfNecessary(passwordNode.asText());
+        } catch (BizException ex) {
+            throw new AuthenticationServiceException(ex.getErrorMessage(), ex);
+        }
 
 
         // 将用户名、密码封装到 Token 中

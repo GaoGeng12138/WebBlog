@@ -30,8 +30,11 @@ public class SensitiveResponseBodyAdvice implements ResponseBodyAdvice<Object> {
     public Object beforeBodyWrite(Object body, MethodParameter returnType, MediaType selectedContentType,
                                   Class<? extends HttpMessageConverter<?>> selectedConverterType,
                                   ServerHttpRequest request, ServerHttpResponse response) {
-        sensitiveDataProcessor.encryptResponseFields(body);
-        response.getHeaders().add("X-Transport-Encrypted", "true");
+        boolean encrypted = sensitiveDataProcessor.encryptResponseFields(body);
+        response.getHeaders().remove("X-Transport-Encrypted");
+        if (encrypted) {
+            response.getHeaders().add("X-Transport-Encrypted", "true");
+        }
         return body;
     }
 }

@@ -31,7 +31,7 @@ export function getUserList(params) {
 
 // 新增用户
 export function addUser(data) {
-    return axios.post("/admin/user/add", data, {
+    return axios.post("/admin/user/create", data, {
         sensitiveFields: ['username', 'password', 'email', 'nickname']
     })
 }
@@ -45,7 +45,7 @@ export function updateUser(data) {
 
 // 删除用户
 export function deleteUser(id) {
-    return axios.delete(`/admin/user/delete/${id}`)
+    return axios.post('/admin/user/delete', { id })
 }
 
 // 启用/停用用户

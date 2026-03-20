@@ -354,6 +354,7 @@ public class AdminUserServiceImpl implements AdminUserService {
         String githubUrl = updateUserInfoReqVO.getGithubUrl();
         String twitterUrl = updateUserInfoReqVO.getTwitterUrl();
         String weiboUrl = updateUserInfoReqVO.getWeiboUrl();
+        List<Long> roleIds = updateUserInfoReqVO.getRoleIds();
 
         // 1. 检查用户是否存在
         UserDO userDO = userMapper.selectById(id);
@@ -385,6 +386,18 @@ public class AdminUserServiceImpl implements AdminUserService {
         if (count != 1) {
             log.error("更新用户信息失败，数据库更新失败: {}", id);
             return Response.fail(ResponseCodeEnum.UPDATE_USER_INFO_FAILED);
+        }
+
+        if (roleIds != null) {
+            userRoleMapper.deleteByUserId(id);
+            for (Long roleId : roleIds) {
+                UserRoleDO userRoleDO = UserRoleDO.builder()
+                        .userId(id)
+                        .roleId(roleId)
+                        .createTime(new Date())
+                        .build();
+                userRoleMapper.insert(userRoleDO);
+            }
         }
 
         log.info("更新用户信息成功: userId={}", id);

@@ -22,65 +22,80 @@ public class SensitiveDataProcessor {
         this.transportCryptoUtils = transportCryptoUtils;
     }
 
-    public void decryptRequestFields(Object target) {
-        process(target, Mode.REQUEST, new IdentityHashMap<>());
+    public boolean decryptRequestFields(Object target) {
+        return process(target, Mode.REQUEST, new IdentityHashMap<>());
     }
 
-    public void encryptResponseFields(Object target) {
-        process(target, Mode.RESPONSE, new IdentityHashMap<>());
+    public boolean encryptResponseFields(Object target) {
+        return process(target, Mode.RESPONSE, new IdentityHashMap<>());
     }
 
-    private void process(Object target, Mode mode, IdentityHashMap<Object, Boolean> visited) {
+    private boolean process(Object target, Mode mode, IdentityHashMap<Object, Boolean> visited) {
         if (target == null || visited.containsKey(target) || isTerminalType(target.getClass())) {
-            return;
+            return false;
         }
 
         visited.put(target, Boolean.TRUE);
+        boolean changed = false;
 
         if (target instanceof Collection) {
             for (Object item : (Collection<?>) target) {
-                process(item, mode, visited);
+                changed = process(item, mode, visited) || changed;
             }
-            return;
+            return changed;
         }
 
         if (target instanceof Map) {
             for (Object value : ((Map<?, ?>) target).values()) {
-                process(value, mode, visited);
+                changed = process(value, mode, visited) || changed;
             }
-            return;
+            return changed;
         }
 
         if (target.getClass().isArray()) {
             int length = Array.getLength(target);
             for (int i = 0; i < length; i++) {
-                process(Array.get(target, i), mode, visited);
+                changed = process(Array.get(target, i), mode, visited) || changed;
             }
-            return;
+            return changed;
         }
 
-        ReflectionUtils.doWithFields(target.getClass(), field -> processField(target, field, mode, visited));
+        final boolean[] fieldChanged = {false};
+        ReflectionUtils.doWithFields(target.getClass(), field -> {
+            if (processField(target, field, mode, visited)) {
+                fieldChanged[0] = true;
+            }
+        });
+        return changed || fieldChanged[0];
     }
 
-    private void processField(Object target, Field field, Mode mode, IdentityHashMap<Object, Boolean> visited) throws IllegalAccessException {
+    private boolean processField(Object target, Field field, Mode mode, IdentityHashMap<Object, Boolean> visited) throws IllegalAccessException {
         ReflectionUtils.makeAccessible(field);
         Object value = field.get(target);
         if (value == null) {
-            return;
+            return false;
         }
 
         SensitiveField sensitiveField = field.getAnnotation(SensitiveField.class);
         if (sensitiveField != null && field.getType() == String.class) {
             if (mode == Mode.REQUEST && sensitiveField.request()) {
-                field.set(target, transportCryptoUtils.decryptIfNecessary((String) value));
+                String decryptedValue = transportCryptoUtils.decryptIfNecessary((String) value);
+                if (!decryptedValue.equals(value)) {
+                    field.set(target, decryptedValue);
+                    return true;
+                }
             }
             if (mode == Mode.RESPONSE && sensitiveField.response()) {
-                field.set(target, transportCryptoUtils.encryptIfNecessary((String) value));
+                String encryptedValue = transportCryptoUtils.encryptIfNecessary((String) value);
+                if (!encryptedValue.equals(value)) {
+                    field.set(target, encryptedValue);
+                    return true;
+                }
             }
-            return;
+            return false;
         }
 
-        process(value, mode, visited);
+        return process(value, mode, visited);
     }
 
     private boolean isTerminalType(Class<?> clazz) {

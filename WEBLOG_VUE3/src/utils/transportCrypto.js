@@ -5,6 +5,19 @@ let cachedTransportKeyMeta = null
 let hasWarnedInvalidEnvKey = false
 let hasWarnedDefaultKeyUsage = false
 
+export class TransportCryptoError extends Error {
+  constructor(message, options = {}) {
+    super(message)
+    this.name = 'TransportCryptoError'
+    this.code = options.code || 'TRANSPORT_CRYPTO_ERROR'
+    this.cause = options.cause
+  }
+}
+
+export function isTransportCryptoError(error) {
+  return error instanceof TransportCryptoError || error?.name === 'TransportCryptoError'
+}
+
 function sanitizeTransportKey(rawKey) {
   if (typeof rawKey !== 'string') {
     return ''
@@ -139,11 +152,18 @@ export async function encryptTransportValue(value) {
     return value
   }
 
-  const iv = crypto.getRandomValues(new Uint8Array(16))
-  const payload = new TextEncoder().encode(String(value))
-  const encrypted = await crypto.subtle.encrypt({ name: 'AES-CBC', iv }, key, payload)
+  try {
+    const iv = crypto.getRandomValues(new Uint8Array(16))
+    const payload = new TextEncoder().encode(String(value))
+    const encrypted = await crypto.subtle.encrypt({ name: 'AES-CBC', iv }, key, payload)
 
-  return `${ENCRYPTED_PREFIX}${toBase64(iv)}::${toBase64(new Uint8Array(encrypted))}`
+    return `${ENCRYPTED_PREFIX}${toBase64(iv)}::${toBase64(new Uint8Array(encrypted))}`
+  } catch (error) {
+    throw new TransportCryptoError('Failed to encrypt transport payload', {
+      code: 'TRANSPORT_ENCRYPT_FAILED',
+      cause: error
+    })
+  }
 }
 
 function toBase64(bytes) {
@@ -155,12 +175,19 @@ function toBase64(bytes) {
 }
 
 function fromBase64(base64) {
-  const binary = atob(base64)
-  const bytes = new Uint8Array(binary.length)
-  for (let i = 0; i < binary.length; i += 1) {
-    bytes[i] = binary.charCodeAt(i)
+  try {
+    const binary = atob(base64)
+    const bytes = new Uint8Array(binary.length)
+    for (let i = 0; i < binary.length; i += 1) {
+      bytes[i] = binary.charCodeAt(i)
+    }
+    return bytes
+  } catch (error) {
+    throw new TransportCryptoError('Invalid transport payload encoding', {
+      code: 'TRANSPORT_INVALID_BASE64',
+      cause: error
+    })
   }
-  return bytes
 }
 
 export async function decryptTransportValue(value) {
@@ -171,7 +198,9 @@ export async function decryptTransportValue(value) {
   const payload = value.slice(ENCRYPTED_PREFIX.length)
   const [ivBase64, cipherBase64] = payload.split('::')
   if (!ivBase64 || !cipherBase64) {
-    return value
+    throw new TransportCryptoError('Invalid transport payload format', {
+      code: 'TRANSPORT_INVALID_FORMAT'
+    })
   }
 
   const key = await importAesKey()
@@ -179,11 +208,21 @@ export async function decryptTransportValue(value) {
     return value
   }
 
-  const iv = fromBase64(ivBase64)
-  const encrypted = fromBase64(cipherBase64)
-  const plainBuffer = await crypto.subtle.decrypt({ name: 'AES-CBC', iv }, key, encrypted)
+  try {
+    const iv = fromBase64(ivBase64)
+    const encrypted = fromBase64(cipherBase64)
+    const plainBuffer = await crypto.subtle.decrypt({ name: 'AES-CBC', iv }, key, encrypted)
 
-  return new TextDecoder().decode(plainBuffer)
+    return new TextDecoder().decode(plainBuffer)
+  } catch (error) {
+    if (isTransportCryptoError(error)) {
+      throw error
+    }
+    throw new TransportCryptoError('Failed to decrypt transport payload', {
+      code: 'TRANSPORT_DECRYPT_FAILED',
+      cause: error
+    })
+  }
 }
 
 export async function encryptPayloadFields(payload, sensitiveFields = []) {

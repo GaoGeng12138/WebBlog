@@ -7,6 +7,7 @@ import com.gaog.weblog.jwt.exception.UsernameOrPasswordNullException;
 import com.gaog.weblog.jwt.utils.ResultUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -49,6 +50,9 @@ public class RestAuthenticationFailureHandler implements AuthenticationFailureHa
             // 用户名或密码为空
             // 使用ResultUtil工具类返回失败响应，包含异常信息
             ResultUtil.fail(response, Response.fail(exception.getMessage()));
+            return;
+        } else if (exception instanceof AuthenticationServiceException) {
+            ResultUtil.fail(response, Response.fail(ResponseCodeEnum.TRANSPORT_DECRYPT_FAILED.getErrorCode(), exception.getMessage()));
             return;
         } else if (exception instanceof InternalAuthenticationServiceException) {
             Throwable cause = exception.getCause();

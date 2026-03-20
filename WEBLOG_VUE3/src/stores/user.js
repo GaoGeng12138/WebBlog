@@ -38,9 +38,14 @@ export const useUserStore = defineStore('user', () => {
             return currentValue
         }
 
-        const decryptedValue = await decryptTransportData(currentValue)
-        targetRef.value = decryptedValue
-        return decryptedValue
+        try {
+            const decryptedValue = await decryptTransportData(currentValue)
+            targetRef.value = decryptedValue
+            return decryptedValue
+        } catch (error) {
+            targetRef.value = {}
+            throw error
+        }
     }
 
     // 设置后台用户信息
@@ -118,11 +123,11 @@ export const useUserStore = defineStore('user', () => {
     }
 
     watch(userInfo, () => {
-        normalizeUserRef(userInfo)
+        normalizeUserRef(userInfo).catch(() => {})
     }, { deep: true, immediate: true })
 
     watch(frontendUserInfo, () => {
-        normalizeUserRef(frontendUserInfo)
+        normalizeUserRef(frontendUserInfo).catch(() => {})
     }, { deep: true, immediate: true })
 
     return { userInfo, frontendUserInfo, setUserInfo, setFrontendUserInfo, ensureUserInfoReady, ensureFrontendUserInfoReady, logout }

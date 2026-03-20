@@ -58,7 +58,7 @@ public class AdminUserController {
         return userService.updateUserStatus(updateUserStatusReqVO);
     }
 
-    @PostMapping("/user/create")
+    @PostMapping({"/user/create", "/user/add"})
     @ApiOperation(value = "创建用户")
     @ApiOperationLog(description = "创建用户")
     public Response createUser(@RequestBody @Validated CreateUserReqVO createUserReqVO) {
@@ -70,6 +70,13 @@ public class AdminUserController {
     @ApiOperationLog(description = "删除用户")
     public Response deleteUser(@RequestBody @Validated DeleteUserReqVO deleteUserReqVO) {
         return userService.deleteUser(deleteUserReqVO);
+    }
+
+    @DeleteMapping("/user/delete/{id}")
+    @ApiOperation(value = "删除用户")
+    @ApiOperationLog(description = "删除用户")
+    public Response deleteUser(@PathVariable Long id) {
+        return userService.deleteUser(DeleteUserReqVO.builder().id(id).build());
     }
 
     @PostMapping("/user/info/update")

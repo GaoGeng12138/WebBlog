@@ -11,6 +11,7 @@ import org.hibernate.validator.constraints.Length;
 
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotNull;
+import java.util.List;
 
 /**
  * @author Gao
@@ -66,4 +67,7 @@ public class UpdateUserInfoReqVO {
     @Length(max = 200, message = "微博链接长度不能超过200个字符")
     @ApiModelProperty(value = "微博链接")
     private String weiboUrl;
+
+    @ApiModelProperty(value = "角色ID列表")
+    private List<Long> roleIds;
 }

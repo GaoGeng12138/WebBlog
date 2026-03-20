@@ -276,8 +276,13 @@ const onSubmit = () => {
 
                 //存储token到cookie
                 let token = response.data.token;
-                if (isEncryptedTransportValue(token)) {
-                    token = await decryptTransportValue(token)
+                try {
+                    if (isEncryptedTransportValue(token)) {
+                        token = await decryptTransportValue(token)
+                    }
+                } catch (error) {
+                    showMessage('登录凭证解密失败，请检查前后端加密配置。', 'error')
+                    return
                 }
                 setToken(token);
 

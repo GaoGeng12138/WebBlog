@@ -56,6 +56,7 @@ public enum ResponseCodeEnum implements BaseExceptionInterface {
     FAVORITE_DISABLED("20036", "收藏功能已关闭！"),
     USER_PUBLISH_DISABLED("20037", "用户发布文章功能已关闭！"),
     LIKE_DISABLED("20038", "点赞功能已关闭！"),
+    TRANSPORT_DECRYPT_FAILED("20039", "传输数据解密失败，请刷新页面后重试！"),
 
     // ----------- 业务异常状态码 -----------
     PRODUCT_NOT_FOUND("20000", "该产品不存在（测试使用）"),
