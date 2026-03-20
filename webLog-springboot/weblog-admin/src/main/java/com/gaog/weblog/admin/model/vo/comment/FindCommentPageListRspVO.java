@@ -1,5 +1,6 @@
 package com.gaog.weblog.admin.model.vo.comment;
 
+import com.gaog.weblog.common.annotation.SensitiveField;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
@@ -32,9 +33,11 @@ public class FindCommentPageListRspVO {
     private Long userId;
 
     @ApiModelProperty("Commenter nickname")
+    @SensitiveField(request = false)
     private String nickname;
 
     @ApiModelProperty("Commenter email")
+    @SensitiveField(request = false)
     private String email;
 
     @ApiModelProperty("Comment content")

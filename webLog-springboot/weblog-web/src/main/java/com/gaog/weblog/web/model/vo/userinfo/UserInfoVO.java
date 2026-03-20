@@ -1,5 +1,6 @@
 package com.gaog.weblog.web.model.vo.userinfo;
 
+import com.gaog.weblog.common.annotation.SensitiveField;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -29,11 +30,13 @@ public class UserInfoVO implements Serializable {
     /**
      * 用户名
      */
+    @SensitiveField(request = false)
     private String username;
 
     /**
      * 昵称
      */
+    @SensitiveField(request = false)
     private String nickname;
 
     /**
@@ -44,18 +47,23 @@ public class UserInfoVO implements Serializable {
     /**
      * 邮箱
      */
+    @SensitiveField(request = false)
     private String email;
 
     /**
      * 个性签名
      */
+    @SensitiveField(request = false)
     private String introduction;
 
     /**
      * 社交链接
      */
+    @SensitiveField(request = false)
     private String githubUrl;
+    @SensitiveField(request = false)
     private String twitterUrl;
+    @SensitiveField(request = false)
     private String weiboUrl;
 
 

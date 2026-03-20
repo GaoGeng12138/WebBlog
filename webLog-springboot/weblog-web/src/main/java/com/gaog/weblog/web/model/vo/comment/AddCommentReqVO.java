@@ -1,5 +1,6 @@
 package com.gaog.weblog.web.model.vo.comment;
 
+import com.gaog.weblog.common.annotation.SensitiveField;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
@@ -35,9 +36,11 @@ public class AddCommentReqVO {
     private String content;
 
     @ApiModelProperty(value = "Nickname (for anonymous comment)")
+    @SensitiveField(response = false)
     private String nickname;
 
     @ApiModelProperty(value = "Email (for anonymous comment)")
+    @SensitiveField(response = false)
     private String email;
 
     @ApiModelProperty(value = "Website (optional)")

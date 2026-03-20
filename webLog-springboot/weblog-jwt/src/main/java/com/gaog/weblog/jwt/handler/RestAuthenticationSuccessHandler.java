@@ -1,5 +1,6 @@
 package com.gaog.weblog.jwt.handler;
 
+import com.gaog.weblog.common.utils.TransportCryptoUtils;
 import com.gaog.weblog.common.utils.Response;
 import com.gaog.weblog.jwt.model.LoginRspVO;
 import com.gaog.weblog.jwt.utils.JwtTokenHelper;
@@ -28,6 +29,8 @@ import java.io.IOException;
 public class RestAuthenticationSuccessHandler implements AuthenticationSuccessHandler {
     @Autowired
     private JwtTokenHelper jwtTokenHelper;
+    @Autowired
+    private TransportCryptoUtils transportCryptoUtils;
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
@@ -39,7 +42,9 @@ public class RestAuthenticationSuccessHandler implements AuthenticationSuccessHa
         String token = jwtTokenHelper.generateToken(username);
 
         // 返回 Token
-        LoginRspVO loginRspVO = LoginRspVO.builder().token(token).build();
+        LoginRspVO loginRspVO = LoginRspVO.builder()
+                .token(transportCryptoUtils.encryptIfNecessary(token))
+                .build();
 
         ResultUtil.ok(response, Response.success(loginRspVO));
     }

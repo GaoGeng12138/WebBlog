@@ -1,5 +1,6 @@
 package com.gaog.weblog.admin.model.vo.userinfo;
 
+import com.gaog.weblog.common.annotation.SensitiveField;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
@@ -27,17 +28,21 @@ public class UpdateAdminUserPasswordReqVO implements Serializable {
     private static final long serialVersionUID = 3581428302630039848L;
     @NotBlank(message = "用户名不能为空")
     @ApiModelProperty(value = "用户名")
+    @SensitiveField(response = false)
     private String username;
 
     @NotBlank(message = "旧密码不能为空")
     @ApiModelProperty(value = "旧密码")
+    @SensitiveField(response = false)
     private String oldPassword;
 
     @NotBlank(message = "密码不能为空")
     @ApiModelProperty(value = "密码")
+    @SensitiveField(response = false)
     private String password;
 
     @NotBlank(message = "确认密码不能为空")
     @ApiModelProperty(value = "确认密码")
+    @SensitiveField(response = false)
     private String confirmPassword;
 }

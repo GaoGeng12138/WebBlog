@@ -1,5 +1,6 @@
 package com.gaog.weblog.jwt.config;
 
+import com.gaog.weblog.common.utils.TransportCryptoUtils;
 import com.gaog.weblog.jwt.fillter.JwtAuthenticationFilter;
 import com.gaog.weblog.jwt.handler.RestAuthenticationFailureHandler;
 import com.gaog.weblog.jwt.handler.RestAuthenticationSuccessHandler;
@@ -35,11 +36,13 @@ public class JwtAuthenticationSecurityConfig extends SecurityConfigurerAdapter<D
 
     @Autowired
     private UserDetailsService userDetailsService;
+    @Autowired
+    private TransportCryptoUtils transportCryptoUtils;
 
     @Override
     public void configure(HttpSecurity httpSecurity) throws Exception {
         // 自定义的用于 JWT 身份验证的过滤器
-        JwtAuthenticationFilter filter = new JwtAuthenticationFilter();
+        JwtAuthenticationFilter filter = new JwtAuthenticationFilter(transportCryptoUtils);
         filter.setAuthenticationManager(httpSecurity.getSharedObject(AuthenticationManager.class));
 
         // 设置登录认证对应的处理类（成功处理、失败处理）

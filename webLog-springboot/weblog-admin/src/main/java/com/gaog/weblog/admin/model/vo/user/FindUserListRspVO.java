@@ -1,5 +1,6 @@
 package com.gaog.weblog.admin.model.vo.user;
 
+import com.gaog.weblog.common.annotation.SensitiveField;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
@@ -25,12 +26,15 @@ public class FindUserListRspVO {
     private Long id;
 
     @ApiModelProperty(value = "用户名")
+    @SensitiveField(request = false)
     private String username;
 
     @ApiModelProperty(value = "昵称")
+    @SensitiveField(request = false)
     private String nickname;
 
     @ApiModelProperty(value = "邮箱")
+    @SensitiveField(request = false)
     private String email;
 
     @ApiModelProperty(value = "头像")

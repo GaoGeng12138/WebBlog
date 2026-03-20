@@ -1,5 +1,6 @@
 package com.gaog.weblog.admin.model.vo.userinfo;
 
+import com.gaog.weblog.common.annotation.SensitiveField;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -24,6 +25,7 @@ public class FindUserInfoRspVO implements Serializable {
     /**
      * 用户名
      */
+    @SensitiveField(request = false)
     private String username;
     /**
      * 角色

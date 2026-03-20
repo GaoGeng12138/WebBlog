@@ -1,5 +1,6 @@
 package com.gaog.weblog.admin.model.vo.user;
 
+import com.gaog.weblog.common.annotation.SensitiveField;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
@@ -28,18 +29,22 @@ public class UpdateUserInfoReqVO {
 
     @Email(message = "邮箱格式不正确")
     @ApiModelProperty(value = "邮箱")
+    @SensitiveField(response = false)
     private String email;
 
     @ApiModelProperty(value = "用户名")
     @Length(max = 100, message = "用户名长度不能超过100个字符")
+    @SensitiveField(response = false)
     private String username;
 
     @Length(max = 100, message = "昵称长度不能超过100个字符")
     @ApiModelProperty(value = "昵称")
+    @SensitiveField(response = false)
     private String nickname;
 
     @ApiModelProperty(value = "密码")
     @Length(max = 100, message = "密码长度不能超过100个字符")
+    @SensitiveField(response = false)
     private String password;
 
     @Length(max = 255, message = "个性签名长度不能超过255个字符")

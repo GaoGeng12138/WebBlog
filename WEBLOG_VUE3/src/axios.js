@@ -1,6 +1,7 @@
 import axios from "axios";
 import { getToken, removeToken } from "@/composables/cookie";
 import { showMessage } from "@/composables/util";
+import { decryptTransportData, encryptPayloadFields } from "@/utils/transportCrypto";
 
 function getApiBaseURL() {
     if (import.meta.env.VITE_API_BASE_URL) {
@@ -19,11 +20,15 @@ const instance = axios.create({
 
 //请求拦截器中先是获取了 Cookie 中的 Token 令牌，在不为空的情况下，将其添加到请求头中，
 // 按后端的规范，key 为 Authorization, 值为 Bearer + 中间空一格 + 令牌 的格式
-instance.interceptors.request.use(config => {
+instance.interceptors.request.use(async config => {
     // 在发送请求之前做些什么
     const token = getToken();
     if (token) {
         config.headers['Authorization'] = 'Bearer ' + token; // 将 token 添加到请求头中
+    }
+
+    if (config.data && config.sensitiveFields?.length) {
+        config.data = await encryptPayloadFields(config.data, config.sensitiveFields);
     }
     return config;
 }, function (error) {
@@ -33,9 +38,9 @@ instance.interceptors.request.use(config => {
 
 
 // 添加响应拦截器
-instance.interceptors.response.use(response => {
+instance.interceptors.response.use(async response => {
     // 2xx 范围内的状态码都会触发该函数。
-    const data = response.data;
+    const data = await decryptTransportData(response.data);
     // 正常返回数据
     return data;
 }, function (error) {

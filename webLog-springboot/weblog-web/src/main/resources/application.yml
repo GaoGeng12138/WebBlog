@@ -11,3 +11,8 @@ jwt:
   secret: IUK/BG1I1eL5Wm0ZC9zqfa2QUu8b5qAIWLwIW6pCnIQTGTZt2PItoDW1OCqGj7ri5yqQKI4bpGHWA3+HoIS+7A==
   #过期时间
   expiration: 24
+
+transport:
+  crypto:
+    enabled: true
+    key: ${WEBLOG_TRANSPORT_CRYPTO_KEY:WebLogTransportKey2026Secret!!@#}

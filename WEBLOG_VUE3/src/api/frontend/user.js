@@ -7,7 +7,9 @@ export function getUserInfoFrontend() {
 
 // 前台用户注册
 export function registerFrontend(data) {
-    return axios.post('/user/register', data)
+    return axios.post('/user/register', data, {
+        sensitiveFields: ['username', 'password', 'email', 'nickname']
+    })
 }
 
 // 获取用户中心统计数据

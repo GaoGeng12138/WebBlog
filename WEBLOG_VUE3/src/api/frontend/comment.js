@@ -25,7 +25,9 @@ export function getComments(articleId, pageNum = 1, pageSize = 10) {
  * @returns {Promise}
  */
 export function postComment(commentData) {
-    return axios.post('/comment/add', commentData)
+    return axios.post('/comment/add', commentData, {
+        sensitiveFields: ['nickname', 'email']
+    })
 }
 
 /**

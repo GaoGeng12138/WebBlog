@@ -1,5 +1,6 @@
 package com.gaog.weblog.jwt.model;
 
+import com.gaog.weblog.common.annotation.SensitiveField;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -20,5 +21,6 @@ public class LoginRspVO {
     /**
      * Token
      */
+    @SensitiveField(request = false)
     private String token;
 }
