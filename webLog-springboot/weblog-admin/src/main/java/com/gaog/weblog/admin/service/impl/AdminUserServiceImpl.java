@@ -66,8 +66,11 @@ public class AdminUserServiceImpl implements AdminUserService {
      */
     @Override
     public Response updatePassword(UpdateAdminUserPasswordReqVO updateAdminUserPasswordReqVO) {
-        //获取用户名和密码
-        String username = updateAdminUserPasswordReqVO.getUsername();
+        // 优先使用当前登录态中的用户名，避免依赖前端回传用户名导致查找失败或被篡改
+        String username = SecurityContextUtil.getCurrentUsername();
+        if (StringUtils.isBlank(username)) {
+            username = updateAdminUserPasswordReqVO.getUsername();
+        }
         String oldPassword = updateAdminUserPasswordReqVO.getOldPassword();
         String password = updateAdminUserPasswordReqVO.getPassword();
         String confirmPassword = updateAdminUserPasswordReqVO.getConfirmPassword();
