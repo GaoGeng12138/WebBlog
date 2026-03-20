@@ -21,6 +21,7 @@ import com.gaog.weblog.common.domain.mapper.UserFavoriteArticleMapper;
 import com.gaog.weblog.common.utils.IpLocationUtil;
 import com.gaog.weblog.common.utils.IpUtil;
 import com.gaog.weblog.web.model.vo.user.RegisterUserReqVO;
+import com.gaog.weblog.web.model.vo.user.UpdateUserProfileReqVO;
 import com.gaog.weblog.web.model.vo.user.UserCurrentLocationRspVO;
 import com.gaog.weblog.web.model.vo.user.RegisterUserRspVO;
 import com.gaog.weblog.web.model.vo.user.UserCenterStatsVO;
@@ -32,11 +33,13 @@ import com.gaog.weblog.web.model.vo.userinfo.UserInfoVO;
 import com.gaog.weblog.web.service.UserActivityScoreService;
 import com.gaog.weblog.web.service.UserService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import javax.servlet.http.HttpServletRequest;
 import java.util.Date;
 import java.util.HashSet;
@@ -82,16 +85,15 @@ public class UserServiceImpl implements UserService {
      */
     @Override
     public Response getUserInfo() {
-        // 直接从 SecurityContext 中获取用户信息，无需查询数据库
-        CustomUserDetails currentUser = SecurityContextUtil.getCurrentUser();
-
-        if (currentUser == null) {
-            return Response.fail("用户未登录");
+        Long currentUserId = SecurityContextUtil.getCurrentUserId();
+        UserDO currentUser = userMapper.selectById(currentUserId);
+        if (currentUser == null || Boolean.TRUE.equals(currentUser.getIsDeleted())) {
+            return Response.fail(ResponseCodeEnum.USER_NOT_FOUND);
         }
 
-        // 组装返回数据，直接使用 CustomUserDetails 中的信息
+        CustomUserDetails userDetails = SecurityContextUtil.getCurrentUser();
         UserInfoVO userInfoVO = UserInfoVO.builder()
-                .userId(currentUser.getUserId())
+                .userId(currentUser.getId())
                 .username(currentUser.getUsername())
                 .avatar(currentUser.getAvatar())
                 .introduction(currentUser.getIntroduction())
@@ -100,7 +102,7 @@ public class UserServiceImpl implements UserService {
                 .githubUrl(currentUser.getGithubUrl())
                 .twitterUrl(currentUser.getTwitterUrl())
                 .weiboUrl(currentUser.getWeiboUrl())
-                .roles(new HashSet<>(currentUser.getRoles()))
+                .roles(new HashSet<>(userDetails.getRoles()))
                 .registerTime(currentUser.getCreateTime())
                 .build();
 
@@ -231,6 +233,46 @@ public class UserServiceImpl implements UserService {
                 .build();
 
         return Response.success(rspVO);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Response updateProfile(UpdateUserProfileReqVO updateUserProfileReqVO) {
+        Long currentUserId = SecurityContextUtil.getCurrentUserId();
+        UserDO userDO = userMapper.selectById(currentUserId);
+        if (userDO == null || Boolean.TRUE.equals(userDO.getIsDeleted())) {
+            log.warn("更新前台用户资料失败，用户不存在: {}", currentUserId);
+            return Response.fail(ResponseCodeEnum.USER_NOT_FOUND);
+        }
+
+        String nickname = updateUserProfileReqVO.getNickname();
+        String introduction = updateUserProfileReqVO.getIntroduction();
+        String avatar = updateUserProfileReqVO.getAvatar();
+        String email = updateUserProfileReqVO.getEmail();
+        String githubUrl = updateUserProfileReqVO.getGithubUrl();
+        String twitterUrl = updateUserProfileReqVO.getTwitterUrl();
+        String weiboUrl = updateUserProfileReqVO.getWeiboUrl();
+
+        com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<UserDO> updateWrapper =
+                new com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<>();
+        updateWrapper
+                .set(StringUtils.isNotBlank(nickname), UserDO::getNickname, nickname)
+                .set(StringUtils.isNotBlank(introduction), UserDO::getIntroduction, introduction)
+                .set(StringUtils.isNotBlank(avatar), UserDO::getAvatar, avatar)
+                .set(StringUtils.isNotBlank(email), UserDO::getEmail, email)
+                .set(StringUtils.isNotBlank(githubUrl), UserDO::getGithubUrl, githubUrl)
+                .set(StringUtils.isNotBlank(twitterUrl), UserDO::getTwitterUrl, twitterUrl)
+                .set(StringUtils.isNotBlank(weiboUrl), UserDO::getWeiboUrl, weiboUrl)
+                .set(UserDO::getUpdateTime, LocalDateTime.now())
+                .eq(UserDO::getId, currentUserId);
+
+        int count = userMapper.update(null, updateWrapper);
+        if (count != 1) {
+            log.error("更新前台用户资料失败，数据库更新失败: {}", currentUserId);
+            return Response.fail(ResponseCodeEnum.UPDATE_USER_INFO_FAILED);
+        }
+
+        return Response.success();
     }
     
     /**

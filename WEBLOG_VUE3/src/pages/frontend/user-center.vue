@@ -37,15 +37,22 @@
                     <div class="flex flex-col md:flex-row items-center md:items-end w-full">
                         <div class="relative -mt-20 md:-mt-24 mb-4 md:mb-0 md:mr-6 flex-shrink-0">
                             <div
-                                class="relative h-32 w-32 cursor-pointer overflow-hidden rounded-full border-[6px] border-white bg-white shadow-[0_18px_40px_rgba(120,146,184,0.18)] group md:h-40 md:w-40">
+                                class="relative h-32 w-32 cursor-pointer overflow-hidden rounded-full border-[6px] border-white bg-white shadow-[0_18px_40px_rgba(120,146,184,0.18)] group md:h-40 md:w-40"
+                                @click="triggerAvatarUpload">
                                 <img :src="displayAvatar" @error="handleAvatarError"
                                     class="w-full h-full object-cover" />
                                 <div
                                     class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                                     <span
-                                        class="text-white text-xs font-medium border border-white/50 px-3 py-1 rounded-full backdrop-blur-sm">修改头像</span>
+                                        class="text-white text-xs font-medium border border-white/50 px-3 py-1 rounded-full backdrop-blur-sm">{{ avatarUploading ? '上传中...' : '修改头像' }}</span>
                                 </div>
                             </div>
+                            <input
+                                ref="avatarInputRef"
+                                type="file"
+                                accept="image/png,image/jpeg,image/jpg"
+                                class="hidden"
+                                @change="handleAvatarChange" />
                         </div>
 
                         <div class="flex-1 text-center md:text-left">
@@ -646,7 +653,7 @@
                 <template #footer>
                     <span class="dialog-footer">
                         <el-button @click="showEditProfile = false" round>取消</el-button>
-                        <el-button type="primary" @click="saveProfile" round>保存修改</el-button>
+                        <el-button type="primary" :loading="profileSaving" @click="saveProfile" round>保存修改</el-button>
                     </span>
                 </template>
             </el-dialog>
@@ -668,8 +675,9 @@ import { useUserStore } from '@/stores/user'
 import { useSiteConfigStore } from '@/stores/siteConfig'
 import { getArticlePageList } from "@/api/frontend/article";
 import { getCollectedArticles, uncollectArticle } from "@/api/frontend/favorite";
-import { getUserCenterStatistics, getUserCenterComments, getUserCenterOverview, getActivityScore, getActivityStatistics, getActivityTrend, getCurrentUserLocation } from "@/api/frontend/user";
+import { getUserCenterStatistics, getUserCenterComments, getUserCenterOverview, getActivityScore, getActivityStatistics, getActivityTrend, getCurrentUserLocation, updateUserProfile } from "@/api/frontend/user";
 import { deleteComment as deleteCommentApi } from "@/api/frontend/comment";
+import { uploadFile } from "@/api/frontend/file";
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import Pagination from '@/components/frontend/Pagination.vue'
@@ -839,9 +847,13 @@ const activeTabName = computed(() => {
 })
 
 const showEditProfile = ref(false)
+const profileSaving = ref(false)
+const avatarUploading = ref(false)
+const avatarInputRef = ref(null)
 const editForm = reactive({
     nickname: '',
-    introduction: ''
+    introduction: '',
+    avatar: ''
 })
 
 const articles = ref([]) // 初始为空数组
@@ -1187,21 +1199,93 @@ const openEditDialog = () => {
     if (user.value) {
         editForm.nickname = user.value.nickname || ''
         editForm.introduction = user.value.introduction || ''
+        editForm.avatar = user.value.avatar || ''
     }
     showEditProfile.value = true
 }
 
-// 修改：保存逻辑 (这里需要你补充实际调用后端接口的代码)
-const saveProfile = () => {
-    // 1. TODO: 这里应该调用后端 API 更新用户信息
-    // await updateUserProfile(editForm) 
+const saveProfile = async () => {
+    if (profileSaving.value) {
+        return
+    }
 
-    // 2. 模拟更新成功
-    user.value.nickname = editForm.nickname
-    user.value.introduction = editForm.introduction
+    profileSaving.value = true
+    try {
+        const res = await updateUserProfile({
+            nickname: editForm.nickname,
+            introduction: editForm.introduction,
+            avatar: editForm.avatar
+        })
 
-    // 3. 关闭弹窗
-    showEditProfile.value = false
+        if (!res?.success) {
+            ElMessage.error(res?.message || '保存失败')
+            return
+        }
+
+        await userStore.ensureFrontendUserInfoReady(true)
+        showEditProfile.value = false
+        ElMessage.success('个人资料已更新')
+    } catch (error) {
+        console.error('保存个人资料失败:', error)
+        ElMessage.error(error?.response?.data?.message || '保存失败')
+    } finally {
+        profileSaving.value = false
+    }
+}
+
+const triggerAvatarUpload = () => {
+    if (avatarUploading.value) {
+        return
+    }
+    avatarInputRef.value?.click()
+}
+
+const handleAvatarChange = async (event) => {
+    const file = event?.target?.files?.[0]
+    if (!file) {
+        return
+    }
+
+    if (!['image/jpeg', 'image/png'].includes(file.type)) {
+        ElMessage.error('头像图片只能是 JPG/PNG 格式')
+        event.target.value = ''
+        return
+    }
+
+    if (file.size / 1024 / 1024 > 2) {
+        ElMessage.error('头像图片大小不能超过 2MB')
+        event.target.value = ''
+        return
+    }
+
+    avatarUploading.value = true
+    try {
+        const formData = new FormData()
+        formData.append('file', file)
+
+        const uploadRes = await uploadFile(formData)
+        const avatarUrl = uploadRes?.data?.url
+        if (!uploadRes?.success || !avatarUrl) {
+            ElMessage.error(uploadRes?.message || '头像上传失败')
+            return
+        }
+
+        const saveRes = await updateUserProfile({ avatar: avatarUrl })
+        if (!saveRes?.success) {
+            ElMessage.error(saveRes?.message || '头像保存失败')
+            return
+        }
+
+        editForm.avatar = avatarUrl
+        await userStore.ensureFrontendUserInfoReady(true)
+        ElMessage.success('头像已更新')
+    } catch (error) {
+        console.error('修改头像失败:', error)
+        ElMessage.error(error?.response?.data?.message || '修改头像失败')
+    } finally {
+        avatarUploading.value = false
+        event.target.value = ''
+    }
 }
 
 // 处理 tab 选择

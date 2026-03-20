@@ -4,6 +4,7 @@ import com.gaog.weblog.common.aspect.ApiOperationLog;
 import com.gaog.weblog.common.utils.PageResponse;
 import com.gaog.weblog.common.utils.Response;
 import com.gaog.weblog.web.model.vo.user.RegisterUserReqVO;
+import com.gaog.weblog.web.model.vo.user.UpdateUserProfileReqVO;
 import com.gaog.weblog.web.model.vo.user.UserCurrentLocationRspVO;
 import com.gaog.weblog.web.model.vo.user.UserActivityScoreReqVO;
 import com.gaog.weblog.web.model.vo.user.UserActivityScoreRspVO;
@@ -55,6 +56,13 @@ public class UserController {
     @ApiOperationLog(description = "用户注册")
     public Response register(@RequestBody @Validated RegisterUserReqVO registerUserReqVO) {
         return userService.register(registerUserReqVO);
+    }
+
+    @PostMapping("/profile/update")
+    @ApiOperation(value = "更新当前用户资料")
+    @ApiOperationLog(description = "更新当前用户资料")
+    public Response updateProfile(@RequestBody @Validated UpdateUserProfileReqVO updateUserProfileReqVO) {
+        return userService.updateProfile(updateUserProfileReqVO);
     }
     
     @GetMapping("/comment/history")

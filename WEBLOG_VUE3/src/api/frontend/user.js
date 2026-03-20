@@ -5,6 +5,13 @@ export function getUserInfoFrontend() {
     return axios.get('/user/info')
 }
 
+// 更新前台用户资料
+export function updateUserProfile(data) {
+    return axios.post('/user/profile/update', data, {
+        sensitiveFields: ['nickname', 'email']
+    })
+}
+
 // 前台用户注册
 export function registerFrontend(data) {
     return axios.post('/user/register', data, {

@@ -3,6 +3,7 @@ package com.gaog.weblog.web.service;
 import com.gaog.weblog.common.utils.PageResponse;
 import com.gaog.weblog.common.utils.Response;
 import com.gaog.weblog.web.model.vo.user.RegisterUserReqVO;
+import com.gaog.weblog.web.model.vo.user.UpdateUserProfileReqVO;
 import com.gaog.weblog.web.model.vo.user.UserCurrentLocationRspVO;
 import com.gaog.weblog.web.model.vo.user.UserActivityScoreReqVO;
 import com.gaog.weblog.web.model.vo.user.UserActivityScoreRspVO;
@@ -41,6 +42,13 @@ public interface UserService {
      * @return
      */
     Response register(RegisterUserReqVO registerUserReqVO);
+
+    /**
+     * 更新当前登录用户资料
+     * @param updateUserProfileReqVO 更新资料请求
+     * @return 响应
+     */
+    Response updateProfile(UpdateUserProfileReqVO updateUserProfileReqVO);
     
     /**
      * 获取用户评论历史
