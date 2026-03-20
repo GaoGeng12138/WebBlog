@@ -1,5 +1,5 @@
 const ENCRYPTED_PREFIX = 'ENC::'
-const DEFAULT_TRANSPORT_KEY = 'WebLogTransportKey2026Secret!!AB'
+const DEFAULT_TRANSPORT_KEY = 'WebLogTransportKey2026Secret!!@#'
 
 function getTransportKey() {
   return import.meta.env.VITE_TRANSPORT_CRYPTO_KEY || DEFAULT_TRANSPORT_KEY
