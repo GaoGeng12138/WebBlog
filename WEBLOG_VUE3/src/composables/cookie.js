@@ -8,14 +8,37 @@ const cookie = useCookies()
 // 存储在 Cookie 中的 Token 的 key
 const TOKEN_KEY = 'Authorization'
 
+function normalizeTokenValue(token) {
+    if (typeof token !== 'string') {
+        return token
+    }
+
+    let normalizedToken = token.trim()
+
+    if (
+        (normalizedToken.startsWith('"') && normalizedToken.endsWith('"')) ||
+        (normalizedToken.startsWith("'") && normalizedToken.endsWith("'"))
+    ) {
+        normalizedToken = normalizedToken.slice(1, -1).trim()
+    }
+
+    if (/^Bearer\s+/i.test(normalizedToken)) {
+        normalizedToken = normalizedToken.replace(/^Bearer\s+/i, '').trim()
+    }
+
+    return normalizedToken
+}
+
 // 获取 Token 值
 export function getToken() {
-    return cookie.get(TOKEN_KEY)
+    return normalizeTokenValue(cookie.get(TOKEN_KEY))
 }
 
 // 设置 Token 到 Cookie 中
 export function setToken(token) {
-    return cookie.set(TOKEN_KEY, token)
+    return cookie.set(TOKEN_KEY, normalizeTokenValue(token), {
+        path: '/'
+    })
 }
 
 // 删除 Token

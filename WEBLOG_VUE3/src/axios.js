@@ -1,7 +1,7 @@
 import axios from "axios";
 import { getToken, removeToken } from "@/composables/cookie";
 import { showMessage } from "@/composables/util";
-import { decryptTransportData, encryptPayloadFields } from "@/utils/transportCrypto";
+import { decryptTransportData, decryptTransportValue, encryptPayloadFields, isEncryptedTransportValue } from "@/utils/transportCrypto";
 
 function buildAppPath(path) {
     const base = import.meta.env.BASE_URL || '/'
@@ -36,7 +36,10 @@ const instance = axios.create({
 // 按后端的规范，key 为 Authorization, 值为 Bearer + 中间空一格 + 令牌 的格式
 instance.interceptors.request.use(async config => {
     // 在发送请求之前做些什么
-    const token = getToken();
+    let token = getToken();
+    if (isEncryptedTransportValue(token)) {
+        token = await decryptTransportValue(token)
+    }
     if (token) {
         config.headers['Authorization'] = 'Bearer ' + token; // 将 token 添加到请求头中
     }
