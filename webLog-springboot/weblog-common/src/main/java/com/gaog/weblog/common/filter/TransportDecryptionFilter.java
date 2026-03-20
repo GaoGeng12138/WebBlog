@@ -8,7 +8,6 @@ import com.fasterxml.jackson.databind.node.TextNode;
 import com.gaog.weblog.common.exception.BizException;
 import com.gaog.weblog.common.utils.Response;
 import com.gaog.weblog.common.utils.TransportCryptoUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.MediaType;
@@ -84,7 +83,7 @@ public class TransportDecryptionFilter extends OncePerRequestFilter {
         if (node.isTextual()) {
             String value = node.asText();
             String decryptedValue = transportCryptoUtils.decryptIfNecessary(value);
-            return StringUtils.equals(value, decryptedValue) ? node : TextNode.valueOf(decryptedValue);
+            return equalsText(value, decryptedValue) ? node : TextNode.valueOf(decryptedValue);
         }
 
         if (node.isArray()) {
@@ -114,6 +113,10 @@ public class TransportDecryptionFilter extends OncePerRequestFilter {
 
     private boolean shouldDecryptTransportBody(HttpServletRequest request) {
         return "true".equalsIgnoreCase(request.getHeader("X-Transport-Encrypted"));
+    }
+
+    private boolean equalsText(String left, String right) {
+        return left == null ? right == null : left.equals(right);
     }
 
     private void writeDecryptErrorResponse(HttpServletResponse response, BizException ex) throws IOException {
