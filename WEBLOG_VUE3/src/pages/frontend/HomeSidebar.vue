@@ -30,7 +30,7 @@
             </div>
 
             <div class="min-w-0 flex-1 py-0.5">
-              <p class="line-clamp-3 text-[0.94rem] font-medium leading-6 tracking-[0.01em] text-slate-800 transition-colors duration-300 group-hover:text-orange-500">
+              <p class="line-clamp-3 text-[0.94rem] font-medium leading-6 tracking-[0.01em] text-slate-800 transition-colors duration-300 group-hover:text-[var(--theme-primary)]">
                 {{ item.title }}
               </p>
               <div class="mt-2.5 flex items-center gap-3 text-[12px] text-slate-400">
@@ -46,7 +46,7 @@
             </div>
           </router-link>
 
-          <div v-if="hotArticles.length === 0" class="rounded-2xl border border-dashed border-slate-200 px-4 py-6 text-center text-sm text-slate-400">
+          <div v-if="hotArticles.length === 0" class="rounded-2xl border border-dashed border-[rgba(129,158,196,0.2)] bg-[rgba(244,248,252,0.76)] px-4 py-6 text-center text-sm text-slate-400">
             暂无热门文章
           </div>
         </div>
@@ -121,16 +121,16 @@ function formatDate(ts) {
   align-items: center;
   min-height: 2.5rem;
   padding: 0 1rem;
-  background: linear-gradient(135deg, #f97316, #ef4444);
+  background: linear-gradient(135deg, #5d7fac, #7f9fcc);
   color: white;
   letter-spacing: 0.06em;
-  box-shadow: 0 14px 28px rgba(249, 115, 22, 0.18);
+  box-shadow: 0 14px 28px rgba(116, 149, 195, 0.18);
 }
 
 .sidebar-heading__track {
   flex: 1;
   height: 2px;
-  background: linear-gradient(90deg, rgba(249, 115, 22, 0.9), rgba(249, 115, 22, 0.15));
+  background: linear-gradient(90deg, rgba(116, 149, 195, 0.85), rgba(116, 149, 195, 0.12));
 }
 
 .sidebar-hot-card {
@@ -139,15 +139,16 @@ function formatDate(ts) {
   align-items: stretch;
   border-radius: 1rem;
   background: rgba(255, 255, 255, 0.92);
-  border: 1px solid rgba(241, 245, 249, 0.95);
+  border: 1px solid rgba(129, 158, 196, 0.16);
   padding: 0.62rem;
-  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.05);
+  box-shadow: 0 16px 34px rgba(120, 146, 184, 0.08);
   transition: all 0.28s ease;
 }
 
 .sidebar-hot-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 18px 36px rgba(249, 115, 22, 0.1);
+  border-color: rgba(116, 149, 195, 0.22);
+  box-shadow: 0 22px 40px rgba(120, 146, 184, 0.14);
 }
 
 .sidebar-hot-cover {
@@ -167,7 +168,7 @@ function formatDate(ts) {
   width: 100%;
   height: 100%;
   overflow: hidden;
-  background: linear-gradient(135deg, #7c3aed, #2563eb);
+  background: linear-gradient(135deg, #6889b6, #8facd6);
 }
 
 .sidebar-hot-cover__glow {

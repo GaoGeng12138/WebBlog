@@ -32,10 +32,10 @@ const currentYear = new Date().getFullYear()
     gap: 16px;
     padding: 14px 24px;
     background:
-        linear-gradient(135deg, rgba(248, 250, 252, 0.98), rgba(255, 251, 235, 0.95)),
-        radial-gradient(circle at top left, rgba(251, 191, 36, 0.18), transparent 35%);
-    color: #475569;
-    border-top: 1px solid rgba(226, 232, 240, 0.95);
+        linear-gradient(135deg, rgba(249, 252, 255, 0.94), rgba(240, 246, 253, 0.88)),
+        radial-gradient(circle at top left, rgba(148, 176, 231, 0.18), transparent 35%);
+    color: var(--cosmic-muted);
+    border-top: 1px solid rgba(149, 171, 210, 0.16);
 }
 
 .footer-left,
@@ -55,8 +55,8 @@ const currentYear = new Date().getFullYear()
     height: 10px;
     border-radius: 999px;
     flex-shrink: 0;
-    background: linear-gradient(135deg, #f59e0b, #0ea5e9);
-    box-shadow: 0 0 0 6px rgba(245, 158, 11, 0.12);
+    background: linear-gradient(135deg, var(--cosmic-gold), var(--cosmic-blue));
+    box-shadow: 0 0 0 6px rgba(148, 176, 231, 0.14);
 }
 
 .brand-copy {
@@ -70,22 +70,22 @@ const currentYear = new Date().getFullYear()
     font-size: 13px;
     font-weight: 600;
     letter-spacing: 0.02em;
-    color: #0f172a;
+    color: var(--cosmic-text-strong);
 }
 
 .brand-meta {
     font-size: 12px;
-    color: #64748b;
+    color: var(--cosmic-muted);
 }
 
 .footer-center {
     gap: 8px;
     font-size: 12px;
-    color: #64748b;
+    color: var(--cosmic-muted);
     padding: 8px 14px;
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.78);
-    border: 1px solid rgba(226, 232, 240, 0.9);
+    background: rgba(255, 255, 255, 0.7);
+    border: 1px solid rgba(149, 171, 210, 0.16);
 }
 
 .status-dot {
@@ -105,10 +105,10 @@ const currentYear = new Date().getFullYear()
     border-radius: 999px;
     font-size: 12px;
     font-weight: 600;
-    color: #0f172a;
-    background: rgba(255, 255, 255, 0.82);
-    border: 1px solid rgba(203, 213, 225, 0.95);
-    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.04);
+    color: var(--cosmic-text-light);
+    background: rgba(255, 255, 255, 0.78);
+    border: 1px solid rgba(149, 171, 210, 0.18);
+    box-shadow: 0 8px 20px rgba(120, 146, 186, 0.08);
 }
 
 @media (max-width: 960px) {

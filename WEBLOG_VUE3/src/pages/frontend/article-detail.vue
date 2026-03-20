@@ -1,5 +1,5 @@
 <template>
-  <div class="article-detail-page min-h-screen bg-[#F8FAFC] flex flex-col">
+  <div class="article-detail-page min-h-screen bg-transparent flex flex-col">
     <!-- Header -->
     <AppHeader :keyword="keyword" @update:keyword="keyword = $event" @search="searchArticles" />
     
@@ -9,9 +9,9 @@
         <!-- 左侧导航栏（文章目录） -->
         <aside v-if="article" class="hidden xl:block w-60 shrink-0">
           <div class="sticky top-24">
-            <div class="bg-white/60 backdrop-blur-xl rounded-2xl shadow-sm border border-gray-100 p-5">
-              <h3 class="text-sm font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <el-icon class="text-blue-500"><Menu /></el-icon>
+            <div class="rounded-[26px] border border-[rgba(129,158,196,0.22)] bg-white/78 p-5 shadow-[0_18px_48px_rgba(120,146,184,0.14)] backdrop-blur-2xl">
+              <h3 class="mb-4 flex items-center gap-2 text-sm font-bold text-slate-800">
+                <el-icon class="text-[var(--theme-primary)]"><Menu /></el-icon>
                 文章目录
               </h3>
               <nav
@@ -27,15 +27,15 @@
                     'block py-2 px-3 text-sm rounded-xl transition-all duration-300 relative',
                     heading.level === 1 ? 'pl-3' : heading.level === 2 ? 'pl-6' : heading.level === 3 ? 'pl-9' : 'pl-12',
                     activeHeading === heading.id 
-                      ? 'bg-blue-50 text-blue-700 font-semibold' 
-                      : 'text-gray-600 hover:bg-gray-50/80 hover:text-blue-600'
+                      ? 'bg-[rgba(116,149,195,0.16)] text-[var(--theme-primary-deep)] font-semibold shadow-[inset_0_0_0_1px_rgba(116,149,195,0.18)]'
+                      : 'text-slate-500 hover:bg-white/90 hover:text-[var(--theme-primary)]'
                   ]"
                 >
-                  <span v-if="activeHeading === heading.id" class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-4 bg-blue-600 rounded-r-full"></span>
+                  <span v-if="activeHeading === heading.id" class="absolute left-0 top-1/2 h-4 w-1 -translate-y-1/2 rounded-r-full bg-[var(--theme-primary)]"></span>
                   <span class="truncate block">{{ heading.text }}</span>
                 </a>
               </nav>
-              <div v-else class="rounded-2xl border border-dashed border-gray-200 bg-gray-50/70 px-4 py-5 text-sm leading-6 text-gray-500">
+              <div v-else class="rounded-2xl border border-dashed border-[rgba(129,158,196,0.28)] bg-[rgba(244,248,252,0.92)] px-4 py-5 text-sm leading-6 text-slate-500">
                 正文里暂时没有识别到可导航的标题，等内容渲染完成后目录会自动出现。
               </div>
             </div>
@@ -51,7 +51,7 @@
               <p class="mt-4 text-sm text-gray-500 font-medium">全力加载中 ...</p>
             </div>
 
-            <div v-else-if="article" class="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 sm:p-10 lg:p-14">
+            <div v-else-if="article" class="rounded-[34px] border border-[rgba(129,158,196,0.2)] bg-white/92 p-6 shadow-[0_24px_80px_rgba(120,146,184,0.14)] backdrop-blur-xl sm:p-10 lg:p-14">
               <!-- 封面图 -->
               <div v-if="article.cover" class="mb-8 rounded-[28px] overflow-hidden border border-slate-200/80 bg-slate-950 shadow-[0_24px_70px_rgba(15,23,42,0.12)]">
                 <img :src="article.cover" :alt="article.title || article.summary || '文章封面'" class="article-hero-image w-full h-auto max-h-[560px] object-contain">
@@ -67,8 +67,8 @@
                   </p>
                 </div>
 
-                <div class="flex flex-wrap items-center gap-3 sm:gap-4 text-sm text-gray-500">
-                   <div v-if="article.category" class="bg-blue-50 text-blue-600 px-3 py-1 rounded-full font-medium text-xs shadow-sm">
+                <div class="flex flex-wrap items-center gap-3 text-sm text-slate-500 sm:gap-4">
+                   <div v-if="article.category" class="rounded-full border border-[rgba(116,149,195,0.2)] bg-[rgba(116,149,195,0.12)] px-3 py-1 text-xs font-semibold tracking-[0.08em] text-[var(--theme-primary-deep)] shadow-sm">
                      {{ typeof article.category === 'string' ? article.category : article.category.name }}
                    </div>
                    <span class="flex items-center gap-1.5">
@@ -91,7 +91,7 @@
                     @click="toggleCollect"
                     :disabled="collectLoading"
                     class="inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition-all duration-300 focus:outline-none sm:ml-auto"
-                    :class="isCollected ? 'bg-orange-50 border-orange-200 text-orange-600 hover:bg-orange-100 hover:-translate-y-0.5 shadow-sm' : 'bg-white border-gray-200 text-gray-500 hover:text-orange-500 hover:border-orange-200 hover:bg-orange-50 hover:-translate-y-0.5'"
+                    :class="isCollected ? 'border-[rgba(116,149,195,0.24)] bg-[rgba(116,149,195,0.14)] text-[var(--theme-primary-deep)] shadow-sm hover:bg-[rgba(116,149,195,0.18)] hover:-translate-y-0.5' : 'border-[rgba(129,158,196,0.24)] bg-white/90 text-slate-500 hover:border-[rgba(116,149,195,0.28)] hover:bg-[rgba(116,149,195,0.08)] hover:text-[var(--theme-primary)] hover:-translate-y-0.5'"
                   >
                     <el-icon class="text-base leading-none"><StarFilled v-if="isCollected" /><Star v-else /></el-icon>
                     <span>{{ isCollected ? '已收藏' : '收藏文章' }}</span>
@@ -100,7 +100,7 @@
                   <button 
                     v-else-if="siteConfig.isFeatureEnabled('favoriteEnabled') && !isLoggedIn"
                     @click="handleCollectClickForGuest"
-                    class="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-500 hover:text-orange-500 hover:border-orange-200 hover:bg-orange-50 transition-all duration-300 focus:outline-none hover:-translate-y-0.5 sm:ml-auto"
+                    class="inline-flex items-center gap-2 rounded-full border border-[rgba(129,158,196,0.24)] bg-white/90 px-4 py-2 text-sm font-medium text-slate-500 transition-all duration-300 focus:outline-none hover:-translate-y-0.5 hover:border-[rgba(116,149,195,0.3)] hover:bg-[rgba(116,149,195,0.08)] hover:text-[var(--theme-primary)] sm:ml-auto"
                   >
                      <el-icon class="text-base leading-none"><Star /></el-icon>
                      <span>登录后收藏</span>
@@ -109,7 +109,7 @@
 
                 <div v-if="article.tags && article.tags.length" class="flex flex-wrap gap-2 mt-6">
                   <span v-for="tag in article.tags" :key="tag.id || tag.name" 
-                    class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors cursor-pointer">
+                    class="inline-flex cursor-pointer items-center rounded-full border border-[rgba(129,158,196,0.16)] bg-[rgba(240,245,251,0.95)] px-3 py-1 text-xs font-medium text-slate-600 transition-colors hover:border-[rgba(116,149,195,0.24)] hover:bg-white hover:text-[var(--theme-primary)]">
                     # {{ tag.name || tag }}
                   </span>
                 </div>
@@ -119,46 +119,46 @@
               <div ref="articleContentRef" class="prose prose-blue prose-lg max-w-none article-content" v-viewer v-html="article.content"></div>
 
               <!-- 上一篇/下一篇导航 -->
-              <div class="mt-16 pt-8 border-t border-gray-100">
+              <div class="mt-16 border-t border-[rgba(129,158,196,0.14)] pt-8">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                   <!-- 上一篇 -->
                   <router-link v-if="displayPreArticle" :to="`/article/${displayPreArticle.articleId}`"
-                    class="group flex flex-col p-5 rounded-2xl border border-gray-100 bg-gray-50/50 hover:bg-white hover:border-blue-200 hover:shadow-md transition-all duration-300">
-                    <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 group-hover:text-blue-500 transition-colors">Previous</span>
-                    <span class="text-base font-bold text-gray-900 line-clamp-2 group-hover:text-blue-600">{{ displayPreArticle.articleTitle || '无标题文章' }}</span>
+                    class="group flex flex-col rounded-[24px] border border-[rgba(129,158,196,0.16)] bg-[rgba(244,248,252,0.88)] p-5 transition-all duration-300 hover:-translate-y-1 hover:border-[rgba(116,149,195,0.24)] hover:bg-white hover:shadow-[0_18px_40px_rgba(120,146,184,0.14)]">
+                    <span class="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400 transition-colors group-hover:text-[var(--theme-primary)]">Previous</span>
+                    <span class="line-clamp-2 text-base font-bold text-slate-900 group-hover:text-[var(--theme-primary-deep)]">{{ displayPreArticle.articleTitle || '无标题文章' }}</span>
                   </router-link>
-                  <div v-else class="flex flex-col p-5 rounded-2xl border border-dashed border-gray-200 bg-gray-50/30">
-                    <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Previous</span>
-                    <span class="text-sm text-gray-400">已经是第一篇了</span>
+                  <div v-else class="flex flex-col rounded-[24px] border border-dashed border-[rgba(129,158,196,0.2)] bg-[rgba(244,248,252,0.72)] p-5">
+                    <span class="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Previous</span>
+                    <span class="text-sm text-slate-400">已经是第一篇了</span>
                   </div>
 
                   <!-- 下一篇 -->
                   <router-link v-if="displayNextArticle" :to="`/article/${displayNextArticle.articleId}`"
-                    class="group flex flex-col md:text-right p-5 rounded-2xl border border-gray-100 bg-gray-50/50 hover:bg-white hover:border-blue-200 hover:shadow-md transition-all duration-300">
-                    <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 group-hover:text-blue-500 transition-colors">Next</span>
-                    <span class="text-base font-bold text-gray-900 line-clamp-2 group-hover:text-blue-600">{{ displayNextArticle.articleTitle || '无标题文章' }}</span>
+                    class="group flex flex-col rounded-[24px] border border-[rgba(129,158,196,0.16)] bg-[rgba(244,248,252,0.88)] p-5 transition-all duration-300 hover:-translate-y-1 hover:border-[rgba(116,149,195,0.24)] hover:bg-white hover:shadow-[0_18px_40px_rgba(120,146,184,0.14)] md:text-right">
+                    <span class="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400 transition-colors group-hover:text-[var(--theme-primary)]">Next</span>
+                    <span class="line-clamp-2 text-base font-bold text-slate-900 group-hover:text-[var(--theme-primary-deep)]">{{ displayNextArticle.articleTitle || '无标题文章' }}</span>
                   </router-link>
-                  <div v-else class="flex flex-col md:text-right p-5 rounded-2xl border border-dashed border-gray-200 bg-gray-50/30">
-                    <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Next</span>
-                    <span class="text-sm text-gray-400">已经是最后一篇了</span>
+                  <div v-else class="flex flex-col rounded-[24px] border border-dashed border-[rgba(129,158,196,0.2)] bg-[rgba(244,248,252,0.72)] p-5 md:text-right">
+                    <span class="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Next</span>
+                    <span class="text-sm text-slate-400">已经是最后一篇了</span>
                   </div>
                 </div>
               </div>
             </div>
 
             <!-- Comment Section -->
-            <CommentSection v-if="article && !loading" :article-id="article.id" class="mt-8 bg-white rounded-3xl shadow-sm border border-gray-100 p-6 sm:p-10 lg:p-12" />
+            <CommentSection v-if="article && !loading" :article-id="article.id" class="mt-8" />
 
             <!-- 404状态 -->
-            <div v-if="!article && !loading" class="py-24 text-center bg-white rounded-3xl shadow-sm border border-gray-100 px-6">
-              <div class="w-24 h-24 mx-auto mb-6 bg-gray-50 rounded-full flex items-center justify-center">
-                <svg class="h-12 w-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div v-if="!article && !loading" class="rounded-[34px] border border-[rgba(129,158,196,0.18)] bg-white/92 px-6 py-24 text-center shadow-[0_24px_80px_rgba(120,146,184,0.12)]">
+              <div class="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-[rgba(244,248,252,0.92)]">
+                <svg class="h-12 w-12 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
               </div>
-              <h3 class="text-xl font-bold text-gray-900 mb-2">文章未找到</h3>
-              <p class="text-gray-500 max-w-sm mx-auto mb-8">抱歉，您访问的文章不存在或已被删除。可能链接有误或它已不在地球上。</p>
-              <router-link to="/" class="inline-flex items-center justify-center px-6 py-2.5 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors">
+              <h3 class="mb-2 text-xl font-bold text-slate-900">文章未找到</h3>
+              <p class="mx-auto mb-8 max-w-sm text-slate-500">抱歉，您访问的文章不存在或已被删除。可能链接有误或它已不在地球上。</p>
+              <router-link to="/" class="theme-btn-primary inline-flex items-center justify-center rounded-xl px-6 py-2.5 font-medium">
                 返回首页
               </router-link>
             </div>
@@ -201,7 +201,7 @@ const userStore = useUserStore()
 const siteConfig = useSiteConfigStore()
 
 const article = ref(null)
-const loading = ref(false)
+const loading = ref(true)
 const searchKeyword = ref('')
 const articleContentRef = ref(null)
 const isCollected = ref(false)
@@ -499,6 +499,7 @@ async function loadArticle() {
   const articleId = route.params.id
   if (!articleId) {
     console.warn('未获取到文章 ID')
+    loading.value = false
     return
   }
 
@@ -720,15 +721,15 @@ function handleCollectClickForGuest() {
 }
 
 ::v-deep(.article-content a) {
-  color: #d97706;
+  color: var(--theme-primary-deep);
   text-decoration: none;
-  border-bottom: 1px solid rgba(245, 158, 11, 0.25);
+  border-bottom: 1px solid rgba(116, 149, 195, 0.25);
   transition: color 0.25s ease, border-color 0.25s ease;
 }
 
 ::v-deep(.article-content a:hover) {
-  color: #b45309;
-  border-color: rgba(217, 119, 6, 0.45);
+  color: var(--theme-primary);
+  border-color: rgba(116, 149, 195, 0.42);
 }
 
 ::v-deep(.article-content ul),
@@ -762,9 +763,9 @@ function handleCollectClickForGuest() {
 ::v-deep(.article-content blockquote) {
   margin: 1.8rem 0;
   padding: 1.1rem 1.25rem;
-  border-left: 4px solid #f59e0b;
+  border-left: 4px solid var(--theme-primary);
   border-radius: 0 18px 18px 0;
-  background: linear-gradient(135deg, rgba(255, 251, 235, 0.95), rgba(255, 255, 255, 0.92));
+  background: linear-gradient(135deg, rgba(235, 243, 251, 0.96), rgba(255, 255, 255, 0.95));
   color: #475569;
 }
 
@@ -801,8 +802,8 @@ function handleCollectClickForGuest() {
 }
 
 ::v-deep(.article-content th) {
-  background: #fff7ed;
-  color: #9a3412;
+  background: rgba(235, 243, 251, 0.96);
+  color: var(--theme-primary-deep);
   font-weight: 700;
 }
 
@@ -814,9 +815,9 @@ function handleCollectClickForGuest() {
   padding: 0.18rem 0.45rem;
   margin: 0 0.15rem;
   border-radius: 8px;
-  border: 1px solid rgba(251, 191, 36, 0.18);
-  background: #fff7ed;
-  color: #c2410c;
+  border: 1px solid rgba(116, 149, 195, 0.18);
+  background: rgba(235, 243, 251, 0.96);
+  color: var(--theme-primary-deep);
   font-size: 0.92em !important;
   font-family: 'JetBrains Mono', 'Cascadia Code', Consolas, Monaco, monospace;
 }
@@ -901,7 +902,7 @@ function handleCollectClickForGuest() {
 }
 
 ::v-deep(.code-copy-button:hover) {
-  background: rgba(245, 158, 11, 0.85);
+  background: rgba(116, 149, 195, 0.85);
   transform: translateY(-1px);
 }
 </style>

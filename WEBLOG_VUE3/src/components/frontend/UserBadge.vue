@@ -1,12 +1,12 @@
 <template>
   <div class="flex items-center">
-    <div v-if="loading" class="text-sm text-gray-400">加载中...</div>
+    <div v-if="loading" class="text-sm text-[var(--cosmic-muted)]">加载中...</div>
 
     <!-- 已登录：显示头像和下拉菜单 -->
     <div v-else-if="user && user.nickname" class="flex items-center gap-2">
       <el-dropdown trigger="click">
-        <div class="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
-          <img :src="displayAvatar" @error="handleAvatarError" alt="avatar" class="w-8 h-8 rounded-full object-cover border border-gray-200" />
+        <div class="flex items-center gap-2 cursor-pointer hover:opacity-90 transition-opacity">
+          <img :src="displayAvatar" @error="handleAvatarError" alt="avatar" class="w-8 h-8 rounded-full object-cover border border-[rgba(149,171,210,0.28)] shadow-[0_0_0_4px_rgba(255,255,255,0.38)]" />
         </div>
         <template #dropdown>
           <el-dropdown-menu>
@@ -21,7 +21,7 @@
     <div v-else>
       <button 
         @click="goLogin"
-        class="w-9 h-9 rounded-full flex items-center justify-center text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-all duration-200"
+        class="w-9 h-9 rounded-full flex items-center justify-center text-[var(--cosmic-muted)] hover:text-[var(--cosmic-blue-deep)] hover:bg-[rgba(148,176,231,0.12)] transition-all duration-200 border border-transparent hover:border-[rgba(148,176,231,0.18)]"
         title="登录"
       >
         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">

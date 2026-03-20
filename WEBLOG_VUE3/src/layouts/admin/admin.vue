@@ -10,11 +10,11 @@ const menStore = useMenuStore()
 
 <template>
     <!-- 外部容器 -->
-    <el-container class="h-screen bg-gray-50">
+    <el-container class="admin-shell h-screen">
         <!-- 左边侧边栏 -->
         <el-aside 
             :width="menStore.menuWidth" 
-            class="transition-all bg-slate-800 shadow-lg"
+            class="transition-all shadow-[0_18px_38px_rgba(120,146,186,0.08)]"
         >
             <AdminMenu></AdminMenu>
         </el-aside>
@@ -22,13 +22,13 @@ const menStore = useMenuStore()
         <!-- 右边主内容区域 -->
         <el-container>
             <!-- 顶栏容器 -->
-            <el-header class="p-0 shadow-md">
+            <el-header class="p-0 shadow-[0_14px_32px_rgba(120,146,186,0.08)]">
                 <AdminHeader></AdminHeader>
                 <AdminTagList></AdminTagList>
             </el-header>
 
             <!-- 主内容区域 -->
-            <el-main class="p-0 bg-gray-50">
+            <el-main class="p-0 bg-transparent">
                 <!-- 主内容（根据路由动态展示不同页面） -->
                 <router-view v-slot="{ Component }">
                     <Transition name="fade" mode="out-in">
@@ -41,7 +41,7 @@ const menStore = useMenuStore()
             </el-main>
 
             <!-- 底栏容器 -->
-            <el-footer class="p-0 border-t border-gray-200">
+            <el-footer class="p-0 border-t border-[rgba(149,171,210,0.16)] bg-transparent">
                 <AdminFooter></AdminFooter>
             </el-footer>
         </el-container>
@@ -52,7 +52,7 @@ const menStore = useMenuStore()
 .el-header {
     padding: 0 !important;
     height: auto;
-    background-color: white;
+    background-color: transparent;
 }
 
 /* 内容区域过渡动画：淡入淡出效果 */

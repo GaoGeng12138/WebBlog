@@ -1,9 +1,9 @@
 <template>
-  <div class="comment-section bg-white rounded-xl shadow-md p-6 mt-8">
+  <div class="comment-section mt-8 rounded-[30px] border border-[rgba(129,158,196,0.18)] bg-white/92 p-6 shadow-[0_24px_70px_rgba(120,146,184,0.12)] backdrop-blur-xl sm:p-8">
     <!-- Comment Header -->
     <div class="flex items-center justify-between mb-6">
-      <h2 class="text-2xl font-bold text-gray-900">
-        评论 <span class="text-sm text-gray-500">({{ totalComments }})</span>
+      <h2 class="text-2xl font-bold text-slate-900">
+        评论 <span class="text-sm text-slate-500">({{ totalComments }})</span>
       </h2>
     </div>
 
@@ -12,21 +12,21 @@
       <!-- Anonymous or Logged-in User Info -->
       <div class="flex items-start space-x-3 mb-4">
         <div class="flex-shrink-0">
-          <div v-if="isLoggedIn" class="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold">
+          <div v-if="isLoggedIn" class="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-[var(--theme-primary)] to-[var(--theme-primary-soft)] text-sm font-bold text-white shadow-[0_12px_26px_rgba(116,149,195,0.22)]">
             {{ userStore.frontendUserInfo?.nickname?.charAt(0) || 'U' }}
           </div>
-          <div v-else class="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-gray-600">
+          <div v-else class="flex h-10 w-10 items-center justify-center rounded-full bg-[rgba(240,245,251,0.95)] text-slate-500">
             <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
               <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
             </svg>
           </div>
         </div>
         <div class="flex-1">
-          <div class="text-sm text-gray-700 mb-2">
+          <div class="mb-2 text-sm text-slate-700">
             <span v-if="isLoggedIn" class="font-semibold">{{ userStore.frontendUserInfo?.nickname }}</span>
-            <span v-else-if="isAnonymousEnabled" class="text-gray-500">匿名评论</span>
-            <span v-else class="text-gray-500">
-              请 <router-link to="/login" class="text-blue-600 hover:text-blue-700">登录</router-link> 后发表评论
+            <span v-else-if="isAnonymousEnabled" class="text-slate-500">匿名评论</span>
+            <span v-else class="text-slate-500">
+              请 <router-link to="/login" class="font-medium text-[var(--theme-primary-deep)] hover:text-[var(--theme-primary)]">登录</router-link> 后发表评论
             </span>
           </div>
           <el-input
@@ -45,6 +45,7 @@
               @click="submitComment"
               :loading="submitLoading"
               :disabled="!newCommentContent.trim() || (!isLoggedIn && !isAnonymousEnabled)"
+              class="theme-btn-primary !rounded-full !px-6"
             >
               发表评论
             </el-button>
@@ -54,8 +55,8 @@
     </div>
 
     <!-- No Comments Enabled Message -->
-    <div v-else class="text-center py-8 text-gray-500">
-      <svg class="mx-auto h-12 w-12 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div v-else class="rounded-[24px] border border-dashed border-[rgba(129,158,196,0.2)] bg-[rgba(244,248,252,0.88)] py-8 text-center text-slate-500">
+      <svg class="mx-auto mb-3 h-12 w-12 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
       </svg>
       <p>评论功能已关闭</p>
@@ -79,11 +80,11 @@
     </div>
 
     <!-- No Comments -->
-    <div v-else-if="isCommentEnabled && comments.length === 0" class="text-center py-12 text-gray-500">
-      <svg class="mx-auto h-16 w-16 text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div v-else-if="isCommentEnabled && comments.length === 0" class="rounded-[24px] border border-dashed border-[rgba(129,158,196,0.18)] bg-[rgba(244,248,252,0.84)] py-12 text-center text-slate-500">
+      <svg class="mx-auto mb-3 h-16 w-16 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
       </svg>
-      <p class="text-lg">暂无评论</p>
+      <p class="text-lg font-medium text-slate-700">暂无评论</p>
       <p class="text-sm mt-1">快来发表第一条评论吧！</p>
     </div>
 
@@ -104,6 +105,7 @@
       v-model="replyDialogVisible"
       :title="`回复 @${replyToComment?.nickname || '用户'}`"
       width="500px"
+      class="comment-dialog"
     >
       <el-input
         v-model="replyContent"
@@ -115,8 +117,8 @@
       />
       <template #footer>
         <span class="dialog-footer">
-          <el-button @click="replyDialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="submitReply" :loading="submitLoading">
+          <el-button class="theme-btn-secondary !rounded-full !px-5" @click="replyDialogVisible = false">取消</el-button>
+          <el-button type="primary" class="theme-btn-primary !rounded-full !px-5" @click="submitReply" :loading="submitLoading">
             发表回复
           </el-button>
         </span>
@@ -314,16 +316,40 @@ onMounted(() => {
 
 <style scoped>
 .comment-input :deep(.el-textarea__inner) {
-  border-radius: 8px;
-  border: 1px solid #e5e7eb;
-  transition: border-color 0.3s;
+  border-radius: 20px;
+  border: 1px solid rgba(129, 158, 196, 0.2);
+  background: rgba(248, 251, 255, 0.95);
+  box-shadow: inset 0 1px 2px rgba(148, 163, 184, 0.08);
+  transition: border-color 0.3s, box-shadow 0.3s, background 0.3s;
 }
 
 .comment-input :deep(.el-textarea__inner):focus {
-  border-color: #3b82f6;
+  border-color: rgba(116, 149, 195, 0.45);
+  box-shadow: 0 0 0 4px rgba(116, 149, 195, 0.12);
+  background: white;
 }
 
 .comment-pagination :deep(.el-pagination) {
   justify-content: center;
+}
+
+.comment-dialog :deep(.el-dialog) {
+  border: 1px solid rgba(129, 158, 196, 0.18);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 24px 70px rgba(120, 146, 184, 0.18);
+  backdrop-filter: blur(20px);
+}
+
+.comment-dialog :deep(.el-dialog__header) {
+  padding: 24px 24px 12px;
+}
+
+.comment-dialog :deep(.el-dialog__body) {
+  padding: 0 24px 8px;
+}
+
+.comment-dialog :deep(.el-dialog__footer) {
+  padding: 12px 24px 24px;
 }
 </style>

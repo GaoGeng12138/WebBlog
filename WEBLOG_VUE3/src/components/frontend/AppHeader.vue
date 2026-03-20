@@ -3,8 +3,8 @@
     class="sticky top-0 z-50 transition-all duration-300 border-b"
     :class="[
       isScrolled 
-        ? 'backdrop-blur-xl bg-[#fdf7eb]/92 shadow-sm border-[#eadfca]/70' 
-        : 'bg-[#fdf7eb]/82 backdrop-blur-sm border-transparent'
+        ? 'backdrop-blur-xl bg-[rgba(250,253,255,0.82)] shadow-[0_16px_34px_rgba(108,137,184,0.12)] border-[rgba(149,171,210,0.18)]' 
+        : 'bg-[rgba(247,250,255,0.64)] backdrop-blur-sm border-transparent'
     ]"
   >
     <div class="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8">
@@ -12,7 +12,7 @@
         
         <!-- Left: Logo -->
         <div class="flex-shrink-0 flex items-center cursor-pointer group" @click="$router.push('/')">
-          <div class="relative flex items-center justify-center overflow-hidden rounded-xl p-1.5 transition-all duration-300 group-hover:bg-blue-50">
+          <div class="relative flex items-center justify-center overflow-hidden rounded-xl p-1.5 transition-all duration-300 group-hover:bg-[rgba(148,176,231,0.12)]">
             <img 
               :src="displayLogo"
               @error="handleLogoError"
@@ -35,7 +35,7 @@
           <!-- Mobile Menu Button -->
           <button 
             @click="isMobileMenuOpen = !isMobileMenuOpen"
-            class="md:hidden p-2 rounded-xl text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-colors focus:outline-none"
+            class="md:hidden p-2 rounded-xl text-[var(--cosmic-muted)] hover:text-[var(--cosmic-blue-deep)] hover:bg-[rgba(148,176,231,0.12)] transition-colors focus:outline-none"
           >
             <svg v-if="!isMobileMenuOpen" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
@@ -57,7 +57,7 @@
       leave-from-class="scale-y-100 opacity-100"
       leave-to-class="scale-y-0 opacity-0"
     >
-      <div v-if="isMobileMenuOpen" class="md:hidden absolute top-full left-0 w-full bg-[#fdf7eb]/96 backdrop-blur-xl border-b border-[#eadfca]/80 shadow-xl pb-6 pt-2">
+      <div v-if="isMobileMenuOpen" class="md:hidden absolute top-full left-0 w-full bg-[rgba(250,253,255,0.96)] backdrop-blur-xl border-b border-[rgba(149,171,210,0.18)] shadow-xl pb-6 pt-2">
         <div class="px-4 space-y-6">
           <Navigation direction="vertical" @navigate="isMobileMenuOpen = false" /> 
         </div>
@@ -148,6 +148,7 @@ onUnmounted(() => {
   bottom: 0;
   height: 1px;
   background: linear-gradient(90deg, rgba(226, 232, 240, 0.1), rgba(203, 213, 225, 0.9), rgba(226, 232, 240, 0.1));
+  opacity: 0.55;
 }
 
 .header-divider__glow {
@@ -157,7 +158,7 @@ onUnmounted(() => {
   width: min(52vw, 720px);
   height: 10px;
   transform: translateX(-50%);
-  background: radial-gradient(circle, rgba(251, 191, 36, 0.18) 0%, rgba(251, 191, 36, 0.06) 42%, transparent 76%);
+  background: radial-gradient(circle, rgba(148, 176, 231, 0.3) 0%, rgba(148, 176, 231, 0.08) 42%, transparent 76%);
   filter: blur(6px);
 }
 
@@ -176,8 +177,8 @@ onUnmounted(() => {
   height: 100%;
   width: 100%;
   transform-origin: left center;
-  background: linear-gradient(90deg, #2563eb 0%, #3b82f6 35%, #0ea5e9 68%, #22c55e 100%);
+  background: linear-gradient(90deg, #6e92d8 0%, #94b0e7 48%, #c8d8f3 100%);
   transition: transform 120ms linear;
-  box-shadow: 0 0 14px rgba(59, 130, 246, 0.26);
+  box-shadow: 0 0 14px rgba(110, 146, 216, 0.2);
 }
 </style>

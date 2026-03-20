@@ -1,12 +1,15 @@
 <template>
   <div class="app-shell">
-    <div class="snowfall-layer" aria-hidden="true">
+    <div class="atmosphere-layer" aria-hidden="true">
+      <div class="atmosphere-layer__mist atmosphere-layer__mist--left"></div>
+      <div class="atmosphere-layer__mist atmosphere-layer__mist--right"></div>
+      <div class="atmosphere-layer__veil"></div>
       <span
-        v-for="flake in snowflakes"
-        :key="flake.id"
-        class="snowfall-layer__flake"
-        :style="flake.style"
-      >❄</span>
+        v-for="orb in orbs"
+        :key="orb.id"
+        class="atmosphere-layer__orb"
+        :style="orb.style"
+      ></span>
     </div>
 
     <div class="app-content">
@@ -24,26 +27,19 @@ import { useUserStore } from '@/stores/user'
 const route = useRoute()
 const siteConfig = useSiteConfigStore()
 const userStore = useUserStore()
-const snowflakes = [
-  { id: 1, style: '--left: 6%; --size: 16px; --duration: 28s; --delay: -5s; --drift: -18px; --opacity: 0.55;' },
-  { id: 2, style: '--left: 15%; --size: 20px; --duration: 34s; --delay: -18s; --drift: 22px; --opacity: 0.48;' },
-  { id: 3, style: '--left: 21%; --size: 12px; --duration: 24s; --delay: -7s; --drift: 12px; --opacity: 0.46;' },
-  { id: 4, style: '--left: 27%; --size: 14px; --duration: 26s; --delay: -10s; --drift: -16px; --opacity: 0.52;' },
-  { id: 5, style: '--left: 33%; --size: 17px; --duration: 29s; --delay: -15s; --drift: -22px; --opacity: 0.5;' },
-  { id: 6, style: '--left: 39%; --size: 18px; --duration: 31s; --delay: -13s; --drift: 19px; --opacity: 0.46;' },
-  { id: 7, style: '--left: 45%; --size: 11px; --duration: 23s; --delay: -9s; --drift: -10px; --opacity: 0.44;' },
-  { id: 8, style: '--left: 52%; --size: 15px; --duration: 27s; --delay: -3s; --drift: -14px; --opacity: 0.54;' },
-  { id: 9, style: '--left: 58%; --size: 13px; --duration: 25s; --delay: -17s; --drift: 11px; --opacity: 0.45;' },
-  { id: 10, style: '--left: 64%; --size: 19px; --duration: 33s; --delay: -20s; --drift: 20px; --opacity: 0.47;' },
-  { id: 11, style: '--left: 70%; --size: 12px; --duration: 24s; --delay: -6s; --drift: -15px; --opacity: 0.49;' },
-  { id: 12, style: '--left: 76%; --size: 13px; --duration: 25s; --delay: -8s; --drift: -12px; --opacity: 0.56;' },
-  { id: 13, style: '--left: 81%; --size: 15px; --duration: 28s; --delay: -19s; --drift: 14px; --opacity: 0.43;' },
-  { id: 14, style: '--left: 86%; --size: 17px; --duration: 30s; --delay: -16s; --drift: 16px; --opacity: 0.5;' },
-  { id: 15, style: '--left: 90%; --size: 11px; --duration: 22s; --delay: -12s; --drift: -9px; --opacity: 0.42;' },
-  { id: 16, style: '--left: 94%; --size: 14px; --duration: 29s; --delay: -11s; --drift: -10px; --opacity: 0.53;' }
+const orbs = [
+  { id: 1, style: '--left: 7%; --top: 12%; --size: 10px; --delay: 0s; --duration: 12s;' },
+  { id: 2, style: '--left: 18%; --top: 22%; --size: 6px; --delay: 1.5s; --duration: 10s;' },
+  { id: 3, style: '--left: 31%; --top: 10%; --size: 8px; --delay: 2.1s; --duration: 13s;' },
+  { id: 4, style: '--left: 46%; --top: 18%; --size: 5px; --delay: 0.7s; --duration: 11s;' },
+  { id: 5, style: '--left: 63%; --top: 14%; --size: 9px; --delay: 2.8s; --duration: 12.5s;' },
+  { id: 6, style: '--left: 79%; --top: 9%; --size: 6px; --delay: 1.2s; --duration: 10.8s;' },
+  { id: 7, style: '--left: 91%; --top: 20%; --size: 8px; --delay: 3.1s; --duration: 13.5s;' },
+  { id: 8, style: '--left: 12%; --top: 56%; --size: 7px; --delay: 2.5s; --duration: 12.2s;' },
+  { id: 9, style: '--left: 37%; --top: 68%; --size: 9px; --delay: 0.8s; --duration: 11.6s;' },
+  { id: 10, style: '--left: 72%; --top: 63%; --size: 7px; --delay: 1.9s; --duration: 12.8s;' }
 ]
 
-// 监听路由变化，动态更新标题
 watch(
   () => route.meta.title,
   (newTitle) => {
@@ -58,7 +54,6 @@ watch(
   { immediate: true }
 )
 
-// 监听整个路由对象，处理动态路由（如文章详情）
 watch(
   () => route.fullPath,
   () => {
@@ -85,57 +80,83 @@ watch(
   z-index: 1;
 }
 
-.snowfall-layer {
+.atmosphere-layer {
   position: fixed;
   inset: 0;
-  z-index: 2;
+  z-index: 0;
   pointer-events: none;
   overflow: hidden;
 }
 
-.snowfall-layer__flake {
+.atmosphere-layer__mist,
+.atmosphere-layer__veil {
   position: absolute;
-  top: -10%;
-  left: var(--left);
-  font-size: var(--size);
-  line-height: 1;
-  color: rgba(255, 255, 255, var(--opacity));
-  text-shadow:
-    0 0 10px rgba(255, 255, 255, 0.85),
-    0 0 18px rgba(255, 255, 255, 0.46),
-    0 1px 2px rgba(148, 163, 184, 0.18);
-  animation: snowfall-fall var(--duration) linear infinite;
-  animation-delay: var(--delay);
-  will-change: transform;
-  opacity: 0.9;
+  border-radius: 9999px;
+  filter: blur(80px);
 }
 
-@keyframes snowfall-fall {
-  0% {
-    transform: translate3d(0, -12vh, 0) rotate(0deg) scale(0.92);
+.atmosphere-layer__mist--left {
+  left: -10%;
+  top: -4%;
+  width: 44rem;
+  height: 26rem;
+  background: radial-gradient(circle, rgba(144, 179, 241, 0.24) 0%, rgba(190, 214, 245, 0.1) 48%, transparent 74%);
+}
+
+.atmosphere-layer__mist--right {
+  right: -8%;
+  top: 20%;
+  width: 36rem;
+  height: 30rem;
+  background: radial-gradient(circle, rgba(177, 205, 245, 0.22) 0%, rgba(224, 234, 248, 0.1) 44%, transparent 76%);
+}
+
+.atmosphere-layer__veil {
+  left: 18%;
+  bottom: -12%;
+  width: 42rem;
+  height: 20rem;
+  background: radial-gradient(circle, rgba(245, 238, 226, 0.32) 0%, rgba(236, 242, 251, 0.16) 38%, transparent 68%);
+}
+
+.atmosphere-layer__orb {
+  position: absolute;
+  left: var(--left);
+  top: var(--top);
+  width: var(--size);
+  height: var(--size);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow:
+    0 0 10px rgba(255, 255, 255, 0.35),
+    0 0 18px rgba(149, 184, 236, 0.2);
+  animation: floatPulse var(--duration) ease-in-out infinite;
+  animation-delay: var(--delay);
+}
+
+@keyframes floatPulse {
+  0%, 100% {
+    opacity: 0.4;
+    transform: translateY(0) scale(0.92);
   }
 
   50% {
-    transform: translate3d(calc(var(--drift) * 0.55), 54vh, 0) rotate(120deg) scale(1);
-  }
-
-  100% {
-    transform: translate3d(var(--drift), 112vh, 0) rotate(240deg) scale(0.96);
+    opacity: 0.9;
+    transform: translateY(-10px) scale(1.08);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .snowfall-layer__flake {
+  .atmosphere-layer__orb {
     animation: none;
-    opacity: 0.28;
+    opacity: 0.55;
   }
 }
 </style>
 
-
 <style>
-/* 自定义顶部加载 Loading 颜色 */
 #nprogress .bar {
-   background: #409eff!important;
+   background: linear-gradient(90deg, #7a9de6 0%, #9cb9ef 48%, #c4d8f8 100%) !important;
+   box-shadow: 0 0 12px rgba(122, 157, 230, 0.24);
 }
 </style>

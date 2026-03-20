@@ -5,10 +5,10 @@
         v-for="item in navItems"
         :key="item.key"
         type="button"
-        class="px-4 py-3 rounded-xl text-sm font-normal transition-all duration-300 inline-flex items-center justify-center border border-transparent"
+        class="px-4 py-3 rounded-xl text-sm font-normal transition-all duration-300 inline-flex items-center justify-center border"
         :class="isActive(item.key)
-          ? 'text-blue-600 bg-blue-50/80 shadow-sm border-blue-100'
-          : 'text-gray-600 bg-gray-50/50 hover:text-blue-600 hover:bg-white hover:border-gray-200 hover:shadow-sm'"
+          ? 'text-[var(--cosmic-blue-deep)] bg-[rgba(148,176,231,0.18)] shadow-[0_10px_22px_rgba(110,146,216,0.12)] border-[rgba(148,176,231,0.26)]'
+          : 'text-[var(--cosmic-muted)] bg-[rgba(255,255,255,0.54)] border-[rgba(149,171,210,0.14)] hover:text-[var(--cosmic-blue-deep)] hover:bg-[rgba(255,255,255,0.84)] hover:border-[rgba(148,176,231,0.2)] hover:shadow-[0_10px_22px_rgba(108,137,184,0.08)]'"
         @click="handleNavigate(item.path)"
       >
         <span class="truncate">{{ item.label }}</span>
@@ -30,12 +30,12 @@
           </div>
           
           <!-- Bottom Indicator Line -->
-          <div class="absolute bottom-0 left-0 w-full h-[3px] rounded-t-full bg-gradient-to-r from-blue-600 to-indigo-500 transition-all duration-300"
+          <div class="absolute bottom-0 left-0 w-full h-[3px] rounded-t-full bg-gradient-to-r from-[var(--cosmic-blue-soft)] via-[var(--cosmic-blue)] to-[var(--cosmic-blue-deep)] transition-all duration-300"
                :class="isActive(item.key) ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0'">
           </div>
           
           <!-- Hover Blur Background -->
-          <div v-if="isActive(item.key)" class="absolute bottom-0 left-1/2 -translate-x-1/2 w-3/4 h-2 bg-blue-500/20 blur-md pointer-events-none rounded-full"></div>
+          <div v-if="isActive(item.key)" class="absolute bottom-0 left-1/2 -translate-x-1/2 w-3/4 h-2 bg-[rgba(148,176,231,0.2)] blur-md pointer-events-none rounded-full"></div>
         </button>
       </div>
     </div>
@@ -141,17 +141,17 @@ function handleNavigate(path) {
 }
 
 .nav-link-idle {
-  color: #475569;
+  color: var(--cosmic-muted);
 }
 
 .nav-link-idle:hover {
-  color: #1d4ed8;
-  background-color: rgba(239, 246, 255, 0.4); /* Very light blue background on hover */
+  color: var(--cosmic-text-strong);
+  background-color: rgba(255, 255, 255, 0.78);
 }
 
 .nav-link-active {
-  color: #1d4ed8;
-  background-color: transparent;
+  color: var(--cosmic-blue-deep);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(240, 246, 253, 0.9));
   text-shadow: none;
 }
 </style>

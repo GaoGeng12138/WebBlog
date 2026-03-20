@@ -1,22 +1,24 @@
 <template>
     <!-- 设置背景色为白色、高度为 64px，padding-right 为4，border-bootom 为slate 100通过 flex 指定水平布局 -->
-    <div class="bg-white h-[64px] flex pr-4 border-b border-gray-200 shadow-sm">
-        <div class="w-[64px] h-[64px] cursor-pointer flex items-center justify-center text-gray-700 hover:bg-gray-100 transition-colors"
+    <div class="h-[64px] flex pr-4 border-b border-[rgba(149,171,210,0.18)] shadow-[0_12px_24px_rgba(120,146,186,0.1)] bg-[linear-gradient(180deg,rgba(248,251,255,0.94),rgba(240,246,253,0.86))] backdrop-blur-xl">
+        <div class="w-[64px] h-[64px] cursor-pointer flex items-center justify-center text-[var(--cosmic-text-light)] transition-colors"
             @click="handleMenuCollapse">
             <!-- 左边栏收缩、展开 -->
-            <el-icon class="text-xl">
+            <div class="admin-header-icon-button admin-header-icon-button--menu">
+                <el-icon class="text-[18px]">
                 <Fold v-if="userMenu.menuWidth == '250px'" />
                 <Expand v-else />
-            </el-icon>
+                </el-icon>
+            </div>
         </div>
         
         <!-- 右边容器，通过 ml-auto 让其在父容器的右边 -->
         <div class="ml-auto flex items-center gap-2">
             <!-- 点击刷新页面 -->
             <el-tooltip class="box-item" effect="dark" content="刷新" placement="bottom">
-                <div class="w-[42px] h-[64px] cursor-pointer flex items-center justify-center text-gray-700 hover:bg-gray-100 transition-colors rounded-md"
+                <div class="admin-header-action"
                     @click="handleRefresh">
-                    <el-icon class="text-lg">
+                    <el-icon class="text-[17px]">
                         <Refresh />
                     </el-icon>
                 </div>
@@ -24,9 +26,9 @@
 
             <!-- 点击全屏展示 -->
             <el-tooltip class="box-item" effect="dark" content="全屏" placement="bottom">
-                <div class="w-[42px] h-[64px] cursor-pointer flex items-center justify-center text-gray-700 hover:bg-gray-100 transition-colors rounded-md"
+                <div class="admin-header-action"
                     @click="toggle">
-                    <el-icon class="text-lg">
+                    <el-icon class="text-[17px]">
                         <FullScreen v-if="!isFullscreen" />
                         <CircleClose v-else />
                     </el-icon>
@@ -35,9 +37,9 @@
 
             <!-- Go to Frontend Button -->
             <el-tooltip class="box-item" effect="dark" content="回到前台" placement="bottom">
-                <div class="w-[42px] h-[64px] cursor-pointer flex items-center justify-center text-gray-700 hover:bg-gray-100 transition-colors rounded-md"
+                <div class="admin-header-action"
                     @click="goToFrontend">
-                    <el-icon class="text-lg">
+                    <el-icon class="text-[17px]">
                         <House />
                     </el-icon>
                 </div>
@@ -45,13 +47,13 @@
 
             <!-- 登录用户头像 -->
             <el-dropdown class="flex items-center justify-center h-full" @command="handleCommand">
-                <span class="el-dropdown-link flex items-center justify-center text-gray-700 text-sm cursor-pointer h-full px-3 hover:bg-gray-100 transition-colors rounded-md outline-none" style="outline: none !important;">
+                <span class="el-dropdown-link flex items-center justify-center text-[var(--cosmic-text-light)] text-sm cursor-pointer h-full px-3 transition-colors rounded-2xl outline-none hover:bg-[rgba(255,255,255,0.58)]" style="outline: none !important;">
                     <!-- 头像 Avatar -->
                     <img
                         :src="displayAvatar"
                         @error="handleAvatarError"
                         alt="avatar"
-                        class="mr-2 w-8 h-8 rounded-full object-cover border border-gray-200" />
+                        class="mr-2 w-8 h-8 rounded-full object-cover border border-[rgba(149,171,210,0.28)] shadow-[0_0_0_4px_rgba(255,255,255,0.42)]" />
                     <span class="hidden md:inline mr-1">{{ userStore.userInfo.username }}</span>
                     <el-icon class="el-icon--right hidden md:inline">
                         <arrow-down />
@@ -251,3 +253,41 @@ const logout = () => {
     })
 }
 </script>
+
+<style scoped>
+.admin-header-icon-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 16px;
+    border: 1px solid rgba(149, 171, 210, 0.16);
+    background: rgba(255, 255, 255, 0.54);
+    box-shadow: 0 10px 24px rgba(120, 146, 186, 0.08);
+    transition: transform 0.28s ease, background 0.28s ease, box-shadow 0.28s ease, border-color 0.28s ease;
+}
+
+.admin-header-icon-button:hover,
+.admin-header-action:hover {
+    transform: translateY(-1px);
+    background: rgba(255, 255, 255, 0.82);
+    border-color: rgba(116, 149, 195, 0.22);
+    box-shadow: 0 16px 30px rgba(120, 146, 186, 0.12);
+}
+
+.admin-header-action {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    color: var(--cosmic-text-light);
+    border-radius: 16px;
+    border: 1px solid rgba(149, 171, 210, 0.14);
+    background: rgba(255, 255, 255, 0.52);
+    box-shadow: 0 10px 24px rgba(120, 146, 186, 0.08);
+    transition: transform 0.28s ease, background 0.28s ease, box-shadow 0.28s ease, border-color 0.28s ease, color 0.28s ease;
+}
+</style>

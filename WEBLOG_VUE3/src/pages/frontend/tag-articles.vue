@@ -8,29 +8,29 @@
       <main class="flex flex-col gap-6 py-6 lg:flex-row">
         <!-- Articles Section -->
         <section class="w-full lg:w-[76%]">
-          <div class="mb-4 overflow-hidden rounded-[22px] border border-white/70 bg-white/85 p-4 shadow-[0_16px_38px_rgba(15,23,42,0.06)] backdrop-blur-xl sm:p-5">
-            <p class="text-xs font-semibold uppercase tracking-[0.26em] text-slate-400">
+          <div class="mb-4 overflow-hidden rounded-[22px] border border-[rgba(149,171,210,0.16)] bg-[rgba(255,255,255,0.78)] p-4 shadow-[0_16px_30px_rgba(120,146,186,0.08)] backdrop-blur-xl sm:p-5">
+            <p class="text-xs font-semibold uppercase tracking-[0.26em] text-[var(--cosmic-muted)]">
               Tag Articles
             </p>
             <div class="mt-2 flex flex-col gap-2.5 lg:flex-row lg:items-end lg:justify-between">
               <div>
-                <h1 class="text-[2rem] font-black tracking-tight text-slate-950 sm:text-[2.2rem]">
+                <h1 class="text-[2rem] font-black tracking-tight text-[var(--cosmic-text-light)] sm:text-[2.2rem]">
                   {{ tagName ? `标签: ${tagName}` : '文章列表' }}
                 </h1>
-                <p class="mt-1.5 max-w-2xl text-sm leading-6 text-slate-500 sm:text-[14px]">
+                <p class="mt-1.5 max-w-2xl text-sm leading-6 text-[var(--cosmic-text-light-muted)] sm:text-[14px]">
                   关于这个标签的所有文章内容。
                 </p>
               </div>
-              <div class="flex flex-wrap items-center gap-2 text-sm text-slate-500">
-                <span class="rounded-full bg-slate-100 px-3.5 py-1.5 text-[13px] font-semibold text-slate-700">
+              <div class="flex flex-wrap items-center gap-2 text-sm text-[var(--cosmic-muted)]">
+                <span class="rounded-full bg-[rgba(148,176,231,0.12)] px-3.5 py-1.5 text-[13px] font-semibold text-[var(--cosmic-blue-deep)]">
                   共 {{ total }} 篇
                 </span>
               </div>
             </div>
 
             <div class="mt-3.5 max-w-[560px]">
-              <label class="hero-search relative flex items-center p-1.5 rounded-full border border-white/60 bg-white/70 shadow-[0_8px_20px_rgba(15,23,42,0.04)] backdrop-blur-xl transition-all duration-300 focus-within:-translate-y-0.5 focus-within:bg-white/95 focus-within:shadow-[0_12px_28px_rgba(59,130,246,0.12)] focus-within:border-blue-200">
-                <span class="pl-4 pr-3 flex items-center justify-center text-slate-400 group-focus-within:text-blue-500 transition-colors">
+              <label class="hero-search relative flex items-center p-1.5 rounded-full border border-[rgba(149,171,210,0.16)] bg-[rgba(255,255,255,0.72)] shadow-[0_10px_24px_rgba(120,146,186,0.08)] backdrop-blur-xl transition-all duration-300 focus-within:-translate-y-0.5 focus-within:bg-[rgba(255,255,255,0.95)] focus-within:shadow-[0_12px_28px_rgba(110,146,216,0.12)] focus-within:border-[rgba(148,176,231,0.24)]">
+                <span class="pl-4 pr-3 flex items-center justify-center text-[var(--cosmic-muted)] group-focus-within:text-[var(--cosmic-blue)] transition-colors">
                   <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M10.5 18a7.5 7.5 0 100-15 7.5 7.5 0 000 15z" />
                   </svg>
@@ -38,13 +38,13 @@
                 <input
                   v-model="searchKeyword"
                   type="text"
-                  class="min-w-0 flex-1 bg-transparent px-1 py-2 text-[15px] text-slate-700 outline-none border-none ring-0 placeholder:text-slate-400 focus:outline-none focus:ring-0"
+                  class="min-w-0 flex-1 bg-transparent px-1 py-2 text-[15px] text-[var(--cosmic-text-light)] outline-none border-none ring-0 placeholder:text-[var(--cosmic-muted)] focus:outline-none focus:ring-0"
                   :placeholder="`在标签 ${tagName || ''} 中搜索文章`"
                   @keyup.enter="searchArticles"
                 />
                 <button
                   type="button"
-                  class="hero-search-button rounded-full bg-slate-900 px-6 py-2.5 text-[14px] font-semibold text-white transition-all duration-300 hover:bg-blue-600 hover:shadow-lg hover:shadow-blue-600/20 active:scale-95 ml-2"
+                  class="theme-btn-primary hero-search-button ml-2 rounded-full px-6 py-2.5 text-[14px] font-semibold text-white transition-all duration-300 active:scale-95"
                   @click="searchArticles"
                 >
                   查询
@@ -53,7 +53,7 @@
             </div>
           </div>
 
-          <div class="rounded-[26px] border border-white/70 bg-white/85 p-5 shadow-[0_18px_42px_rgba(15,23,42,0.06)] backdrop-blur-xl sm:p-6">
+          <div class="rounded-[26px] border border-[rgba(149,171,210,0.16)] bg-[rgba(255,255,255,0.82)] p-5 shadow-[0_18px_34px_rgba(120,146,186,0.08)] backdrop-blur-xl sm:p-6">
             <div v-if="loading" class="py-16 text-center">
               <div class="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
               <p class="mt-2 text-gray-600">加载中...</p>

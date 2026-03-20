@@ -7,13 +7,13 @@
           <span class="sidebar-heading__track"></span>
         </div>
 
-        <div class="mt-5 rounded-[22px] border border-white/70 bg-white/90 p-4 shadow-[0_14px_30px_rgba(15,23,42,0.05)] backdrop-blur-xl">
+        <div class="mt-5 rounded-[22px] border border-[rgba(129,158,196,0.18)] bg-[rgba(255,255,255,0.92)] p-4 shadow-[0_18px_38px_rgba(120,146,184,0.1)] backdrop-blur-xl">
           <p class="text-[10px] font-medium uppercase tracking-[0.24em] text-slate-400">Daily Note</p>
           <blockquote class="mt-3 break-words text-[0.86rem] font-medium leading-[1.9] tracking-[0.005em] text-slate-700">
             “{{ todayQuote.text }}”
           </blockquote>
           <div class="mt-3.5 flex flex-wrap items-center gap-2 text-[11px] text-slate-500">
-            <span class="rounded-full bg-amber-50 px-2.5 py-1 font-medium text-amber-700">{{ todayQuote.tag }}</span>
+            <span class="rounded-full border border-[rgba(116,149,195,0.18)] bg-[rgba(116,149,195,0.12)] px-2.5 py-1 font-medium text-[var(--theme-primary-deep)]">{{ todayQuote.tag }}</span>
             <span>{{ todayLabel }}</span>
           </div>
         </div>
@@ -73,17 +73,17 @@ blockquote {
   align-items: center;
   min-height: 2.5rem;
   padding: 0 1rem;
-  background: linear-gradient(135deg, #f59e0b, #f97316);
+  background: linear-gradient(135deg, #5d7fac, #7f9fcc);
   color: white;
   font-size: 0.84rem;
   font-weight: 500;
   letter-spacing: 0.06em;
-  box-shadow: 0 14px 28px rgba(245, 158, 11, 0.16);
+  box-shadow: 0 14px 28px rgba(116, 149, 195, 0.18);
 }
 
 .sidebar-heading__track {
   flex: 1;
   height: 2px;
-  background: linear-gradient(90deg, rgba(245, 158, 11, 0.9), rgba(245, 158, 11, 0.14));
+  background: linear-gradient(90deg, rgba(116, 149, 195, 0.85), rgba(116, 149, 195, 0.12));
 }
 </style>

@@ -1,8 +1,17 @@
 /* 管理后台全局样式 */
 
+.admin-shell {
+  background:
+    linear-gradient(180deg, rgba(246, 250, 255, 0.94), rgba(237, 244, 252, 0.98)),
+    radial-gradient(circle at top left, rgba(148, 176, 231, 0.22), transparent 24%),
+    radial-gradient(circle at right center, rgba(241, 235, 224, 0.18), transparent 16%);
+}
+
 /* 卡片样式 */
 .admin-card {
-  @apply rounded-xl border border-gray-200 shadow-sm;
+  @apply rounded-xl shadow-sm backdrop-blur-md;
+  border: 1px solid rgba(149, 171, 210, 0.18);
+  background: rgba(255, 255, 255, 0.78);
 }
 
 /* 表格样式 */
@@ -13,15 +22,32 @@
 /* 按钮样式 */
 .admin-btn-primary {
   @apply rounded-lg;
+  background: linear-gradient(135deg, var(--cosmic-blue), var(--cosmic-blue-deep)) !important;
+  border: 1px solid rgba(110, 146, 216, 0.18) !important;
+  color: #fff !important;
+  box-shadow: 0 10px 22px rgba(110, 146, 216, 0.18) !important;
 }
 
 .admin-btn-secondary {
   @apply rounded-lg;
+  background: rgba(255, 255, 255, 0.82) !important;
+  border: 1px solid rgba(149, 171, 210, 0.18) !important;
+  color: var(--cosmic-text-light) !important;
 }
 
 /* 输入框样式 */
 .admin-input {
   @apply rounded-lg;
+}
+
+.admin-btn-primary:hover {
+  filter: brightness(1.03);
+}
+
+.admin-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.96) !important;
+  color: var(--cosmic-blue-deep) !important;
+  border-color: rgba(148, 176, 231, 0.24) !important;
 }
 
 /* 分页样式 */
@@ -31,7 +57,9 @@
 
 /* 统计卡片 */
 .stat-card {
-  @apply rounded-xl border border-gray-200 shadow-sm;
+  @apply rounded-xl shadow-sm backdrop-blur-md;
+  border: 1px solid rgba(149, 171, 210, 0.18);
+  background: rgba(255, 255, 255, 0.82);
 }
 
 .stat-content {
@@ -48,10 +76,12 @@
 
 .stat-number {
   @apply text-2xl font-bold mb-1;
+  color: var(--cosmic-text-light);
 }
 
 .stat-label {
-  @apply text-gray-600 text-sm;
+  @apply text-sm;
+  color: var(--cosmic-text-light-muted);
 }
 
 /* 图表容器 */
@@ -70,7 +100,9 @@
 
 /* 分页组件 */
 .admin-pagination .el-pagination {
-  @apply rounded-lg bg-white p-4 shadow-sm border border-gray-200;
+  @apply rounded-lg p-4 shadow-sm backdrop-blur-md;
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(149, 171, 210, 0.18);
 }
 
 .admin-pagination .el-pagination .el-pager li {
@@ -78,7 +110,8 @@
 }
 
 .admin-pagination .el-pagination .el-pager li.active {
-  @apply bg-blue-500 text-white;
+  background: linear-gradient(135deg, #94b0e7, #6e92d8) !important;
+  color: #ffffff !important;
 }
 
 .admin-pagination .el-pagination .el-pagination__sizes .el-select .el-input .el-input__inner {

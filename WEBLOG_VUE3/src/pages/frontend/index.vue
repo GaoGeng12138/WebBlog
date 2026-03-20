@@ -3,29 +3,29 @@
     <AppHeader :keyword="keyword" @update:keyword="keyword = $event" @search="handleSearch" />
 
     <main class="relative flex-1 mx-auto w-full max-w-[1700px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
-      <section class="hero-panel relative overflow-hidden rounded-[20px] border border-white/60 px-4 py-4 shadow-[0_14px_34px_rgba(15,23,42,0.05)] sm:px-5 lg:px-6 lg:py-4.5">
+      <section class="hero-panel relative overflow-hidden rounded-[20px] border px-4 py-4 shadow-[0_18px_34px_rgba(120,146,186,0.12)] sm:px-5 lg:px-6 lg:py-4.5">
         <div class="hero-glow hero-glow-left"></div>
         <div class="hero-glow hero-glow-right"></div>
 
         <div class="relative z-10 grid gap-4 lg:grid-cols-[minmax(0,1fr)_220px] lg:items-center">
           <div class="max-w-[560px]">
-            <p class="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-white/70 px-3 py-1 text-[10px] font-medium uppercase tracking-[0.24em] text-slate-500 backdrop-blur">
-              <span class="h-2 w-2 rounded-full bg-blue-500"></span>
+            <p class="inline-flex items-center gap-2 rounded-full border border-[rgba(149,171,210,0.18)] bg-[rgba(255,255,255,0.62)] px-3 py-1 text-[10px] font-medium uppercase tracking-[0.24em] text-[var(--cosmic-muted)] backdrop-blur">
+              <span class="h-2 w-2 rounded-full bg-[var(--cosmic-blue)]"></span>
               ThoughtFlow
             </p>
 
-            <h1 class="mt-2 text-[2rem] font-semibold tracking-[-0.03em] text-slate-800 sm:text-[2.25rem] lg:text-[2.4rem]">
+            <h1 class="mt-2 text-[2rem] font-semibold tracking-[-0.03em] text-[var(--cosmic-text-strong)] sm:text-[2.25rem] lg:text-[2.4rem]">
               记录
               <span class="hero-text-gradient">思考的流动</span>
             </h1>
 
-            <p class="mt-1.5 max-w-md text-[13px] leading-6 text-slate-500 sm:text-[14px]">
+            <p class="mt-1.5 max-w-md text-[13px] leading-6 text-[var(--cosmic-text-light-muted)] sm:text-[14px]">
               {{ heroDescription }}
             </p>
 
             <div class="mt-3.5 max-w-[540px]">
-              <label class="hero-search relative flex items-center p-1.5 rounded-full border border-white/60 bg-white/70 shadow-[0_8px_20px_rgba(15,23,42,0.04)] backdrop-blur-xl transition-all duration-300 focus-within:-translate-y-0.5 focus-within:bg-white/95 focus-within:shadow-[0_12px_28px_rgba(59,130,246,0.12)] focus-within:border-blue-200">
-                <span class="pl-4 pr-3 flex items-center justify-center text-slate-400 group-focus-within:text-blue-500 transition-colors">
+              <label class="hero-search relative flex items-center p-1.5 rounded-full border border-[rgba(149,171,210,0.16)] bg-[rgba(255,255,255,0.72)] shadow-[0_12px_28px_rgba(120,146,186,0.1)] backdrop-blur-xl transition-all duration-300 focus-within:-translate-y-0.5 focus-within:bg-[rgba(255,255,255,0.95)] focus-within:shadow-[0_16px_30px_rgba(110,146,216,0.12)] focus-within:border-[rgba(148,176,231,0.24)]">
+                <span class="pl-4 pr-3 flex items-center justify-center text-[var(--cosmic-muted)] group-focus-within:text-[var(--cosmic-blue)] transition-colors">
                   <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M10.5 18a7.5 7.5 0 100-15 7.5 7.5 0 000 15z" />
                   </svg>
@@ -33,13 +33,13 @@
                 <input
                   v-model="keyword"
                   type="text"
-                  class="min-w-0 flex-1 bg-transparent px-1 py-2 text-[14px] text-slate-600 outline-none border-none ring-0 placeholder:text-slate-400 focus:outline-none focus:ring-0"
+                  class="min-w-0 flex-1 bg-transparent px-1 py-2 text-[14px] text-[var(--cosmic-text-light)] outline-none border-none ring-0 placeholder:text-[var(--cosmic-muted)] focus:outline-none focus:ring-0"
                   placeholder="搜索文章或你想回顾的主题"
                   @keyup.enter="handleSearch"
                 />
                 <button
                   type="button"
-                  class="hero-search-button rounded-full bg-slate-900 px-6 py-2.5 text-[13px] font-medium text-white transition-all duration-300 hover:bg-blue-600 hover:shadow-lg hover:shadow-blue-600/20 active:scale-95 ml-2"
+                  class="hero-search-button ml-2 rounded-full bg-[linear-gradient(135deg,var(--cosmic-blue),var(--cosmic-blue-deep))] px-6 py-2.5 text-[13px] font-medium text-white transition-all duration-300 hover:shadow-lg hover:shadow-[rgba(110,146,216,0.22)] active:scale-95"
                   @click="handleSearch"
                 >
                   开始搜索
@@ -52,11 +52,11 @@
             <div
               v-for="item in heroFacts"
               :key="item.label"
-              class="rounded-[16px] border border-white/60 bg-white/72 p-3 backdrop-blur-xl"
+              class="rounded-[16px] border border-[rgba(149,171,210,0.16)] bg-[rgba(255,255,255,0.64)] p-3 backdrop-blur-xl"
             >
-              <p class="text-[11px] font-medium text-slate-500">{{ item.label }}</p>
-              <p class="mt-1 text-[1.42rem] font-semibold tracking-[-0.03em] text-slate-800">{{ item.value }}</p>
-              <p class="mt-1 text-[12px] leading-5 text-slate-500">{{ item.hint }}</p>
+              <p class="text-[11px] font-medium text-[var(--cosmic-muted)]">{{ item.label }}</p>
+              <p class="mt-1 text-[1.42rem] font-semibold tracking-[-0.03em] text-[var(--cosmic-text-light)]">{{ item.value }}</p>
+              <p class="mt-1 text-[12px] leading-5 text-[var(--cosmic-text-light-muted)]">{{ item.hint }}</p>
             </div>
           </div>
         </div>
@@ -70,27 +70,27 @@
         <section class="min-w-0 flex-1">
           <div class="mb-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div>
-              <p class="text-[11px] font-medium uppercase tracking-[0.2em] text-slate-400">
+              <p class="text-[11px] font-medium uppercase tracking-[0.2em] text-[var(--cosmic-muted)]">
                 {{ keyword ? 'Search Result' : 'Latest Writing' }}
               </p>
-              <h2 class="mt-2 text-[2rem] font-semibold tracking-[-0.03em] text-slate-800">
+              <h2 class="mt-2 text-[2rem] font-semibold tracking-[-0.03em] text-[var(--cosmic-text-strong)]">
                 {{ sectionTitle }}
               </h2>
-              <p class="mt-2 text-[13px] leading-6 text-slate-500">
+              <p class="mt-2 text-[13px] leading-6 text-[var(--cosmic-text-light-muted)]">
                 {{ sectionDescription }}
               </p>
             </div>
 
-            <div class="flex flex-wrap items-center gap-2 text-[13px] text-slate-500">
-              <span class="font-medium text-slate-700">排序</span>
+            <div class="flex flex-wrap items-center gap-2 text-[13px] text-[var(--cosmic-muted)]">
+              <span class="font-medium text-[var(--cosmic-text-light)]">排序</span>
               <button
                 v-for="item in sortOptions"
                 :key="item.key"
                 type="button"
                 class="rounded-full px-4 py-2 text-[12px] font-medium transition-all duration-300"
                 :class="sortKey === item.key
-                  ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/15'
-                  : 'bg-white/80 text-slate-500 ring-1 ring-slate-200 hover:bg-white hover:text-slate-900'"
+                  ? 'bg-[linear-gradient(135deg,var(--cosmic-blue),var(--cosmic-blue-deep))] text-white shadow-lg shadow-[rgba(110,146,216,0.18)]'
+                  : 'bg-[rgba(255,255,255,0.72)] text-[var(--cosmic-muted)] ring-1 ring-[rgba(149,171,210,0.14)] hover:bg-[rgba(255,255,255,0.96)] hover:text-[var(--cosmic-blue-deep)]'"
                 @click="sortKey = item.key"
               >
                 {{ item.label }}
@@ -121,15 +121,15 @@
 
           <div
             v-if="!loading && sortedArticles.length === 0"
-            class="mt-6 flex flex-col items-center justify-center rounded-[32px] border border-white/70 bg-white/70 px-4 py-20 text-center shadow-[0_20px_50px_rgba(15,23,42,0.08)] backdrop-blur-md"
+            class="mt-6 flex flex-col items-center justify-center rounded-[32px] border border-[rgba(149,171,210,0.16)] bg-[rgba(255,255,255,0.72)] px-4 py-20 text-center shadow-[0_20px_40px_rgba(120,146,186,0.1)] backdrop-blur-md"
           >
-            <div class="mb-6 flex h-28 w-28 items-center justify-center rounded-full bg-blue-50">
-              <svg class="h-14 w-14 text-blue-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div class="mb-6 flex h-28 w-28 items-center justify-center rounded-full bg-[rgba(148,176,231,0.12)] border border-[rgba(148,176,231,0.16)]">
+              <svg class="h-14 w-14 text-[var(--cosmic-blue-soft)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
               </svg>
             </div>
-            <p class="text-lg font-semibold text-slate-900">暂无相关文章</p>
-            <p class="mt-2 max-w-sm text-sm leading-7 text-slate-500">
+            <p class="text-lg font-semibold text-[var(--cosmic-text-strong)]">暂无相关文章</p>
+            <p class="mt-2 max-w-sm text-sm leading-7 text-[var(--cosmic-text-light-muted)]">
               可以换个关键词试试，或者回到首页看看最近更新的内容。
             </p>
           </div>
@@ -351,9 +351,10 @@ watch(() => siteConfigStore.siteInfo.frontendArticlePageSize, (newVal) => {
 
 .hero-panel {
   background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.92), rgba(255, 251, 235, 0.94)),
-    radial-gradient(circle at top left, rgba(253, 224, 71, 0.18), transparent 30%),
-    radial-gradient(circle at bottom right, rgba(251, 191, 36, 0.14), transparent 26%);
+    linear-gradient(135deg, rgba(255, 255, 255, 0.76), rgba(244, 249, 255, 0.72)),
+    radial-gradient(circle at top left, rgba(148, 176, 231, 0.18), transparent 28%),
+    radial-gradient(circle at bottom right, rgba(242, 236, 226, 0.22), transparent 24%);
+  border-color: rgba(149, 171, 210, 0.18);
 }
 
 .hero-glow {
@@ -368,7 +369,7 @@ watch(() => siteConfigStore.siteInfo.frontendArticlePageSize, (newVal) => {
   top: -3rem;
   height: 12rem;
   width: 12rem;
-  background: rgba(250, 204, 21, 0.18);
+  background: rgba(148, 176, 231, 0.22);
 }
 
 .hero-glow-right {
@@ -376,11 +377,11 @@ watch(() => siteConfigStore.siteInfo.frontendArticlePageSize, (newVal) => {
   bottom: -4rem;
   height: 15rem;
   width: 15rem;
-  background: rgba(251, 191, 36, 0.15);
+  background: rgba(220, 230, 244, 0.24);
 }
 
 .hero-text-gradient {
-  background: linear-gradient(135deg, #92400e 10%, #d97706 50%, #f59e0b 100%);
+  background: linear-gradient(135deg, #27425f 0%, #6e92d8 48%, #93b2e6 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
