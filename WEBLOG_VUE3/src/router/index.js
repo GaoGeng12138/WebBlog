@@ -20,8 +20,8 @@ import { createRouter, createWebHistory } from "vue-router";
 import { useSiteConfigStore } from '@/stores/siteConfig'
 import { ElMessage } from 'element-plus'
 
-const frontendFavicon = `${import.meta.env.BASE_URL}thoughtflow_logo.png`
-const adminFavicon = `${import.meta.env.BASE_URL}thoughtflow-admin.svg`
+const frontendFavicon = `${import.meta.env.BASE_URL}thoughtflow-frontend.svg`
+const adminFavicon = `${import.meta.env.BASE_URL}thoughtflow-admin-tab.svg`
 
 function setFavicon(href) {
     let favicon = document.querySelector('link[data-app-favicon="true"]')
@@ -177,6 +177,13 @@ const routes = [
                 component: AdminBlogSetting,
                 meta: {
                     title: '博客设置'
+                }
+            },
+            {
+                path: "/admin/visitor/list",
+                component: () => import('@/pages/admin/visitor-list.vue'),
+                meta: {
+                    title: '访客记录'
                 }
             },
         ]

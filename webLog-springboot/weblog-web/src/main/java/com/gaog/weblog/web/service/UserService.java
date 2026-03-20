@@ -3,8 +3,11 @@ package com.gaog.weblog.web.service;
 import com.gaog.weblog.common.utils.PageResponse;
 import com.gaog.weblog.common.utils.Response;
 import com.gaog.weblog.web.model.vo.user.RegisterUserReqVO;
+import com.gaog.weblog.web.model.vo.user.UserCurrentLocationRspVO;
 import com.gaog.weblog.web.model.vo.user.UserActivityScoreReqVO;
 import com.gaog.weblog.web.model.vo.user.UserActivityScoreRspVO;
+
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Gao
@@ -23,6 +26,14 @@ public interface UserService {
      * @return
      */
     Response getUserCenterStats();
+
+    /**
+     * 获取当前访问位置
+     *
+     * @param request HttpServletRequest
+     * @return 当前访问位置
+     */
+    Response<UserCurrentLocationRspVO> getCurrentLocation(HttpServletRequest request);
 
     /**
      * 用户注册

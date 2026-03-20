@@ -17,6 +17,11 @@ export function getUserCenterStatistics() {
     return axios.get('/user/stats')
 }
 
+// 获取当前访问位置
+export function getCurrentUserLocation() {
+    return axios.get('/user/location')
+}
+
 //获取用户中心 评论历史
 export function getUserCenterComments(params) {
     return axios.get('/user/comment/history', { params })

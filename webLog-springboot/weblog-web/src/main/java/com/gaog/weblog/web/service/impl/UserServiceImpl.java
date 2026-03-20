@@ -18,7 +18,10 @@ import com.gaog.weblog.common.domain.mapper.ArticleMapper;
 import com.gaog.weblog.common.domain.mapper.CommentMapper;
 import com.gaog.weblog.common.domain.mapper.SiteSettingMapper;
 import com.gaog.weblog.common.domain.mapper.UserFavoriteArticleMapper;
+import com.gaog.weblog.common.utils.IpLocationUtil;
+import com.gaog.weblog.common.utils.IpUtil;
 import com.gaog.weblog.web.model.vo.user.RegisterUserReqVO;
+import com.gaog.weblog.web.model.vo.user.UserCurrentLocationRspVO;
 import com.gaog.weblog.web.model.vo.user.RegisterUserRspVO;
 import com.gaog.weblog.web.model.vo.user.UserCenterStatsVO;
 import com.gaog.weblog.web.model.vo.user.UserCommentHistoryVO;
@@ -34,6 +37,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -141,6 +145,21 @@ public class UserServiceImpl implements UserService {
                 .build();
         
         return Response.success(statsVO);
+    }
+
+    @Override
+    public Response<UserCurrentLocationRspVO> getCurrentLocation(HttpServletRequest request) {
+        String ipAddress = IpUtil.getClientIp(request);
+        IpLocationUtil.LocationInfo locationInfo = IpLocationUtil.resolveLocationInfo(ipAddress);
+
+        UserCurrentLocationRspVO rspVO = UserCurrentLocationRspVO.builder()
+                .ipAddress(ipAddress)
+                .province(locationInfo.getProvince())
+                .city(locationInfo.getCity())
+                .location(locationInfo.getDisplayText())
+                .build();
+
+        return Response.success(rspVO);
     }
 
     /**

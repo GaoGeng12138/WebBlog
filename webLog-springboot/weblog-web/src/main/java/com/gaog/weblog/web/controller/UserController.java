@@ -4,6 +4,7 @@ import com.gaog.weblog.common.aspect.ApiOperationLog;
 import com.gaog.weblog.common.utils.PageResponse;
 import com.gaog.weblog.common.utils.Response;
 import com.gaog.weblog.web.model.vo.user.RegisterUserReqVO;
+import com.gaog.weblog.web.model.vo.user.UserCurrentLocationRspVO;
 import com.gaog.weblog.web.model.vo.user.UserActivityScoreReqVO;
 import com.gaog.weblog.web.model.vo.user.UserActivityScoreRspVO;
 import com.gaog.weblog.web.service.UserService;
@@ -13,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -39,6 +41,13 @@ public class UserController {
     @ApiOperationLog(description = "获取用户中心统计数据")
     public Response getUserCenterStats() {
         return userService.getUserCenterStats();
+    }
+
+    @GetMapping("/location")
+    @ApiOperation(value = "获取当前访问位置")
+    @ApiOperationLog(description = "获取当前访问位置")
+    public Response<UserCurrentLocationRspVO> getCurrentLocation(HttpServletRequest request) {
+        return userService.getCurrentLocation(request);
     }
 
     @PostMapping("/register")

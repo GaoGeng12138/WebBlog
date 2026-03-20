@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <rect width="64" height="64" rx="18" fill="url(#bg)"/>
+  <circle cx="22" cy="24" r="11" fill="url(#bubble)"/>
+  <path d="M31 18C31 13.5817 34.5817 10 39 10H42C49.732 10 56 16.268 56 24C56 31.732 49.732 38 42 38H31V18Z" fill="#23406A" opacity="0.94"/>
+  <path d="M16 39.5C16 32.5964 21.5964 27 28.5 27H40.5C47.4036 27 53 32.5964 53 39.5C53 46.4036 47.4036 52 40.5 52H28.5C21.5964 52 16 46.4036 16 39.5Z" fill="white" opacity="0.92"/>
+  <path d="M23 39.5C23 37.567 24.567 36 26.5 36H42" stroke="#6E92D8" stroke-width="4.2" stroke-linecap="round"/>
+  <path d="M23 45.5H37.5" stroke="#97B2E9" stroke-width="4.2" stroke-linecap="round"/>
+  <path d="M15.5 23.5L18.8 31.2L24.5 20.2L28.2 26L32.6 17.2" stroke="#DDF4FF" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>
+  <defs>
+    <linearGradient id="bg" x1="8" y1="6" x2="55" y2="58" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#EDF5FF"/>
+      <stop offset="1" stop-color="#C6DBFF"/>
+    </linearGradient>
+    <linearGradient id="bubble" x1="11" y1="13" x2="33" y2="35" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#66D0E8"/>
+      <stop offset="1" stop-color="#5A85D9"/>
+    </linearGradient>
+  </defs>
+</svg>

@@ -1,16 +1,16 @@
 <template>
-    <div class="min-h-screen bg-[#F5F7FA] pb-20">
-        <div class="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200/50">
+    <div class="min-h-screen bg-transparent pb-20">
+        <div class="sticky top-0 z-50 border-b border-[rgba(129,158,196,0.16)] bg-white/70 backdrop-blur-xl">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
                 <div class="flex items-center cursor-pointer group" @click="goHome">
                     <div
-                        class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center group-hover:bg-blue-50 text-gray-500 group-hover:text-blue-600 transition-colors mr-3">
+                        class="mr-3 flex h-8 w-8 items-center justify-center rounded-full bg-[rgba(240,245,251,0.94)] text-slate-500 transition-colors group-hover:bg-[rgba(116,149,195,0.12)] group-hover:text-[var(--theme-primary)]">
                         <el-icon>
                             <ArrowLeft />
                         </el-icon>
                     </div>
                     <span
-                        class="text-sm font-medium text-gray-600 group-hover:text-blue-600 transition-colors">返回首页</span>
+                        class="text-sm font-medium text-slate-600 transition-colors group-hover:text-[var(--theme-primary)]">返回首页</span>
                 </div>
                 <div class="flex items-center gap-2 text-xs text-gray-400">
                     <span>个人中心</span>
@@ -20,24 +20,24 @@
             </div>
         </div>
 
-        <div class="relative h-64 md:h-80 w-full group overflow-hidden">
+        <div class="relative h-64 w-full overflow-hidden group md:h-80">
             <img src="https://picsum.photos/1920/600?random=1"
                 class="w-full h-full object-cover transition duration-700 group-hover:scale-105" alt="Cover" />
-            <div class="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
+            <div class="absolute inset-0 bg-[linear-gradient(180deg,rgba(238,245,252,0.1),rgba(57,92,145,0.2)),linear-gradient(0deg,rgba(15,23,42,0.22),rgba(15,23,42,0.04))]"></div>
             <div
                 class="absolute top-6 right-6 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-[-10px] group-hover:translate-y-0">
-                <el-button type="info" size="small" round icon="Camera"
-                    class="!bg-black/30 !border-white/30 !text-white backdrop-blur-sm hover:!bg-black/50">更换封面</el-button>
+                <el-button size="small" round icon="Camera"
+                    class="theme-btn-secondary !border-white/45 !bg-white/18 !px-4 !text-white backdrop-blur-sm hover:!bg-white/28">更换封面</el-button>
             </div>
         </div>
 
         <div class="max-w-7xl mx-auto px-4 sm:px-6 relative -mt-20 z-10">
-            <div class="bg-white rounded-2xl shadow-lg mb-8 p-6 md:p-8 relative overflow-visible">
+            <div class="relative mb-8 overflow-visible rounded-[30px] border border-[rgba(129,158,196,0.18)] bg-white/92 p-6 shadow-[0_28px_80px_rgba(120,146,184,0.16)] backdrop-blur-xl md:p-8">
                 <div class="flex flex-col md:flex-row items-start justify-between">
                     <div class="flex flex-col md:flex-row items-center md:items-end w-full">
                         <div class="relative -mt-20 md:-mt-24 mb-4 md:mb-0 md:mr-6 flex-shrink-0">
                             <div
-                                class="w-32 h-32 md:w-40 md:h-40 rounded-full border-[6px] border-white bg-white shadow-md overflow-hidden group cursor-pointer relative">
+                                class="relative h-32 w-32 cursor-pointer overflow-hidden rounded-full border-[6px] border-white bg-white shadow-[0_18px_40px_rgba(120,146,184,0.18)] group md:h-40 md:w-40">
                                 <img :src="displayAvatar" @error="handleAvatarError"
                                     class="w-full h-full object-cover" />
                                 <div
@@ -55,10 +55,10 @@
                                 </h1>
                                 <div class="flex items-center justify-center md:justify-start gap-2">
                                     <el-tag v-if="hasRole('ROLE_ADMIN')" effect="dark" type="danger" size="small" round
-                                        class="!border-0">管理员</el-tag>
+                                        class="!border-0 !bg-[var(--theme-primary-deep)] !text-white">管理员</el-tag>
                                     <el-tag v-else effect="light" type="primary" size="small" round
-                                        class="!bg-blue-50 !text-blue-600 !border-blue-100">Lv.3 作者</el-tag>
-                                    <span class="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-md">ID:{{
+                                        class="!border-[rgba(116,149,195,0.18)] !bg-[rgba(116,149,195,0.12)] !text-[var(--theme-primary-deep)]">Lv.3 作者</el-tag>
+                                    <span class="rounded-md bg-[rgba(240,245,251,0.95)] px-2 py-0.5 text-xs text-slate-400">ID:{{
                                         user.userId
                                         }}</span>
                                 </div>
@@ -68,7 +68,7 @@
                                 class="text-gray-500 text-sm mb-4 flex items-center justify-center md:justify-start gap-4">
                                 <span class="flex items-center gap-1"><el-icon class="text-gray-400">
                                         <Location />
-                                    </el-icon> {{ province || '未知' }}·{{ city || '未知' }}</span>
+                                    </el-icon> {{ currentLocationText }}</span>
                                 <span class="flex items-center gap-1"><el-icon class="text-gray-400">
                                         <Calendar />
                                     </el-icon> 加入于 {{ formatDate(user.registerTime) }}</span>
@@ -84,31 +84,31 @@
                             <div class="flex items-center gap-8 md:gap-10">
                                 <div class="text-center group cursor-pointer">
                                     <div
-                                        class="text-2xl font-bold text-gray-800 group-hover:text-blue-600 transition-colors">
+                                        class="text-2xl font-bold text-slate-800 transition-colors group-hover:text-[var(--theme-primary)]">
                                         {{ articleCount }}</div>
                                     <div class="text-xs text-gray-400 mt-1">文章</div>
                                 </div>
                                 <div class="text-center group cursor-pointer">
                                     <div
-                                        class="text-2xl font-bold text-gray-800 group-hover:text-green-600 transition-colors">
+                                        class="text-2xl font-bold text-slate-800 transition-colors group-hover:text-[var(--theme-primary-deep)]">
                                         {{ favoriteCount }}</div>
                                     <div class="text-xs text-gray-400 mt-1">收藏</div>
                                 </div>
                                 <div class="text-center group cursor-pointer">
                                     <div
-                                        class="text-2xl font-bold text-gray-800 group-hover:text-purple-600 transition-colors">
+                                        class="text-2xl font-bold text-slate-800 transition-colors group-hover:text-[var(--theme-primary-soft)]">
                                         {{ commentCount }}</div>
                                     <div class="text-xs text-gray-400 mt-1">评论</div>
                                 </div>
                             </div>
                             <div class="flex gap-3">
                                 <el-button type="primary" size="large" round
-                                    class="!px-8 !font-medium shadow-sm hover:shadow-md transition-shadow"
+                                    class="theme-btn-primary !px-8 !font-medium shadow-sm hover:shadow-md transition-shadow"
                                     @click="openEditDialog">
                                     编辑个人资料
                                 </el-button>
-                                <el-button v-if="hasRole('ROLE_ADMIN')" type="warning" size="large" round
-                                    class="!px-8 !font-medium shadow-sm hover:shadow-md transition-shadow"
+                                <el-button v-if="hasRole('ROLE_ADMIN')" size="large" round
+                                    class="theme-btn-secondary !px-8 !font-medium shadow-sm hover:shadow-md transition-shadow"
                                     @click="goToAdminPanel">
                                     <el-icon class="mr-1">
                                         <Setting />
@@ -124,7 +124,7 @@
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
 
                 <div class="lg:col-span-3">
-                    <div class="bg-white rounded-2xl shadow-sm p-4 sticky top-24">
+                    <div class="sticky top-24 rounded-[26px] border border-[rgba(129,158,196,0.18)] bg-white/88 p-4 shadow-[0_20px_50px_rgba(120,146,184,0.12)] backdrop-blur-xl">
                         <el-menu :default-active="activeTab" class="!border-none custom-menu" @select="handleTabSelect">
                             <el-menu-item index="overview">
                                 <el-icon>
@@ -162,7 +162,7 @@
                 </div>
 
                 <div class="lg:col-span-9">
-                    <div class="bg-white rounded-2xl shadow-sm min-h-[600px] p-6 md:p-8">
+                    <div class="min-h-[600px] rounded-[30px] border border-[rgba(129,158,196,0.18)] bg-white/90 p-6 shadow-[0_24px_70px_rgba(120,146,184,0.12)] backdrop-blur-xl md:p-8">
 
                         <div v-if="activeTab === 'overview'" class="animate-fade-in space-y-8">
                             <section>
@@ -239,7 +239,7 @@
                                                                     <!-- 实际柱子 -->
                                                                     <div class="w-full max-w-[40px] rounded-t shadow-sm transition-all duration-300"
                                                                         :class="item.score > 0
-                                                                            ? 'bg-gradient-to-t from-blue-500 to-blue-400'
+                                                                            ? 'bg-gradient-to-t from-[var(--theme-primary-deep)] to-[var(--theme-primary)]'
                                                                             : 'bg-gray-200'"
                                                                         :style="{ height: calculateBarHeight(item.score) + '%' }">
                                                                     </div>
@@ -289,25 +289,25 @@
                                             <div
                                                 class="stat-card bg-white p-4 rounded-lg shadow-sm border border-gray-100">
                                                 <div class="text-xs text-gray-500 mb-1">日均活跃度</div>
-                                                <div class="text-xl font-bold text-blue-600">{{
+                                                <div class="text-xl font-bold text-[var(--theme-primary)]">{{
                                                     activityStatistics.dailyAverage }}</div>
                                             </div>
                                             <div
                                                 class="stat-card bg-white p-4 rounded-lg shadow-sm border border-gray-100">
                                                 <div class="text-xs text-gray-500 mb-1">周均活跃度</div>
-                                                <div class="text-xl font-bold text-green-600">{{
+                                                <div class="text-xl font-bold text-[var(--theme-primary-deep)]">{{
                                                     activityStatistics.weeklyAverage }}</div>
                                             </div>
                                             <div
                                                 class="stat-card bg-white p-4 rounded-lg shadow-sm border border-gray-100">
                                                 <div class="text-xs text-gray-500 mb-1">月均活跃度</div>
-                                                <div class="text-xl font-bold text-purple-600">{{
+                                                <div class="text-xl font-bold text-[var(--theme-primary-soft)]">{{
                                                     activityStatistics.monthlyAverage }}</div>
                                             </div>
                                             <div
                                                 class="stat-card bg-white p-4 rounded-lg shadow-sm border border-gray-100">
                                                 <div class="text-xs text-gray-500 mb-1">最佳表现</div>
-                                                <div class="text-xl font-bold text-yellow-600">{{
+                                                <div class="text-xl font-bold text-[#89A9D6]">{{
                                                     activityStatistics.bestDayScore }}</div>
                                                 <div class="text-xs text-gray-500 mt-1">{{
                                                     activityStatistics.bestDay }}</div>
@@ -320,7 +320,7 @@
                             <section>
                                 <div class="flex justify-between items-center mb-4">
                                     <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
-                                        <span class="w-1 h-5 bg-green-500 rounded-full"></span> 最新动态
+                                        <span class="h-5 w-1 rounded-full bg-[var(--theme-primary)]"></span> 最新动态
                                     </h3>
                                     <el-button link type="primary" @click="loadDynamics">刷新</el-button>
                                 </div>
@@ -335,17 +335,17 @@
                                             :timestamp="dynamic.createTime" placement="top" type="primary" size="large">
                                             <div class="p-4 rounded-lg border transition-all cursor-pointer hover:shadow-md"
                                                 :class="{
-                                                    'bg-blue-50/50 border-blue-100': dynamic.type === 1,
-                                                    'bg-purple-50/50 border-purple-100': dynamic.type === 2,
-                                                    'bg-yellow-50/50 border-yellow-100': dynamic.type === 3
+                                                    'bg-[rgba(116,149,195,0.1)] border-[rgba(116,149,195,0.18)]': dynamic.type === 1,
+                                                    'bg-[rgba(137,169,214,0.12)] border-[rgba(137,169,214,0.22)]': dynamic.type === 2,
+                                                    'bg-[rgba(209,223,244,0.4)] border-[rgba(171,192,222,0.28)]': dynamic.type === 3
                                                 }" @click="handleDynamicClick(dynamic)">
                                                 <h4 class="text-sm text-gray-600 mb-1">
                                                     {{ getDynamicTypeName(dynamic.type) }}
                                                 </h4>
                                                 <div class="font-medium mt-1 hover:underline" :class="{
-                                                    'text-blue-700': dynamic.type === 1,
-                                                    'text-purple-700': dynamic.type === 2,
-                                                    'text-yellow-700': dynamic.type === 3
+                                                    'text-[var(--theme-primary-deep)]': dynamic.type === 1,
+                                                    'text-[#6E8EB9]': dynamic.type === 2,
+                                                    'text-[#5878A6]': dynamic.type === 3
                                                 }">
                                                     {{ dynamic.title }}
                                                 </div>
@@ -655,24 +655,36 @@ import { useUserStore } from '@/stores/user'
 import { useSiteConfigStore } from '@/stores/siteConfig'
 import { getArticlePageList } from "@/api/frontend/article";
 import { getCollectedArticles, uncollectArticle } from "@/api/frontend/favorite";
-import { getUserCenterStatistics, getUserCenterComments, getUserCenterOverview, getActivityScore, getActivityStatistics, getActivityTrend } from "@/api/frontend/user";
+import { getUserCenterStatistics, getUserCenterComments, getUserCenterOverview, getActivityScore, getActivityStatistics, getActivityTrend, getCurrentUserLocation } from "@/api/frontend/user";
 import { deleteComment as deleteCommentApi } from "@/api/frontend/comment";
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import Pagination from '@/components/frontend/Pagination.vue'
-import { getCityLocation } from '@/api/frontend/cityLocation.js'
+const city = ref('')
+const province = ref('')
+const locationLabel = ref('')
 
-
-const city = ref(null)
-const province = ref(null)
-getCityLocation().then(res => {
-    city.value = res.city
-    province.value = res.province
-})
+const loadCurrentLocation = async () => {
+    try {
+        const res = await getCurrentUserLocation()
+        const data = res?.data || {}
+        city.value = data.city || ''
+        province.value = data.province || ''
+        locationLabel.value = data.location || ''
+    } catch (error) {
+        city.value = ''
+        province.value = ''
+        locationLabel.value = '未知位置'
+    }
+}
 
 const userStore = useUserStore()
 const siteConfig = useSiteConfigStore()
 const user = computed(() => userStore.frontendUserInfo)
+const currentLocationText = computed(() => {
+    const parts = [province.value, city.value].filter(Boolean)
+    return parts.length ? parts.join(' · ') : (locationLabel.value || '未知位置')
+})
 const router = useRouter()
 const defaultAvatar = `${import.meta.env.BASE_URL}default-avatar.svg`
 const displayAvatar = computed(() => user.value?.avatar || defaultAvatar)
@@ -841,6 +853,7 @@ const isLoggedIn = computed(() => {
 })
 
 onMounted(() => {
+    loadCurrentLocation()
     siteConfig.fetchPermissions().catch((error) => {
         console.error('Failed to load publish permissions:', error)
     })
@@ -1333,18 +1346,20 @@ onMounted(() => {
     height: 50px;
     color: #64748b;
     font-weight: 500;
+    background: transparent;
     transition: all 0.2s;
 }
 
 .custom-menu .el-menu-item:hover {
-    background-color: #f1f5f9;
-    color: #0f172a;
+    background-color: rgba(240, 245, 251, 0.92);
+    color: #1e3a5f;
 }
 
 .custom-menu .el-menu-item.is-active {
-    background-color: #eff6ff;
-    color: #2563eb;
+    background: linear-gradient(135deg, rgba(116, 149, 195, 0.14), rgba(209, 223, 244, 0.58));
+    color: #4e6d97;
     font-weight: 600;
+    box-shadow: inset 0 0 0 1px rgba(116, 149, 195, 0.16);
 }
 
 .custom-scrollbar::-webkit-scrollbar {
@@ -1372,9 +1387,9 @@ onMounted(() => {
 /* 活跃度部分样式 */
 .activity-section {
     padding: 1.5rem;
-    background: #f8fafc;
-    border-radius: 0.75rem;
-    border: 1px solid #e2e8f0;
+    background: linear-gradient(180deg, rgba(248, 251, 255, 0.98), rgba(242, 247, 252, 0.96));
+    border-radius: 1.1rem;
+    border: 1px solid rgba(129, 158, 196, 0.16);
 }
 
 .activity-summary {
@@ -1383,9 +1398,10 @@ onMounted(() => {
     align-items: center;
     margin: 1.5rem 0;
     padding: 1rem;
-    background: white;
-    border-radius: 0.5rem;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 0.9rem;
+    border: 1px solid rgba(129, 158, 196, 0.14);
+    box-shadow: 0 16px 40px rgba(120, 146, 184, 0.08);
 }
 
 .score-display {
@@ -1397,7 +1413,7 @@ onMounted(() => {
 .score-number {
     font-size: 2rem;
     font-weight: bold;
-    color: #0ea5e9;
+    color: #6584b1;
 }
 
 .score-label {
@@ -1422,9 +1438,10 @@ onMounted(() => {
     justify-content: space-between;
     align-items: center;
     padding: 0.75rem;
-    background: white;
-    border-radius: 0.5rem;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 0.9rem;
+    border: 1px solid rgba(129, 158, 196, 0.14);
+    box-shadow: 0 14px 36px rgba(120, 146, 184, 0.08);
 }
 
 .activity-type {
@@ -1439,7 +1456,7 @@ onMounted(() => {
 
 .activity-item-score {
     font-weight: 600;
-    color: #0ea5e9;
+    color: #6584b1;
 }
 
 /* 活跃度统计数据样式 */
@@ -1453,7 +1470,7 @@ onMounted(() => {
 
 .stat-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 16px 36px rgba(120, 146, 184, 0.14);
 }
 
 /* 自定义滚动条样式 */
@@ -1475,15 +1492,15 @@ onMounted(() => {
 
 activity-section {
     padding: 1.5rem;
-    background: #f8fafc;
+    background: linear-gradient(180deg, rgba(248, 251, 255, 0.98), rgba(242, 247, 252, 0.96));
     border-radius: 12px;
-    border: 1px solid #e2e8f0;
+    border: 1px solid rgba(129, 158, 196, 0.16);
 }
 
 .activity-summary {
     display: flex;
     justify-content: space-between;
-    background: white;
+    background: rgba(255, 255, 255, 0.9);
     padding: 1rem;
     border-radius: 8px;
 }
@@ -1491,7 +1508,7 @@ activity-section {
 .score-number {
     font-size: 2rem;
     font-weight: bold;
-    color: #0ea5e9;
+    color: #6584b1;
 }
 
 .custom-scrollbar::-webkit-scrollbar {

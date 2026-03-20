@@ -37,6 +37,11 @@ export const useMenuStore = defineStore('menu', () => {
       'icon': 'Lock',
       'path': '/admin/role/list',
     },
+    {
+      'name': '访客记录',
+      'icon': 'Position',
+      'path': '/admin/visitor/list',
+    },
   ]
   
   const userStore = useUserStore()
