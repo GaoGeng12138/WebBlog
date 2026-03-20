@@ -50,7 +50,7 @@
 
                         <div class="flex-1 text-center md:text-left">
                             <div class="flex flex-col md:flex-row md:items-center gap-3 mb-2">
-                                <h1 class="text-2xl md:text-3xl font-bold text-gray-800 tracking-tight">
+                                <h1 class="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight drop-shadow-[0_1px_0_rgba(255,255,255,0.35)]">
                                     {{ user.nickname || user.username || '未登录' }}
                                 </h1>
                                 <div class="flex items-center justify-center md:justify-start gap-2">
@@ -65,50 +65,58 @@
                             </div>
 
                             <div
-                                class="text-gray-500 text-sm mb-4 flex items-center justify-center md:justify-start gap-4">
-                                <span class="flex items-center gap-1"><el-icon class="text-gray-400">
+                                class="mb-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm text-slate-600 md:justify-start">
+                                <span class="flex items-center gap-1.5 rounded-full bg-white/55 px-3 py-1 shadow-[0_8px_20px_rgba(120,146,184,0.08)]">
+                                    <el-icon class="text-[var(--theme-primary)]">
                                         <Location />
                                     </el-icon> {{ currentLocationText }}</span>
-                                <span class="flex items-center gap-1"><el-icon class="text-gray-400">
+                                <span class="flex items-center gap-1.5 rounded-full bg-white/55 px-3 py-1 shadow-[0_8px_20px_rgba(120,146,184,0.08)]">
+                                    <el-icon class="text-[var(--theme-primary-deep)]">
                                         <Calendar />
                                     </el-icon> 加入于 {{ formatDate(user.registerTime) }}</span>
                             </div>
 
                             <p
-                                class="text-gray-600 text-sm leading-relaxed max-w-2xl mx-auto md:mx-0 bg-gray-50 md:bg-transparent p-3 md:p-0 rounded-lg">
+                                class="max-w-2xl rounded-2xl bg-[linear-gradient(135deg,rgba(255,255,255,0.9),rgba(244,248,253,0.82))] px-4 py-3 text-sm leading-relaxed text-slate-600 shadow-[0_12px_30px_rgba(120,146,184,0.08)] md:mx-0 md:bg-transparent md:p-0 md:shadow-none">
                                 {{ user.introduction || '这个人很懒，什么都没有写...' }}
                             </p>
                         </div>
 
-                        <div class="flex flex-col items-center md:items-end gap-6 mt-6 md:mt-0 w-full md:w-auto">
-                            <div class="flex items-center gap-8 md:gap-10">
-                                <div class="text-center group cursor-pointer">
-                                    <div
-                                        class="text-2xl font-bold text-slate-800 transition-colors group-hover:text-[var(--theme-primary)]">
-                                        {{ articleCount }}</div>
-                                    <div class="text-xs text-gray-400 mt-1">文章</div>
-                                </div>
-                                <div class="text-center group cursor-pointer">
-                                    <div
-                                        class="text-2xl font-bold text-slate-800 transition-colors group-hover:text-[var(--theme-primary-deep)]">
-                                        {{ favoriteCount }}</div>
-                                    <div class="text-xs text-gray-400 mt-1">收藏</div>
-                                </div>
-                                <div class="text-center group cursor-pointer">
-                                    <div
-                                        class="text-2xl font-bold text-slate-800 transition-colors group-hover:text-[var(--theme-primary-soft)]">
-                                        {{ commentCount }}</div>
-                                    <div class="text-xs text-gray-400 mt-1">评论</div>
+                        <div class="mt-6 flex w-full flex-col items-stretch gap-4 md:mt-0 md:w-auto md:min-w-[390px] md:items-end">
+                            <div class="profile-panel-shell">
+                                <div class="profile-panel-heading">个人数据</div>
+                                <div class="grid w-full grid-cols-3 gap-3">
+                                    <div class="profile-stat-card group cursor-pointer">
+                                        <div class="profile-stat-accent"></div>
+                                        <div
+                                            class="text-[30px] font-bold leading-none text-slate-900 transition-colors group-hover:text-[var(--theme-primary)]">
+                                            {{ articleCount }}</div>
+                                        <div class="mt-2 text-[11px] font-semibold tracking-[0.18em] text-slate-500">文章</div>
+                                    </div>
+                                    <div class="profile-stat-card group cursor-pointer">
+                                        <div class="profile-stat-accent"></div>
+                                        <div
+                                            class="text-[30px] font-bold leading-none text-slate-900 transition-colors group-hover:text-[var(--theme-primary-deep)]">
+                                            {{ favoriteCount }}</div>
+                                        <div class="mt-2 text-[11px] font-semibold tracking-[0.18em] text-slate-500">收藏</div>
+                                    </div>
+                                    <div class="profile-stat-card group cursor-pointer">
+                                        <div class="profile-stat-accent"></div>
+                                        <div
+                                            class="text-[30px] font-bold leading-none text-slate-900 transition-colors group-hover:text-[var(--theme-primary-soft)]">
+                                            {{ commentCount }}</div>
+                                        <div class="mt-2 text-[11px] font-semibold tracking-[0.18em] text-slate-500">评论</div>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="flex gap-3">
+                            <div class="grid w-full grid-cols-1 gap-3 sm:grid-cols-2">
                                 <el-button type="primary" size="large" round
-                                    class="theme-btn-primary !px-8 !font-medium shadow-sm hover:shadow-md transition-shadow"
+                                    class="theme-btn-primary profile-action-btn profile-action-btn--primary !ml-0 !w-full !px-8 !font-semibold"
                                     @click="openEditDialog">
                                     编辑个人资料
                                 </el-button>
                                 <el-button v-if="hasRole('ROLE_ADMIN')" size="large" round
-                                    class="theme-btn-secondary !px-8 !font-medium shadow-sm hover:shadow-md transition-shadow"
+                                    class="theme-btn-secondary profile-action-btn profile-action-btn--secondary !ml-0 !w-full !px-8 !font-semibold"
                                     @click="goToAdminPanel">
                                     <el-icon class="mr-1">
                                         <Setting />
@@ -1326,6 +1334,80 @@ onMounted(() => {
 <style scoped>
 .animate-fade-in {
     animation: fadeIn 0.4s ease-out;
+}
+
+.profile-stat-card {
+    position: relative;
+    display: flex;
+    min-height: 100px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 20px;
+    border: 1px solid rgba(129, 158, 196, 0.18);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(244, 248, 253, 0.96));
+    box-shadow: 0 14px 28px rgba(120, 146, 184, 0.08);
+    backdrop-filter: blur(16px);
+    transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+}
+
+.profile-stat-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(116, 149, 195, 0.28);
+    box-shadow: 0 18px 32px rgba(108, 137, 184, 0.12);
+}
+
+.profile-panel-shell {
+    width: 100%;
+    border-radius: 24px;
+    border: 1px solid rgba(129, 158, 196, 0.18);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(247, 250, 255, 0.92));
+    padding: 14px;
+    box-shadow: 0 18px 36px rgba(120, 146, 184, 0.1);
+    backdrop-filter: blur(18px);
+}
+
+.profile-panel-heading {
+    margin-bottom: 12px;
+    padding-left: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    color: #64748b;
+}
+
+.profile-stat-accent {
+    position: absolute;
+    top: 12px;
+    left: 50%;
+    width: 34px;
+    height: 4px;
+    border-radius: 999px;
+    transform: translateX(-50%);
+    background: linear-gradient(90deg, rgba(107, 148, 228, 0.18), rgba(85, 127, 210, 0.72), rgba(107, 148, 228, 0.18));
+}
+
+.profile-action-btn {
+    min-height: 46px;
+    box-shadow: 0 12px 26px rgba(108, 137, 184, 0.1);
+    transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease, background 0.22s ease;
+}
+
+.profile-action-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 16px 30px rgba(108, 137, 184, 0.14);
+}
+
+.profile-action-btn--primary {
+    background: linear-gradient(135deg, #6f97e7, #5a82d4) !important;
+    border-color: rgba(98, 136, 214, 0.88) !important;
+    color: #ffffff !important;
+}
+
+.profile-action-btn--secondary {
+    border: 1px solid rgba(129, 158, 196, 0.28) !important;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(246, 249, 253, 0.94)) !important;
+    color: #35527a !important;
 }
 
 @keyframes fadeIn {
