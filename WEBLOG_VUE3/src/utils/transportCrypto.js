@@ -1,8 +1,29 @@
 const ENCRYPTED_PREFIX = 'ENC::'
 const DEFAULT_TRANSPORT_KEY = 'WebLogTransportKey2026Secret!!@#'
 
+function sanitizeTransportKey(rawKey) {
+  if (typeof rawKey !== 'string') {
+    return ''
+  }
+
+  const trimmedKey = rawKey.trim()
+  if (
+    (trimmedKey.startsWith('"') && trimmedKey.endsWith('"')) ||
+    (trimmedKey.startsWith("'") && trimmedKey.endsWith("'"))
+  ) {
+    return trimmedKey.slice(1, -1).trim()
+  }
+
+  return trimmedKey
+}
+
 function getTransportKey() {
-  return import.meta.env.VITE_TRANSPORT_CRYPTO_KEY || DEFAULT_TRANSPORT_KEY
+  const envKey = sanitizeTransportKey(import.meta.env.VITE_TRANSPORT_CRYPTO_KEY)
+  if (envKey) {
+    return envKey
+  }
+
+  return sanitizeTransportKey(DEFAULT_TRANSPORT_KEY)
 }
 
 function normalizeKeyBytes(rawKey) {
@@ -11,7 +32,7 @@ function normalizeKeyBytes(rawKey) {
     return keyBytes
   }
 
-  throw new Error('Transport crypto key length must be 16, 24, or 32 bytes')
+  return null
 }
 
 function toBase64(bytes) {
@@ -32,9 +53,15 @@ function fromBase64(base64) {
 }
 
 async function importAesKey() {
+  const normalizedKey = normalizeKeyBytes(getTransportKey())
+  if (!normalizedKey) {
+    console.warn('[transport-crypto] invalid key length, fallback to plain transport')
+    return null
+  }
+
   return crypto.subtle.importKey(
     'raw',
-    normalizeKeyBytes(getTransportKey()),
+    normalizedKey,
     { name: 'AES-CBC' },
     false,
     ['encrypt', 'decrypt']
@@ -55,6 +82,10 @@ export async function encryptTransportValue(value) {
   }
 
   const key = await importAesKey()
+  if (!key) {
+    return value
+  }
+
   const iv = crypto.getRandomValues(new Uint8Array(16))
   const payload = new TextEncoder().encode(String(value))
   const encrypted = await crypto.subtle.encrypt({ name: 'AES-CBC', iv }, key, payload)
@@ -74,6 +105,10 @@ export async function decryptTransportValue(value) {
   }
 
   const key = await importAesKey()
+  if (!key) {
+    return value
+  }
+
   const iv = fromBase64(ivBase64)
   const encrypted = fromBase64(cipherBase64)
   const plainBuffer = await crypto.subtle.decrypt({ name: 'AES-CBC', iv }, key, encrypted)
