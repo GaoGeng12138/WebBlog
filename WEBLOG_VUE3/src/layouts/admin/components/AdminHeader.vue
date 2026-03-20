@@ -20,7 +20,7 @@
                     @click="handleRefresh">
                     <span class="admin-header-action__halo"></span>
                     <el-icon class="admin-header-action__icon text-[17px]">
-                        <Refresh />
+                        <RefreshRight />
                     </el-icon>
                 </div>
             </el-tooltip>
@@ -32,7 +32,7 @@
                     <span class="admin-header-action__halo"></span>
                     <el-icon class="admin-header-action__icon text-[17px]">
                         <FullScreen v-if="!isFullscreen" />
-                        <CircleClose v-else />
+                        <ScaleToOriginal v-else />
                     </el-icon>
                 </div>
             </el-tooltip>
@@ -43,7 +43,7 @@
                     @click="goToFrontend">
                     <span class="admin-header-action__halo"></span>
                     <el-icon class="admin-header-action__icon text-[17px]">
-                        <House />
+                        <TopRight />
                     </el-icon>
                 </div>
             </el-tooltip>
@@ -112,8 +112,7 @@ import { useFullscreen } from '@vueuse/core';
 import { computed, reactive, ref, watch, onBeforeUnmount, onMounted, } from 'vue';
 import { useRouter } from 'vue-router';
 import { updateAdminPassword } from '@/api/admin/user.js';
-// Import House icon
-import { House } from '@element-plus/icons-vue';
+import { RefreshRight, ScaleToOriginal, TopRight } from '@element-plus/icons-vue';
 
 // 引入了用户 Store
 const userStore = useUserStore()
