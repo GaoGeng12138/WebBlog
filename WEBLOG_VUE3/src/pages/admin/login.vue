@@ -267,6 +267,8 @@ const onSubmit = () => {
             }
         }).catch(error => {
             console.error('登录失败:', error);
+            const message = error?.response?.data?.message || error?.message || '登录请求未成功发出，请检查接口地址或网络配置。'
+            showMessage(message, 'error');
         }).finally(() => {
             //停止加载
             loading.value = false;

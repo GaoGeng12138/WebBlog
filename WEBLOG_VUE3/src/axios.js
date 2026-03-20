@@ -3,12 +3,19 @@ import { getToken, removeToken } from "@/composables/cookie";
 import { showMessage } from "@/composables/util";
 import { decryptTransportData, encryptPayloadFields } from "@/utils/transportCrypto";
 
+function buildAppPath(path) {
+    const base = import.meta.env.BASE_URL || '/'
+    const normalizedBase = base.endsWith('/') ? base.slice(0, -1) : base
+    const normalizedPath = path.startsWith('/') ? path : `/${path}`
+    return normalizedBase ? `${normalizedBase}${normalizedPath}` : normalizedPath
+}
+
 function getApiBaseURL() {
     if (import.meta.env.VITE_API_BASE_URL) {
         return import.meta.env.VITE_API_BASE_URL;
     }
 
-    return import.meta.env.PROD ? "/weblog/api" : "/api";
+    return import.meta.env.PROD ? "/webLog" : "/api";
 }
 
 // 创建 Axios 实例
@@ -66,7 +73,7 @@ instance.interceptors.response.use(async response => {
             showMessage(message || '登录已失效，请重新登录', 'error')
             // 带上当前路径，登录后可跳回原页面
             const redirect = encodeURIComponent(window.location.pathname + window.location.search)
-            window.location.href = `/login?redirect=${redirect}`
+            window.location.href = `${buildAppPath('/login')}?redirect=${redirect}`
             return Promise.reject(error)
         }
     }

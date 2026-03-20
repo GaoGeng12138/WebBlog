@@ -1,11 +1,18 @@
 import axios from "axios";
 
+function buildAppPath(path) {
+  const base = import.meta.env.BASE_URL || '/'
+  const normalizedBase = base.endsWith('/') ? base.slice(0, -1) : base
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`
+  return normalizedBase ? `${normalizedBase}${normalizedPath}` : normalizedPath
+}
+
 function getApiBaseURL() {
   if (import.meta.env.VITE_API_BASE_URL) {
     return import.meta.env.VITE_API_BASE_URL;
   }
 
-  return import.meta.env.PROD ? "/weblog/api" : "/api";
+  return import.meta.env.PROD ? "/webLog" : "/api";
 }
 
 const request = axios.create({
@@ -35,7 +42,7 @@ request.interceptors.response.use(
         // 清除本地token
         localStorage.removeItem("token");
         // 重定向到登录页面
-        window.location.href = '/login';
+        window.location.href = buildAppPath('/login');
         return Promise.reject(err);
       }
     }
