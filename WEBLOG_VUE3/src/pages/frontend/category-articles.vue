@@ -1,8 +1,8 @@
 <template>
-  <div class="min-h-screen">
+  <div class="min-h-screen flex flex-col">
     <AppHeader :keyword="keyword" @update:keyword="keyword = $event" @search="searchArticles" />
 
-    <div class="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex-1 w-full max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8">
     <main class="flex flex-col gap-6 py-6 2xl:flex-row">
       <aside class="hidden 2xl:block 2xl:w-[230px] 2xl:shrink-0">
         <DailyNoteSidebar />

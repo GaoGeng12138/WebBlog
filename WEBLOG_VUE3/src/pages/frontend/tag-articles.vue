@@ -1,10 +1,10 @@
 <template>
-  <div>
+  <div class="min-h-screen flex flex-col">
     <!-- Header -->
     <AppHeader :keyword="keyword" @update:keyword="keyword = $event" @search="searchArticles" />
 
     <!-- Main Content -->
-    <div class="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex-1 w-full max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8">
       <main class="flex flex-col gap-6 py-6 lg:flex-row">
         <!-- Articles Section -->
         <section class="w-full lg:w-[76%]">
