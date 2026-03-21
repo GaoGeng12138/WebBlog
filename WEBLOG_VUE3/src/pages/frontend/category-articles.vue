@@ -77,6 +77,7 @@
                   :article="article"
                   variant="list"
                   :category-id="categoryId"
+                  :show-category-tag="false"
                   :image-index="index"
                 />
               </div>
