@@ -248,6 +248,7 @@ const handleCoverChange = (file) => {
 // 表单引用
 const formRef = ref(null)
 const btnLoading = ref(false)
+const detailRequestSerial = ref(0)
 
 const resetFormState = async () => {
     Object.assign(form, getDefaultFormState())
@@ -262,7 +263,7 @@ const syncPageState = async (id) => {
     if (id) {
         isEdit.value = true
         articleId.value = id
-        loadArticleDetail()
+        loadArticleDetail(id)
         return
     }
 
@@ -330,8 +331,14 @@ watch(
 )
 
 // 加载文章详情
-const loadArticleDetail = () => {
-    getArticleDetail(articleId.value).then((res) => {
+const loadArticleDetail = (id = articleId.value) => {
+    const requestSerial = ++detailRequestSerial.value
+
+    getArticleDetail(id).then((res) => {
+        if (requestSerial !== detailRequestSerial.value || String(id) !== String(articleId.value)) {
+            return
+        }
+
         if (res.success) {
             const article = res.data
             form.title = article.title || ''
