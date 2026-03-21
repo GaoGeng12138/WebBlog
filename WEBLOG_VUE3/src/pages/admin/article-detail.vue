@@ -49,7 +49,10 @@
                 </el-form-item>
 
                 <el-form-item label="文章来源">
-                    <el-tag type="info">{{ isEdit ? (form.articleSourceLabel || '后台发布') : '后台发布' }}</el-tag>
+                    <div class="flex items-center gap-3">
+                        <el-tag type="info">{{ isEdit ? (form.articleSourceLabel || '后台发布') : '后台发布' }}</el-tag>
+                        <el-tag :type="getStatusMeta(form.status).type">{{ getStatusMeta(form.status).text }}</el-tag>
+                    </div>
                 </el-form-item>
 
                 <!-- 文章摘要 -->
@@ -100,8 +103,11 @@
 
                 <!-- 提交按钮 -->
                 <el-form-item>
-                    <el-button type="primary" @click="onSubmit" :loading="btnLoading" class="admin-btn-primary">
-                        {{ isEdit ? '更新文章' : '发布文章' }}
+                    <el-button @click="onSubmit('draft')" :loading="btnLoading && submitAction === 'draft'" class="admin-btn-secondary">
+                        {{ isEdit ? '保存草稿' : '存为草稿' }}
+                    </el-button>
+                    <el-button type="primary" @click="onSubmit('publish')" :loading="btnLoading && submitAction === 'publish'" class="admin-btn-primary">
+                        {{ isEdit ? '发布更新' : '发布文章' }}
                     </el-button>
                     <el-button @click="goBack" class="admin-btn-secondary">取消</el-button>
                 </el-form-item>
@@ -150,6 +156,7 @@ const form = reactive({
     content: '',
     articleSource: 1,
     articleSourceLabel: '后台发布',
+    status: 4,
     visibilityScope: 1,
     visibleUserIds: []
 })
@@ -163,6 +170,7 @@ const getDefaultFormState = () => ({
     content: '',
     articleSource: 1,
     articleSourceLabel: '后台发布',
+    status: 4,
     visibilityScope: 1,
     visibleUserIds: []
 })
@@ -327,7 +335,19 @@ const handleCoverChange = (file) => {
 // 表单引用
 const formRef = ref(null)
 const btnLoading = ref(false)
+const submitAction = ref('publish')
 const detailRequestSerial = ref(0)
+
+const getStatusMeta = (status) => {
+    const map = {
+        0: { text: '待审核', type: 'warning' },
+        1: { text: '审核通过', type: 'primary' },
+        2: { text: '审核未通过', type: 'danger' },
+        3: { text: '草稿', type: 'info' },
+        4: { text: '已发布', type: 'success' }
+    }
+    return map[status] || { text: '未知状态', type: 'info' }
+}
 
 const resetFormState = async () => {
     Object.assign(form, getDefaultFormState())
@@ -351,42 +371,54 @@ const syncPageState = async (id) => {
 }
 
 // 提交表单
-const onSubmit = () => {
+const buildSubmitData = (action) => ({
+    title: form.title?.trim() || '',
+    cover: form.cover?.startsWith('blob:') ? '' : form.cover,
+    categoryId: form.categoryId,
+    summary: form.summary,
+    content: form.content,
+    tags: form.tagIds,
+    submitAction: action,
+    visibilityScope: canConfigureVisibility() ? form.visibilityScope : 1,
+    visibleUserIds: canConfigureVisibility() && form.visibilityScope === 2 ? form.visibleUserIds : []
+})
+
+const executeSubmit = (action) => {
+    submitAction.value = action
+    btnLoading.value = true
+
+    const submitData = buildSubmitData(action)
+    const apiCall = isEdit.value
+        ? updateArticle({ ...submitData, id: articleId.value })
+        : publishArticle(submitData)
+
+    apiCall.then((res) => {
+        if (res.success) {
+            const successText = action === 'draft'
+                ? (isEdit.value ? '草稿已保存' : '草稿已创建')
+                : (isEdit.value ? '文章已发布' : '文章发布成功')
+            showMessage(successText)
+            removeTab(route.path, true)
+            router.push('/admin/article/list')
+        } else {
+            showMessage(res.message, 'error')
+        }
+    }).finally(() => {
+        btnLoading.value = false
+    })
+}
+
+const onSubmit = (action = 'publish') => {
+    if (action === 'draft') {
+        executeSubmit(action)
+        return
+    }
+
     formRef.value.validate((valid) => {
         if (!valid) {
             return false
         }
-
-        btnLoading.value = true
-        // 将 tagIds 从标签名称数组转换为后端需要的格式
-        const submitData = {
-            title: form.title?.trim() || '',
-            cover: form.cover,
-            categoryId: form.categoryId,
-            summary: form.summary,
-            content: form.content,
-            tags: form.tagIds, // 后端接收 tags 字段，为标签名称数组
-            visibilityScope: canConfigureVisibility() ? form.visibilityScope : 1,
-            visibleUserIds: canConfigureVisibility() && form.visibilityScope === 2 ? form.visibleUserIds : []
-        }
-
-        // 根据编辑或新增调用不同接口
-        const apiCall = isEdit.value
-            ? updateArticle({ ...submitData, id: articleId.value })
-            : publishArticle(submitData)
-
-        apiCall.then((res) => {
-            if (res.success) {
-                showMessage(isEdit.value ? '更新成功' : '发布成功')
-                // 如果是发布文章/更新文章成功移除当前标签页
-                removeTab(route.path, true)
-                router.push('/admin/article/list')
-            } else {
-                showMessage(res.message, 'error')
-            }
-        }).finally(() => {
-            btnLoading.value = false
-        })
+        executeSubmit(action)
     })
 }
 
@@ -432,6 +464,7 @@ const loadArticleDetail = (id = articleId.value) => {
             form.content = article.content
             form.articleSource = article.articleSource || 1
             form.articleSourceLabel = article.articleSourceLabel || '后台发布'
+            form.status = article.status ?? 4
             form.visibilityScope = article.visibilityScope || 1
             form.visibleUserIds = article.visibleUserIds || []
         } else {

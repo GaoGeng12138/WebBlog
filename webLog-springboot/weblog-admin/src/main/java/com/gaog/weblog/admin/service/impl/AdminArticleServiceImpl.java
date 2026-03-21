@@ -61,6 +61,9 @@ import java.util.stream.Collectors;
 @Slf4j
 public class AdminArticleServiceImpl implements AdminArticleService {
 
+    private static final String ACTION_DRAFT = "draft";
+    private static final String ACTION_PUBLISH = "publish";
+
     @Autowired
     private ArticleMapper articleMapper;
     @Autowired
@@ -87,6 +90,12 @@ public class AdminArticleServiceImpl implements AdminArticleService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Response publishArticle(PublishArticleReqVO publishArticleReqVO) {
+        boolean savingDraft = isDraftAction(publishArticleReqVO.getSubmitAction());
+        String validateMessage = validateArticlePayloadForAction(publishArticleReqVO.getContent(), publishArticleReqVO.getCover(),
+                publishArticleReqVO.getCategoryId(), savingDraft);
+        if (StringUtils.isNotBlank(validateMessage)) {
+            return Response.fail(validateMessage);
+        }
 
         Long userId = SecurityContextUtil.getCurrentUserId();
         String nickname = SecurityContextUtil.getCurrentUserNickname();
@@ -95,7 +104,7 @@ public class AdminArticleServiceImpl implements AdminArticleService {
                 .title(StringUtils.trimToEmpty(publishArticleReqVO.getTitle()))
                 .cover(publishArticleReqVO.getCover())
                 .summary(publishArticleReqVO.getSummary())
-                .status(ArticleStatusEnum.PUBLISH.getCode())
+                .status(resolveAdminStatus(publishArticleReqVO.getSubmitAction()))
                 .userId(userId)
                 .author(nickname)
                 .articleSource(ArticleSourceEnum.ADMIN.getCode())
@@ -114,7 +123,7 @@ public class AdminArticleServiceImpl implements AdminArticleService {
         //保存文章内容
         ArticleContentDO articleContentDO = ArticleContentDO.builder()
                 .articleId(articleId)
-                .content(publishArticleReqVO.getContent())
+                .content(StringUtils.defaultString(publishArticleReqVO.getContent()))
                 .build();
 
         //获取分类id
@@ -123,17 +132,19 @@ public class AdminArticleServiceImpl implements AdminArticleService {
         //保存文章分类关联
         articleContentMapper.insert(articleContentDO);
 
-        CategoryDO categoryDO = categoryMapper.selectById(categoryId);
-        if (Objects.isNull(categoryDO)) {
-            log.warn("==> 分类不存在, categoryId: {}", categoryId);
-            throw new BizException(ResponseCodeEnum.CATEGORY_NOT_EXISTED);
-        }
+        if (Objects.nonNull(categoryId)) {
+            CategoryDO categoryDO = categoryMapper.selectById(categoryId);
+            if (Objects.isNull(categoryDO)) {
+                log.warn("==> 分类不存在, categoryId: {}", categoryId);
+                throw new BizException(ResponseCodeEnum.CATEGORY_NOT_EXISTED);
+            }
 
-        ArticleCategoryRelDO articleCategoryRelDO = ArticleCategoryRelDO.builder()
-                .articleId(articleId)
-                .categoryId(categoryId)
-                .build();
-        articleCategoryRelMapper.insert(articleCategoryRelDO);
+            ArticleCategoryRelDO articleCategoryRelDO = ArticleCategoryRelDO.builder()
+                    .articleId(articleId)
+                    .categoryId(categoryId)
+                    .build();
+            articleCategoryRelMapper.insert(articleCategoryRelDO);
+        }
 
         // 4. 保存文章关联的标签集合
         List<String> publishTags = publishArticleReqVO.getTags();
@@ -367,6 +378,8 @@ public class AdminArticleServiceImpl implements AdminArticleService {
                                 .tags(tagNames)
                                 .articleSource(articleDO.getArticleSource())
                                 .articleSourceLabel(ArticleSourceEnum.getDescByCode(articleDO.getArticleSource()))
+                                .status(articleDO.getStatus())
+                                .statusLabel(resolveStatusLabel(articleDO.getStatus()))
                                 .createTime(articleDO.getCreateTime())
                                 .build();
                     })
@@ -441,6 +454,8 @@ public class AdminArticleServiceImpl implements AdminArticleService {
                 .tags(tags)
                 .articleSource(articleDO.getArticleSource())
                 .articleSourceLabel(ArticleSourceEnum.getDescByCode(articleDO.getArticleSource()))
+                .status(articleDO.getStatus())
+                .statusLabel(resolveStatusLabel(articleDO.getStatus()))
                 .visibilityScope(contentVisibilityService.normalizeScope(articleDO.getVisibilityScope()))
                 .visibleUserIds(findVisibleUserIds(articleId))
                 .createTime(articleDO.getCreateTime())
@@ -457,6 +472,13 @@ public class AdminArticleServiceImpl implements AdminArticleService {
      */
     @Override
     public Response updateArticle(UpdateArticleReqVO updateArticleReqVO) {
+        boolean savingDraft = isDraftAction(updateArticleReqVO.getSubmitAction());
+        String validateMessage = validateArticlePayloadForAction(updateArticleReqVO.getContent(), updateArticleReqVO.getCover(),
+                updateArticleReqVO.getCategoryId(), savingDraft);
+        if (StringUtils.isNotBlank(validateMessage)) {
+            return Response.fail(validateMessage);
+        }
+
         Long articleId = updateArticleReqVO.getId();
 
         // 1. 检查文章是否存在
@@ -472,6 +494,7 @@ public class AdminArticleServiceImpl implements AdminArticleService {
                 .title(StringUtils.trimToEmpty(updateArticleReqVO.getTitle()))
                 .cover(updateArticleReqVO.getCover())
                 .summary(updateArticleReqVO.getSummary())
+                .status(resolveAdminStatus(updateArticleReqVO.getSubmitAction()))
                 .visibilityScope(resolveVisibilityScope(updateArticleReqVO.getVisibilityScope()))
                 .updateTime(LocalDateTime.now())
                 .build();
@@ -480,7 +503,7 @@ public class AdminArticleServiceImpl implements AdminArticleService {
         // 3. 更新文章内容
         ArticleContentDO articleContentDO = ArticleContentDO.builder()
                 .articleId(articleId)
-                .content(updateArticleReqVO.getContent())
+                .content(StringUtils.defaultString(updateArticleReqVO.getContent()))
                 .build();
         // 先删除旧的内容记录
         articleContentMapper.delete(new LambdaQueryWrapper<ArticleContentDO>()
@@ -490,20 +513,22 @@ public class AdminArticleServiceImpl implements AdminArticleService {
 
         // 4. 更新文章分类
         Long categoryId = updateArticleReqVO.getCategoryId();
-        CategoryDO categoryDO = categoryMapper.selectById(categoryId);
-        if (Objects.isNull(categoryDO)) {
-            log.warn("==> 分类不存在, categoryId: {}", categoryId);
-            throw new BizException(ResponseCodeEnum.CATEGORY_NOT_EXISTED);
-        }
         // 先删除旧的分类关联
         articleCategoryRelMapper.delete(new LambdaQueryWrapper<ArticleCategoryRelDO>()
                 .eq(ArticleCategoryRelDO::getArticleId, articleId));
-        // 插入新的分类关联
-        ArticleCategoryRelDO articleCategoryRelDO = ArticleCategoryRelDO.builder()
-                .articleId(articleId)
-                .categoryId(categoryId)
-                .build();
-        articleCategoryRelMapper.insert(articleCategoryRelDO);
+        if (Objects.nonNull(categoryId)) {
+            CategoryDO categoryDO = categoryMapper.selectById(categoryId);
+            if (Objects.isNull(categoryDO)) {
+                log.warn("==> 分类不存在, categoryId: {}", categoryId);
+                throw new BizException(ResponseCodeEnum.CATEGORY_NOT_EXISTED);
+            }
+            // 插入新的分类关联
+            ArticleCategoryRelDO articleCategoryRelDO = ArticleCategoryRelDO.builder()
+                    .articleId(articleId)
+                    .categoryId(categoryId)
+                    .build();
+            articleCategoryRelMapper.insert(articleCategoryRelDO);
+        }
 
         // 5. 更新文章标签
         // 先删除旧的标签关联
@@ -578,6 +603,47 @@ public class AdminArticleServiceImpl implements AdminArticleService {
                 .stream()
                 .map(ArticleAccessUserDO::getUserId)
                 .collect(Collectors.toList());
+    }
+
+    private Integer resolveAdminStatus(String submitAction) {
+        return isDraftAction(submitAction)
+                ? ArticleStatusEnum.NON_PUBLISH.getCode()
+                : ArticleStatusEnum.PUBLISH.getCode();
+    }
+
+    private boolean isDraftAction(String submitAction) {
+        return ACTION_DRAFT.equalsIgnoreCase(StringUtils.defaultString(submitAction, ACTION_PUBLISH));
+    }
+
+    private String validateArticlePayloadForAction(String content, String cover, Long categoryId, boolean savingDraft) {
+        if (savingDraft) {
+            return null;
+        }
+
+        if (StringUtils.isBlank(content)) {
+            return "文章内容不能为空";
+        }
+        if (StringUtils.isBlank(cover)) {
+            return "文章封面不能为空";
+        }
+        if (Objects.isNull(categoryId)) {
+            return "文章分类不能为空";
+        }
+        return null;
+    }
+
+    private String resolveStatusLabel(Integer status) {
+        if (Objects.isNull(status)) {
+            return "";
+        }
+
+        for (ArticleStatusEnum value : ArticleStatusEnum.values()) {
+            if (Objects.equals(value.getCode(), status)) {
+                return value.getStatus();
+            }
+        }
+
+        return "";
     }
 
 }

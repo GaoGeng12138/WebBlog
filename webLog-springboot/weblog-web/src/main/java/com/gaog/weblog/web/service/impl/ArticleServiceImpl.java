@@ -78,6 +78,9 @@ import java.util.stream.Collectors;
 @Slf4j
 public class ArticleServiceImpl implements ArticleService {
 
+    private static final String ACTION_DRAFT = "draft";
+    private static final String ACTION_PUBLISH = "publish";
+
     @Autowired
     private ArticleMapper articleMapper;
     @Autowired
@@ -351,24 +354,38 @@ public class ArticleServiceImpl implements ArticleService {
     @Override
     public Response findArticleDetail(FindArticleDetailReqVO findArticleDetailReqVO, HttpServletRequest request) {
         Long articleId = findArticleDetailReqVO.getArticleId();
+        boolean editable = Boolean.TRUE.equals(findArticleDetailReqVO.getEditable());
 
         ArticleDO articleDO = articleMapper.selectById(articleId);
 
-        // 判断文章是否存在，且前台仅允许访问已发布文章
-        if (Objects.isNull(articleDO) || !Objects.equals(articleDO.getStatus(), ArticleStatusEnum.PUBLISH.getCode())) {
+        if (Objects.isNull(articleDO)) {
+            log.warn("==> 该文章不存在, articleId: {}", articleId);
+            throw new BizException(ResponseCodeEnum.ARTICLE_NOT_FOUND);
+        }
+
+        Long currentUserId = contentVisibilityService.getCurrentUserIdSafely();
+        boolean privilegedViewer = contentVisibilityService.isCurrentUserPrivileged();
+        boolean ownArticle = Objects.nonNull(currentUserId) && Objects.equals(articleDO.getUserId(), currentUserId);
+
+        if (editable) {
+            if (!ownArticle && !privilegedViewer) {
+                log.warn("==> 编辑文章无访问权限, articleId: {}, userId: {}", articleId, currentUserId);
+                throw new BizException(ResponseCodeEnum.ARTICLE_NOT_FOUND);
+            }
+        } else if (!Objects.equals(articleDO.getStatus(), ArticleStatusEnum.PUBLISH.getCode())) {
             log.warn("==> 该文章不存在, articleId: {}", articleId);
             throw new BizException(ResponseCodeEnum.ARTICLE_NOT_FOUND);
         }
 
         ArticleCategoryRelDO articleCategoryRelDO = articleCategoryRelMapper.selectByArticleId(articleId);
         Long categoryId = articleCategoryRelDO == null ? null : articleCategoryRelDO.getCategoryId();
-        if (!contentVisibilityService.canAccessArticle(articleDO, categoryId)) {
+        if (!editable && !contentVisibilityService.canAccessArticle(articleDO, categoryId)) {
             log.warn("==> 文章无访问权限, articleId: {}", articleId);
             throw new BizException(ResponseCodeEnum.ARTICLE_NOT_FOUND);
         }
 
         // 单日内同一登录用户或同一匿名IP仅增加一次文章阅读数
-        if (increaseArticleReadNumIfNeeded(articleId, request)) {
+        if (!editable && increaseArticleReadNumIfNeeded(articleId, request)) {
             articleDO = articleMapper.selectById(articleId);
         }
 
@@ -381,21 +398,31 @@ public class ArticleServiceImpl implements ArticleService {
                 .title(articleDO.getTitle())
                 .cover(articleDO.getCover())
                 .summary(articleDO.getSummary())
+                .categoryId(categoryId)
                 .createTime(articleDO.getCreateTime())
-                .content(MarkdownHelper.convertMarkdown2Html(articleContentDO.getContent()))
+                .content(editable
+                        ? StringUtils.defaultString(articleContentDO == null ? null : articleContentDO.getContent())
+                        : MarkdownHelper.convertMarkdown2Html(StringUtils.defaultString(articleContentDO == null ? null : articleContentDO.getContent())))
                 .readNum(articleDO.getReadNum())
                 .articleSource(articleDO.getArticleSource())
                 .articleSourceLabel(ArticleSourceEnum.getDescByCode(articleDO.getArticleSource()))
+                .status(articleDO.getStatus())
+                .statusLabel(resolveStatusLabel(articleDO.getStatus()))
+                .visibilityScope(contentVisibilityService.normalizeScope(articleDO.getVisibilityScope()))
+                .visibleUserIds(findVisibleUserIds(articleId))
                 .build();
 
         // 查询所属分类
-        CategoryDO categoryDO = categoryMapper.selectById(articleCategoryRelDO.getCategoryId());
-        // DO 转 VO
-        FindCategoryListRspVO findCategoryListRspVO = FindCategoryListRspVO.builder()
-                .id(categoryDO.getId())
-                .name(categoryDO.getName())
-                .build();
-        vo.setCategory(findCategoryListRspVO);
+        if (Objects.nonNull(articleCategoryRelDO)) {
+            CategoryDO categoryDO = categoryMapper.selectById(articleCategoryRelDO.getCategoryId());
+            if (Objects.nonNull(categoryDO)) {
+                FindCategoryListRspVO findCategoryListRspVO = FindCategoryListRspVO.builder()
+                        .id(categoryDO.getId())
+                        .name(categoryDO.getName())
+                        .build();
+                vo.setCategory(findCategoryListRspVO);
+            }
+        }
 
         // 查询标签
         List<ArticleTagRelDO> articleTagRelDOS = articleTagRelMapper.selectByArticleId(articleId);
@@ -416,24 +443,26 @@ public class ArticleServiceImpl implements ArticleService {
         }
         vo.setTags(tagVOS);
 
-        // 上一篇
-        ArticleDO preArticleDO = articleMapper.selectPreArticle(articleId);
-        if (Objects.nonNull(preArticleDO)) {
-            FindPreNextArticleRspVO preArticleVO = FindPreNextArticleRspVO.builder()
-                    .articleId(preArticleDO.getId())
-                    .articleTitle(preArticleDO.getTitle())
-                    .build();
-            vo.setPreArticle(preArticleVO);
-        }
+        if (!editable) {
+            // 上一篇
+            ArticleDO preArticleDO = articleMapper.selectPreArticle(articleId);
+            if (Objects.nonNull(preArticleDO)) {
+                FindPreNextArticleRspVO preArticleVO = FindPreNextArticleRspVO.builder()
+                        .articleId(preArticleDO.getId())
+                        .articleTitle(preArticleDO.getTitle())
+                        .build();
+                vo.setPreArticle(preArticleVO);
+            }
 
-        // 下一篇
-        ArticleDO nextArticleDO = articleMapper.selectNextArticle(articleId);
-        if (Objects.nonNull(nextArticleDO)) {
-            FindPreNextArticleRspVO nextArticleVO = FindPreNextArticleRspVO.builder()
-                    .articleId(nextArticleDO.getId())
-                    .articleTitle(nextArticleDO.getTitle())
-                    .build();
-            vo.setNextArticle(nextArticleVO);
+            // 下一篇
+            ArticleDO nextArticleDO = articleMapper.selectNextArticle(articleId);
+            if (Objects.nonNull(nextArticleDO)) {
+                FindPreNextArticleRspVO nextArticleVO = FindPreNextArticleRspVO.builder()
+                        .articleId(nextArticleDO.getId())
+                        .articleTitle(nextArticleDO.getTitle())
+                        .build();
+                vo.setNextArticle(nextArticleVO);
+            }
         }
 
         return Response.success(vo);
@@ -571,13 +600,17 @@ public class ArticleServiceImpl implements ArticleService {
             return Response.fail(ResponseCodeEnum.USER_PUBLISH_DISABLED);
         }
 
+        boolean savingDraft = isDraftAction(publishArticleReqVO.getSubmitAction());
+        String validateMessage = validateArticlePayloadForAction(publishArticleReqVO.getContent(), publishArticleReqVO.getCover(),
+                publishArticleReqVO.getCategoryId(), savingDraft);
+        if (StringUtils.isNotBlank(validateMessage)) {
+            return Response.fail(validateMessage);
+        }
+
         Long userId = SecurityContextUtil.getCurrentUserId();
         String nickName = SecurityContextUtil.getCurrentUserNickname();
 
-        Integer status = ArticleStatusEnum.PUBLISH.getCode();
-        if (setting != null && Boolean.TRUE.equals(setting.getArticleReviewRequired())) {
-            status = ArticleStatusEnum.TO_DO_APPROVE.getCode();
-        }
+        Integer status = resolveFrontendStatus(publishArticleReqVO.getSubmitAction(), setting);
 
         ArticleDO articleDO = ArticleDO.builder()
                 .title(StringUtils.trimToEmpty(publishArticleReqVO.getTitle()))
@@ -602,7 +635,7 @@ public class ArticleServiceImpl implements ArticleService {
         //保存文章内容
         ArticleContentDO articleContentDO = ArticleContentDO.builder()
                 .articleId(articleId)
-                .content(publishArticleReqVO.getContent())
+                .content(StringUtils.defaultString(publishArticleReqVO.getContent()))
                 .build();
 
         //获取分类id
@@ -611,17 +644,19 @@ public class ArticleServiceImpl implements ArticleService {
         //保存文章分类关联
         articleContentMapper.insert(articleContentDO);
 
-        CategoryDO categoryDO = categoryMapper.selectById(categoryId);
-        if (Objects.isNull(categoryDO)) {
-            log.warn("==> 分类不存在, categoryId: {}", categoryId);
-            throw new BizException(ResponseCodeEnum.CATEGORY_NOT_EXISTED);
-        }
+        if (Objects.nonNull(categoryId)) {
+            CategoryDO categoryDO = categoryMapper.selectById(categoryId);
+            if (Objects.isNull(categoryDO)) {
+                log.warn("==> 分类不存在, categoryId: {}", categoryId);
+                throw new BizException(ResponseCodeEnum.CATEGORY_NOT_EXISTED);
+            }
 
-        ArticleCategoryRelDO articleCategoryRelDO = ArticleCategoryRelDO.builder()
-                .articleId(articleId)
-                .categoryId(categoryId)
-                .build();
-        articleCategoryRelMapper.insert(articleCategoryRelDO);
+            ArticleCategoryRelDO articleCategoryRelDO = ArticleCategoryRelDO.builder()
+                    .articleId(articleId)
+                    .categoryId(categoryId)
+                    .build();
+            articleCategoryRelMapper.insert(articleCategoryRelDO);
+        }
 
         // 4. 保存文章关联的标签集合
         List<String> publishTags = publishArticleReqVO.getTags();
@@ -735,6 +770,13 @@ public class ArticleServiceImpl implements ArticleService {
             return Response.fail(ResponseCodeEnum.USER_PUBLISH_DISABLED);
         }
 
+        boolean savingDraft = isDraftAction(updateArticleReqVO.getSubmitAction());
+        String validateMessage = validateArticlePayloadForAction(updateArticleReqVO.getContent(), updateArticleReqVO.getCover(),
+                updateArticleReqVO.getCategoryId(), savingDraft);
+        if (StringUtils.isNotBlank(validateMessage)) {
+            return Response.fail(validateMessage);
+        }
+
         Long articleId = updateArticleReqVO.getId();
         // 从 SecurityContext 获取用户ID
         Long userId = SecurityContextUtil.getCurrentUserId();
@@ -753,9 +795,7 @@ public class ArticleServiceImpl implements ArticleService {
                 .cover(updateArticleReqVO.getCover())
                 .summary(updateArticleReqVO.getSummary())
                 .visibilityScope(resolveVisibilityScope(updateArticleReqVO.getVisibilityScope()))
-                .status(setting != null && Boolean.TRUE.equals(setting.getArticleReviewRequired())
-                        ? ArticleStatusEnum.TO_DO_APPROVE.getCode()
-                        : null)
+                .status(resolveFrontendStatus(updateArticleReqVO.getSubmitAction(), setting))
                 .updateTime(LocalDateTime.now())
                 .build();
         articleMapper.updateById(updateArticleDO);
@@ -763,7 +803,7 @@ public class ArticleServiceImpl implements ArticleService {
         // 3. 更新文章内容
         ArticleContentDO articleContentDO = ArticleContentDO.builder()
                 .articleId(articleId)
-                .content(updateArticleReqVO.getContent())
+                .content(StringUtils.defaultString(updateArticleReqVO.getContent()))
                 .build();
         // 先删除旧的内容记录
         articleContentMapper.delete(new LambdaQueryWrapper<ArticleContentDO>()
@@ -773,20 +813,22 @@ public class ArticleServiceImpl implements ArticleService {
 
         // 4. 更新文章分类
         Long categoryId = updateArticleReqVO.getCategoryId();
-        CategoryDO categoryDO = categoryMapper.selectById(categoryId);
-        if (Objects.isNull(categoryDO)) {
-            log.warn("==> 分类不存在, categoryId: {}", categoryId);
-            throw new BizException(ResponseCodeEnum.CATEGORY_NOT_EXISTED);
-        }
         // 先删除旧的分类关联
         articleCategoryRelMapper.delete(new LambdaQueryWrapper<ArticleCategoryRelDO>()
                 .eq(ArticleCategoryRelDO::getArticleId, articleId));
-        // 插入新的分类关联
-        ArticleCategoryRelDO articleCategoryRelDO = ArticleCategoryRelDO.builder()
-                .articleId(articleId)
-                .categoryId(categoryId)
-                .build();
-        articleCategoryRelMapper.insert(articleCategoryRelDO);
+        if (Objects.nonNull(categoryId)) {
+            CategoryDO categoryDO = categoryMapper.selectById(categoryId);
+            if (Objects.isNull(categoryDO)) {
+                log.warn("==> 分类不存在, categoryId: {}", categoryId);
+                throw new BizException(ResponseCodeEnum.CATEGORY_NOT_EXISTED);
+            }
+            // 插入新的分类关联
+            ArticleCategoryRelDO articleCategoryRelDO = ArticleCategoryRelDO.builder()
+                    .articleId(articleId)
+                    .categoryId(categoryId)
+                    .build();
+            articleCategoryRelMapper.insert(articleCategoryRelDO);
+        }
 
         // 5. 更新文章标签
         // 先删除旧的标签关联
@@ -825,6 +867,61 @@ public class ArticleServiceImpl implements ArticleService {
                 .userId(userId)
                 .createTime(LocalDateTime.now())
                 .build()));
+    }
+
+    private Integer resolveFrontendStatus(String submitAction, BlogSettingDO setting) {
+        if (isDraftAction(submitAction)) {
+            return ArticleStatusEnum.NON_PUBLISH.getCode();
+        }
+
+        if (setting != null && Boolean.TRUE.equals(setting.getArticleReviewRequired())) {
+            return ArticleStatusEnum.TO_DO_APPROVE.getCode();
+        }
+
+        return ArticleStatusEnum.PUBLISH.getCode();
+    }
+
+    private boolean isDraftAction(String submitAction) {
+        return ACTION_DRAFT.equalsIgnoreCase(StringUtils.defaultString(submitAction, ACTION_PUBLISH));
+    }
+
+    private String validateArticlePayloadForAction(String content, String cover, Long categoryId, boolean savingDraft) {
+        if (savingDraft) {
+            return null;
+        }
+
+        if (StringUtils.isBlank(content)) {
+            return "文章内容不能为空";
+        }
+        if (StringUtils.isBlank(cover)) {
+            return "文章封面不能为空";
+        }
+        if (Objects.isNull(categoryId)) {
+            return "文章分类不能为空";
+        }
+        return null;
+    }
+
+    private String resolveStatusLabel(Integer status) {
+        if (Objects.isNull(status)) {
+            return "";
+        }
+
+        for (ArticleStatusEnum value : ArticleStatusEnum.values()) {
+            if (Objects.equals(value.getCode(), status)) {
+                return value.getStatus();
+            }
+        }
+
+        return "";
+    }
+
+    private List<Long> findVisibleUserIds(Long articleId) {
+        return articleAccessUserMapper.selectList(new LambdaQueryWrapper<ArticleAccessUserDO>()
+                        .eq(ArticleAccessUserDO::getArticleId, articleId))
+                .stream()
+                .map(ArticleAccessUserDO::getUserId)
+                .collect(Collectors.toList());
     }
 
     /**

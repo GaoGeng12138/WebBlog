@@ -127,6 +127,14 @@
                         </el-tag>
                     </template>
                 </el-table-column>
+
+                <el-table-column label="状态" width="120" align="center">
+                    <template #default="{ row }">
+                        <el-tag :type="getStatusMeta(row.status).type" size="small">
+                            {{ row.statusLabel || getStatusMeta(row.status).text }}
+                        </el-tag>
+                    </template>
+                </el-table-column>
                 
                 <el-table-column prop="createTime" label="创建时间" width="180" align="center" />
                 
@@ -189,6 +197,17 @@ const pagination = ref({
   total: 0
 })
 const tableLoading = ref(false)
+
+const getStatusMeta = (status) => {
+    const map = {
+        0: { text: '待审核', type: 'warning' },
+        1: { text: '审核通过', type: 'primary' },
+        2: { text: '审核未通过', type: 'danger' },
+        3: { text: '草稿', type: 'info' },
+        4: { text: '已发布', type: 'success' }
+    }
+    return map[status] || { text: '未知状态', type: 'info' }
+}
 
 // 查询条件
 const searchTitle = ref('')

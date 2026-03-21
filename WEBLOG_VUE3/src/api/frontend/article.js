@@ -16,9 +16,8 @@ export function getArticlePageListByTag(data) {
 }
 
 // 获取文章详情
-export function getArticleDetail(articleId) {
-    // 后端要求接收 JSON 格式 { "articleId": <id> }
-    return axios.post("/article/detail", { articleId })
+export function getArticleDetail(articleId, options = {}) {
+    return axios.post("/article/detail", { articleId, ...options })
 }
 
 // 获取文章归档列表（按时间汇总）
@@ -33,6 +32,6 @@ export function publishArticle(data) {
 }
 
 // 更新文章（前台）
-export function updateArticle(articleId, data) {
-    return axios.put(`/article/${articleId}`, data)
+export function updateArticle(data) {
+    return axios.post("/article/update", data)
 }
