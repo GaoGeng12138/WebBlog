@@ -184,20 +184,27 @@ const remoteSearchTags = (query) => {
 }
 
 // 编辑器图片上传
+const uploadSingleEditorImage = async (file) => {
+    console.log('==> 编辑器开始上传文件...')
+    const formData = new FormData()
+    formData.append('file', file)
+
+    const res = await uploadFile(formData)
+    if (!res?.success || !res?.data?.url) {
+        throw new Error(res?.message || '图片上传失败')
+    }
+
+    return res.data.url
+}
+
 const onUploadImg = async (files, callback) => {
-    const res = await Promise.all(
-        files.map((file) => {
-            return new Promise((rev, rej) => {
-                console.log('==> 编辑器开始上传文件...')
-                let formData = new FormData()
-                formData.append("file", file);
-                uploadFile(formData).then((res) => {
-                    // 调用 callback 函数，回显上传图片
-                    callback([res.data.url]);
-                })
-            });
-        })
-    );
+    try {
+        const urls = await Promise.all(files.map((file) => uploadSingleEditorImage(file)))
+        callback(urls)
+    } catch (error) {
+        console.error('Markdown 图片上传失败:', error)
+        showMessage(error.message || '图片上传失败', 'error')
+    }
 }
 
 
