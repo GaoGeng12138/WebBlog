@@ -42,6 +42,11 @@ public class FindArticleDetailRspVO {
     private String summary;
 
     /**
+     * 分类 ID
+     */
+    private Long categoryId;
+
+    /**
      * 分类信息
      */
     private FindCategoryListRspVO category;
@@ -60,6 +65,26 @@ public class FindArticleDetailRspVO {
      * 文章来源描述
      */
     private String articleSourceLabel;
+
+    /**
+     * 文章状态
+     */
+    private Integer status;
+
+    /**
+     * 状态文案
+     */
+    private String statusLabel;
+
+    /**
+     * 可见范围
+     */
+    private Integer visibilityScope;
+
+    /**
+     * 指定可见用户
+     */
+    private List<Long> visibleUserIds;
 
     /**
      * 创建时间

@@ -29,7 +29,7 @@ public class AdminCommentController {
     @PostMapping("/list")
     @ApiOperation(value = "Get Comment Page List")
     @ApiOperationLog(description = "Get Comment Page List")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','admin:comment:list')")
     public PageResponse findCommentPageList(@RequestBody @Validated FindCommentPageListReqVO findCommentPageListReqVO) {
         return adminCommentService.findCommentPageList(findCommentPageListReqVO);
     }
@@ -37,7 +37,7 @@ public class AdminCommentController {
     @PostMapping("/audit")
     @ApiOperation(value = "Audit Comment")
     @ApiOperationLog(description = "Audit Comment")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','admin:comment:audit')")
     public Response auditComment(@RequestBody @Validated AuditCommentReqVO auditCommentReqVO) {
         return adminCommentService.auditComment(auditCommentReqVO);
     }
@@ -45,7 +45,7 @@ public class AdminCommentController {
     @PostMapping("/delete")
     @ApiOperation(value = "Delete Comment")
     @ApiOperationLog(description = "Delete Comment")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','admin:comment:delete')")
     public Response deleteComment(@RequestBody @Validated DeleteCommentReqVO deleteCommentReqVO) {
         return adminCommentService.deleteComment(deleteCommentReqVO);
     }
@@ -53,7 +53,7 @@ public class AdminCommentController {
     @PostMapping("/top")
     @ApiOperation(value = "Set Comment Top")
     @ApiOperationLog(description = "Set Comment Top")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','admin:comment:top')")
     public Response setCommentTop(@RequestBody @Validated SetCommentTopReqVO setCommentTopReqVO) {
         return adminCommentService.setCommentTop(setCommentTopReqVO);
     }

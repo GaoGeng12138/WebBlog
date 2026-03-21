@@ -7,6 +7,7 @@ import com.gaog.weblog.common.utils.PageResponse;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -24,6 +25,7 @@ public class AdminVisitorController {
     @PostMapping("/list")
     @ApiOperation(value = "查询访客记录分页列表")
     @ApiOperationLog(description = "查询访客记录分页列表")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','admin:visitor:list')")
     public PageResponse findVisitorLogPageList(@RequestBody @Validated FindVisitorLogPageListReqVO reqVO) {
         return adminVisitorService.findVisitorLogPageList(reqVO);
     }

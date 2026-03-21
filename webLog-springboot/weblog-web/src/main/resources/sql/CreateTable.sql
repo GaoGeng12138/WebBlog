@@ -13,9 +13,21 @@ CREATE TABLE `t_article`
     `status`      tinyint(1) NOT NULL COMMENT '文章状态：0:待审核 1：审核通过 2：审核未通过 3、未发布 4、已发布 ',
     `author`      varchar(255) NOT NULL COMMENT '作者',
     `article_source` tinyint(1) NOT NULL DEFAULT '1' COMMENT '文章来源：1-后台发布，2-前台发布',
+    `visibility_scope` tinyint(1) NOT NULL DEFAULT '1' COMMENT '可见范围：1-公开，2-指定用户可见',
     PRIMARY KEY (`id`) USING BTREE,
     KEY           `idx_create_time` (`create_time`) USING BTREE
 ) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 ROW_FORMAT=DYNAMIC COMMENT='文章表';
+-- t_article_access_user ddl
+CREATE TABLE `t_article_access_user`
+(
+    `id`          bigint(20) unsigned NOT NULL AUTO_INCREMENT COMMENT 'id',
+    `article_id`  bigint(20) unsigned NOT NULL COMMENT '文章id',
+    `user_id`     bigint(20) unsigned NOT NULL COMMENT '允许访问的用户id',
+    `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    PRIMARY KEY (`id`) USING BTREE,
+    UNIQUE KEY `uk_article_user` (`article_id`,`user_id`) USING BTREE,
+    KEY          `idx_user_id` (`user_id`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 ROW_FORMAT=DYNAMIC COMMENT='文章指定访问用户表';
 -- t_article_category_rel ddl
 CREATE TABLE `t_article_category_rel`
 (
@@ -96,6 +108,7 @@ CREATE TABLE `t_category`
     `name`        varchar(60)  NOT NULL DEFAULT '' COMMENT '分类名称',
     `illustrate`  varchar(120) NOT NULL DEFAULT '' COMMENT '分类描述',
     `show_on_front` tinyint(1) NOT NULL DEFAULT '1' COMMENT '是否在前台导航展示：1-是，0-否',
+    `visibility_scope` tinyint(1) NOT NULL DEFAULT '1' COMMENT '可见范围：1-公开，2-指定用户可见',
     `create_time` datetime     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `update_time` datetime     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '最后一次更新时间',
     `is_deleted`  tinyint(2) NOT NULL DEFAULT '0' COMMENT '逻辑删除标志位：0：未删除 1：已删除',
@@ -103,6 +116,17 @@ CREATE TABLE `t_category`
     UNIQUE KEY `uk_name` (`name`) USING BTREE,
     KEY           `idx_create_time` (`create_time`) USING BTREE
 ) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 ROW_FORMAT=DYNAMIC COMMENT='文章分类表';
+-- t_category_access_user ddl
+CREATE TABLE `t_category_access_user`
+(
+    `id`          bigint(20) unsigned NOT NULL AUTO_INCREMENT COMMENT 'id',
+    `category_id` bigint(20) unsigned NOT NULL COMMENT '分类id',
+    `user_id`     bigint(20) unsigned NOT NULL COMMENT '允许访问的用户id',
+    `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    PRIMARY KEY (`id`) USING BTREE,
+    UNIQUE KEY `uk_category_user` (`category_id`,`user_id`) USING BTREE,
+    KEY          `idx_user_id` (`user_id`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 ROW_FORMAT=DYNAMIC COMMENT='分类指定访问用户表';
 -- t_comment ddl
 CREATE TABLE `t_comment`
 (
@@ -146,6 +170,17 @@ CREATE TABLE `t_role`
     KEY           `idx_is_enabled` (`is_enabled`) USING BTREE,
     KEY           `idx_create_time` (`create_time`) USING BTREE
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 ROW_FORMAT=DYNAMIC COMMENT='角色表';
+-- t_role_permission ddl
+CREATE TABLE `t_role_permission`
+(
+    `id`             bigint(20) unsigned NOT NULL AUTO_INCREMENT COMMENT 'id',
+    `role_id`        bigint(20) unsigned NOT NULL COMMENT '角色ID',
+    `permission_key` varchar(100) NOT NULL COMMENT '权限标识',
+    `create_time`    datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    PRIMARY KEY (`id`) USING BTREE,
+    UNIQUE KEY `uk_role_permission` (`role_id`,`permission_key`) USING BTREE,
+    KEY `idx_role_id` (`role_id`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 ROW_FORMAT=DYNAMIC COMMENT='角色权限表';
 -- t_statistics_article_pv ddl
 CREATE TABLE `t_statistics_article_pv`
 (

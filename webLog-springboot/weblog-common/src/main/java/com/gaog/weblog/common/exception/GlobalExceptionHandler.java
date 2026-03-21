@@ -9,6 +9,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.Optional;
@@ -99,6 +100,20 @@ public class GlobalExceptionHandler {
         log.warn("{} request error, errorCode: {}, errorMessage: {}", request.getRequestURI(), errorCode, errorMessage);
 
         return Response.fail(errorCode, errorMessage);
+    }
+
+    /**
+     * 捕获文件上传大小超限异常
+     *
+     * @param request
+     * @param e
+     * @return
+     */
+    @ExceptionHandler({MaxUploadSizeExceededException.class})
+    @ResponseBody
+    public Response<Object> handleMaxUploadSizeExceededException(HttpServletRequest request, MaxUploadSizeExceededException e) {
+        log.warn("{} request fail, upload size exceeded: {}", request.getRequestURI(), e.getMessage());
+        return Response.fail("上传文件过大，单个文件不能超过 10MB");
     }
 
     private Object maskRejectedValue(Object rejectedValue) {

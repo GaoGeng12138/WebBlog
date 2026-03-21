@@ -22,7 +22,7 @@
               {{ isEdit ? '打磨这篇文章' : '开始一篇新作品' }}
             </h1>
             <p class="mt-1 text-sm text-slate-500">
-              先定封面与摘要，再进入正文创作。前台与后台的 Markdown 体验现在保持一致。
+              先存草稿，确认内容完整后再提交发布。前台与后台的 Markdown 体验现在保持一致。
             </p>
           </div>
         </div>
@@ -88,8 +88,13 @@
             <div class="mb-5 grid gap-4 sm:grid-cols-2">
               <div class="rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
                 <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">文章来源</p>
-                <div class="mt-3 inline-flex rounded-full bg-white px-3 py-1.5 text-sm font-semibold text-slate-700 shadow-sm">
-                  {{ isEdit ? (form.articleSourceLabel || '前台发布') : '前台发布' }}
+                <div class="mt-3 flex flex-wrap gap-2">
+                  <div class="inline-flex rounded-full bg-white px-3 py-1.5 text-sm font-semibold text-slate-700 shadow-sm">
+                    {{ isEdit ? (form.articleSourceLabel || '前台发布') : '前台发布' }}
+                  </div>
+                  <div class="inline-flex rounded-full px-3 py-1.5 text-sm font-semibold shadow-sm" :class="statusBadgeClass">
+                    {{ currentStatusLabel }}
+                  </div>
                 </div>
               </div>
 
@@ -262,14 +267,22 @@
               <el-button size="large" round @click="goBack">取消</el-button>
               <el-button size="large" round @click="resetForm">重置</el-button>
               <el-button
+                size="large"
+                round
+                :loading="submitting && submitAction === 'draft'"
+                @click="onSubmit('draft')"
+              >
+                {{ isEdit ? '保存草稿' : '存为草稿' }}
+              </el-button>
+              <el-button
                 type="primary"
                 size="large"
                 round
-                :loading="submitting"
+                :loading="submitting && submitAction === 'publish'"
                 class="!px-10 shadow-lg shadow-blue-500/20"
-                @click="onSubmit"
+                @click="onSubmit('publish')"
               >
-                {{ isEdit ? '保存修改' : '立即发布' }}
+                {{ publishPrimaryLabel }}
               </el-button>
             </div>
           </div>
@@ -292,9 +305,11 @@ import { getAllCategoryList } from '@/api/frontend/category'
 import { getAllTagList } from '@/api/frontend/tag'
 import { uploadFile } from '@/api/frontend/file'
 import { useUserStore } from '@/stores/user'
+import { useSiteConfigStore } from '@/stores/siteConfig'
 import MarkdownEditorSurface from '@/components/article/MarkdownEditorSurface.vue'
 
 const userStore = useUserStore()
+const siteConfig = useSiteConfigStore()
 const user = computed(() => userStore.frontendUserInfo)
 
 const router = useRouter()
@@ -303,6 +318,7 @@ const route = useRoute()
 const formRef = ref()
 const isEdit = ref(false)
 const submitting = ref(false)
+const submitAction = ref('publish')
 
 const categories = ref([])
 const tags = ref([])
@@ -317,7 +333,10 @@ const createDefaultForm = () => ({
   userId: user.value?.userId || null,
   editorType: 'markdown',
   articleSource: 2,
-  articleSourceLabel: '前台发布'
+  articleSourceLabel: '前台发布',
+  status: 3,
+  visibilityScope: 1,
+  visibleUserIds: []
 })
 
 const form = reactive(createDefaultForm())
@@ -343,6 +362,15 @@ const rules = {
 }
 
 const editorModeLabel = computed(() => (form.editorType === 'markdown' ? 'Markdown' : '富文本'))
+const requiresReview = computed(() => siteConfig.permissions.articleReviewRequired === true)
+const publishPrimaryLabel = computed(() => {
+  if (isEdit.value) {
+    return requiresReview.value ? '提交审核' : '发布修改'
+  }
+  return requiresReview.value ? '提交审核' : '立即发布'
+})
+const currentStatusLabel = computed(() => getStatusText(form.status))
+const statusBadgeClass = computed(() => getStatusClass(form.status))
 
 const contentWordCount = computed(() => {
   const text = String(form.content || '')
@@ -358,11 +386,35 @@ const summaryWordCount = computed(() => String(form.summary || '').trim().length
 const estimatedReadMinutes = computed(() => Math.max(1, Math.ceil(contentWordCount.value / 450)))
 
 const publishHint = computed(() => {
-  if (!form.cover) return '先补一个封面图，文章列表和详情页的第一眼会更完整。'
+  if (!form.cover) return '先补一个封面图，哪怕先存草稿，后面回来看也更容易进入状态。'
   if (!form.categoryId) return '再选一个分类，方便归档和导航。'
-  if (!String(form.content || '').trim()) return '正文还是空的，至少写下核心步骤或观点。'
-  return `当前内容完成度不错，可以${isEdit.value ? '保存修改' : '发布'}了。`
+  if (!String(form.content || '').trim()) return '正文还是空的，可以先存草稿，把结构搭起来。'
+  return requiresReview.value
+    ? '内容已经可提交，提交后会进入待审核队列。'
+    : `当前内容完成度不错，可以${isEdit.value ? '直接发布修改' : '直接发布'}了。`
 })
+
+const getStatusText = (status) => {
+  const map = {
+    0: '待审核',
+    1: '审核通过',
+    2: '审核未通过',
+    3: '草稿',
+    4: '已发布'
+  }
+  return map[status] || '未知状态'
+}
+
+const getStatusClass = (status) => {
+  const map = {
+    0: 'bg-amber-50 text-amber-700',
+    1: 'bg-blue-50 text-blue-700',
+    2: 'bg-rose-50 text-rose-700',
+    3: 'bg-slate-100 text-slate-600',
+    4: 'bg-emerald-50 text-emerald-700'
+  }
+  return map[status] || 'bg-slate-100 text-slate-600'
+}
 
 const handleCreated = (editor) => {
   editorRef.value = editor
@@ -425,7 +477,7 @@ const loadCategoriesAndTags = async () => {
 
 const loadArticle = async (id) => {
   try {
-    const res = await getArticleDetail(Number(id))
+    const res = await getArticleDetail(Number(id), { editable: true })
     if (res?.success && res.data) {
       const article = res.data
       Object.assign(form, {
@@ -440,7 +492,10 @@ const loadArticle = async (id) => {
         userId: article.userId || user.value?.userId || null,
         editorType: article.editorType || 'markdown',
         articleSource: article.articleSource || 2,
-        articleSourceLabel: article.articleSourceLabel || '前台发布'
+        articleSourceLabel: article.articleSourceLabel || '前台发布',
+        status: article.status ?? 3,
+        visibilityScope: article.visibilityScope || 1,
+        visibleUserIds: article.visibleUserIds || []
       })
     }
   } catch (error) {
@@ -449,46 +504,61 @@ const loadArticle = async (id) => {
   }
 }
 
-const onSubmit = async () => {
-  if (!formRef.value) return
+const buildPayload = (action) => ({
+  id: route.params.id ? Number(route.params.id) : undefined,
+  title: form.title?.trim() || '',
+  cover: form.cover,
+  categoryId: form.categoryId,
+  tags: form.tags,
+  summary: form.summary,
+  content: form.content,
+  userId: form.userId || user.value?.userId || null,
+  editorType: form.editorType,
+  submitAction: action,
+  visibilityScope: form.visibilityScope,
+  visibleUserIds: form.visibleUserIds
+})
 
-  await formRef.value.validate()
-
-  if (form.editorType === 'richtext' && editorRef.value?.isEmpty?.()) {
-    ElMessage.warning('请输入文章内容')
-    return
-  }
-
+const executeSubmit = async (action) => {
+  submitAction.value = action
   submitting.value = true
 
   try {
-    const payload = {
-      title: form.title?.trim() || '',
-      cover: form.cover,
-      categoryId: form.categoryId,
-      tags: form.tags,
-      summary: form.summary,
-      content: form.content,
-      userId: form.userId || user.value?.userId || null,
-      editorType: form.editorType
-    }
-
+    const payload = buildPayload(action)
     const res = isEdit.value && route.params.id
-      ? await updateArticle(route.params.id, payload)
+      ? await updateArticle(payload)
       : await publishArticle(payload)
 
     if (res?.success) {
-      ElMessage.success(isEdit.value ? '文章修改成功' : '文章发布成功')
+      const successText = action === 'draft'
+        ? (isEdit.value ? '草稿已保存' : '草稿已创建')
+        : (requiresReview.value ? '文章已提交审核' : (isEdit.value ? '文章修改已发布' : '文章发布成功'))
+      ElMessage.success(successText)
       setTimeout(() => router.push('/user'), 800)
     } else {
       ElMessage.error(res?.message || '提交失败')
     }
   } catch (error) {
     console.error('提交文章失败:', error)
-    ElMessage.error('提交发生错误')
+    ElMessage.error(error?.response?.data?.message || '提交发生错误')
   } finally {
     submitting.value = false
   }
+}
+
+const onSubmit = async (action = 'publish') => {
+  if (!formRef.value) return
+
+  if (action !== 'draft') {
+    await formRef.value.validate()
+
+    if (form.editorType === 'richtext' && editorRef.value?.isEmpty?.()) {
+      ElMessage.warning('请输入文章内容')
+      return
+    }
+  }
+
+  await executeSubmit(action)
 }
 
 const beforeUpload = (file) => {
@@ -531,6 +601,10 @@ const resetForm = () => {
 }
 
 onMounted(async () => {
+  await siteConfig.ensureConfigReady().catch((error) => {
+    console.error('获取站点配置失败:', error)
+  })
+
   await userStore.setFrontendUserInfo().catch((error) => {
     console.error('获取用户信息失败:', error)
   })

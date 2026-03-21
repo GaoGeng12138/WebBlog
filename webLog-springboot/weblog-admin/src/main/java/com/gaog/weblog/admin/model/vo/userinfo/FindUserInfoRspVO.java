@@ -27,9 +27,31 @@ public class FindUserInfoRspVO implements Serializable {
      */
     @SensitiveField(request = false)
     private String username;
+
+    /**
+     * 用户ID
+     */
+    private Long userId;
+
+    /**
+     * 昵称
+     */
+    @SensitiveField(request = false)
+    private String nickname;
+
+    /**
+     * 头像
+     */
+    @SensitiveField(request = false)
+    private String avatar;
     /**
      * 角色
      */
     private Set<String> roles;
+
+    /**
+     * 权限标识
+     */
+    private Set<String> permissions;
 
 }

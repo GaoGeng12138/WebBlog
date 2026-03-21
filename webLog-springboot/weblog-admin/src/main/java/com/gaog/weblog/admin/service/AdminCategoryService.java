@@ -4,6 +4,7 @@ import com.gaog.weblog.admin.model.vo.category.AddCategoryReqVO;
 import com.gaog.weblog.admin.model.vo.category.DeleteCategoryReqVO;
 import com.gaog.weblog.admin.model.vo.category.FindCategoryPageListReqVO;
 import com.gaog.weblog.admin.model.vo.category.UpdateCategoryShowOnFrontReqVO;
+import com.gaog.weblog.admin.model.vo.category.UpdateCategoryVisibilityReqVO;
 import com.gaog.weblog.common.utils.PageResponse;
 import com.gaog.weblog.common.utils.Response;
 
@@ -50,4 +51,11 @@ public interface AdminCategoryService {
      * @return
      */
     Response updateCategoryShowOnFront(UpdateCategoryShowOnFrontReqVO updateCategoryShowOnFrontReqVO);
+
+    /**
+     * 更新分类可见范围
+     * @param updateCategoryVisibilityReqVO
+     * @return
+     */
+    Response updateCategoryVisibility(UpdateCategoryVisibilityReqVO updateCategoryVisibilityReqVO);
 }

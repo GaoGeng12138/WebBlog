@@ -34,4 +34,8 @@ public class AddCategoryReqVO {
 
     @NotNull(message = "请选择是否在前台展示")
     private Boolean showOnFront;
+
+    private Integer visibilityScope;
+
+    private java.util.List<Long> visibleUserIds;
 }

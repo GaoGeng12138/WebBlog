@@ -7,6 +7,7 @@ import com.gaog.weblog.common.domain.dos.ArticleCategoryRelDO;
 import com.gaog.weblog.common.domain.dos.CategoryDO;
 import com.gaog.weblog.common.domain.mapper.ArticleCategoryRelMapper;
 import com.gaog.weblog.common.domain.mapper.CategoryMapper;
+import com.gaog.weblog.common.service.ContentVisibilityService;
 import com.gaog.weblog.common.utils.PageResponse;
 import com.gaog.weblog.common.utils.Response;
 import com.gaog.weblog.web.model.vo.category.FindCategoryArticleReqVO;
@@ -34,6 +35,8 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Autowired
     private ArticleCategoryRelMapper articleCategoryRelMapper;
+    @Autowired
+    private ContentVisibilityService contentVisibilityService;
 
     /**
      * 获取分类分页数据，包含每个分类的文章数量
@@ -49,6 +52,7 @@ public class CategoryServiceImpl implements CategoryService {
         Page<CategoryDO> page = new Page<>(current, size);
         LambdaQueryWrapper<CategoryDO> wrapper = new LambdaQueryWrapper<>();
         wrapper.orderByDesc(CategoryDO::getCreateTime);
+        applyVisibilityFilter(wrapper);
 
         Page<CategoryDO> categoryDOPage = categoryMapper.selectPage(page, wrapper);
         List<CategoryDO> categoryDOS = categoryDOPage.getRecords();
@@ -91,6 +95,11 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     public Response findAllCategories() {
         List<CategoryDO> categoryDOS = categoryMapper.selectList(null);
+        if (!CollectionUtils.isEmpty(categoryDOS)) {
+            categoryDOS = categoryDOS.stream()
+                    .filter(contentVisibilityService::canAccessCategory)
+                    .collect(Collectors.toList());
+        }
 
         List<FindCategoryPageListRspVO> vos = null;
         if (!CollectionUtils.isEmpty(categoryDOS)) {
@@ -133,5 +142,21 @@ public class CategoryServiceImpl implements CategoryService {
         Page page = new Page(findCategoryArticleReqVO.getCurrent(), findCategoryArticleReqVO.getSize());
         page.setTotal(0);
         return PageResponse.success(page, null);
+    }
+
+    private void applyVisibilityFilter(LambdaQueryWrapper<CategoryDO> wrapper) {
+        if (contentVisibilityService.isCurrentUserPrivileged()) {
+            return;
+        }
+
+        Long currentUserId = contentVisibilityService.getCurrentUserIdSafely();
+        if (currentUserId == null) {
+            wrapper.eq(CategoryDO::getVisibilityScope, 1);
+            return;
+        }
+
+        wrapper.and(w -> w.eq(CategoryDO::getVisibilityScope, 1)
+                .or()
+                .inSql(CategoryDO::getId, "SELECT category_id FROM t_category_access_user WHERE user_id = " + currentUserId));
     }
 }

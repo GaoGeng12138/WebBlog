@@ -20,4 +20,6 @@ public class FindArticleDetailReqVO {
      */
     @NotNull(message = "文章ID不能为空")
     private Long articleId;
+
+    private Boolean editable;
 }

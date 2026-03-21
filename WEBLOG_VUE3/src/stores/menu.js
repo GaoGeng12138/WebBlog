@@ -1,4 +1,5 @@
 import { useUserStore } from '@/stores/user.js'
+import { hasAccess } from '@/composables/permission'
 import { defineStore } from 'pinia'
 import { ref, watch, computed } from 'vue'
 
@@ -10,37 +11,44 @@ export const useMenuStore = defineStore('menu', () => {
     {
       'name': '仪表盘',
       'icon': 'Monitor',
-      'path': '/admin/index'
+      'path': '/admin/index',
+      'permission': 'admin:dashboard:view'
     },
     {
       'name': '文章管理',
       'icon': 'Document',
       'path': '/admin/article/list',
+      'permission': 'admin:article:list'
     },
     {
       'name': '分类管理',
       'icon': 'FolderOpened',
       'path': '/admin/category/list',
+      'permission': 'admin:category:list'
     },
     {
       'name': '标签管理',
       'icon': 'PriceTag',
       'path': '/admin/tag/list',
+      'permission': 'admin:tag:list'
     },
     {
       'name': '用户管理',
       'icon': 'User',
       'path': '/admin/user/list',
+      'permission': 'admin:user:list'
     },
     {
       'name': '角色管理',
       'icon': 'Lock',
       'path': '/admin/role/list',
+      'permission': 'admin:role:list'
     },
     {
       'name': '访客记录',
       'icon': 'Position',
       'path': '/admin/visitor/list',
+      'permission': 'admin:visitor:list'
     },
   ]
   
@@ -48,16 +56,14 @@ export const useMenuStore = defineStore('menu', () => {
   
   // 使用计算属性来动态生成菜单列表
   const menus = computed(() => {
-    const menuList = [...baseMenus]
-    // 检查用户角色是否包含管理员权限
-    if (userStore.userInfo && userStore.userInfo.roles && userStore.userInfo.roles.includes("ROLE_ADMIN")) {
-      menuList.push({
-        'name': '博客设置',
-        'icon': 'Setting',
-        'path': '/admin/blog/setting',
-      })
-    }
-    return menuList
+    const menuList = [...baseMenus, {
+      'name': '博客设置',
+      'icon': 'Setting',
+      'path': '/admin/blog/setting',
+      'permission': 'admin:setting:view'
+    }]
+
+    return menuList.filter(menu => hasAccess(userStore.userInfo, menu.permission))
   })
 
   // 展开或伸缩左边栏菜单

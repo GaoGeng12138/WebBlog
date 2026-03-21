@@ -66,6 +66,16 @@ public class FindArticlePageListRspVO {
     private String articleSourceLabel;
 
     /**
+     * 文章状态
+     */
+    private Integer status;
+
+    /**
+     * 状态文案
+     */
+    private String statusLabel;
+
+    /**
      * 创建时间
      */
     private LocalDateTime createTime;

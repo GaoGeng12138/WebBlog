@@ -47,7 +47,7 @@
             <!-- 操作栏 -->
             <div class="flex justify-between items-center px-6 pt-5 pb-4">
                 <div>
-                    <el-button type="primary" @click="addCategoryBtnClick">
+                    <el-button v-if="can('admin:tag:add')" type="primary" @click="addCategoryBtnClick">
                         <el-icon class="mr-1">
                             <Plus />
                         </el-icon>
@@ -89,7 +89,7 @@
                     <template #default="scope">
                         <div class="flex items-center justify-center space-x-2">
                             <el-tooltip content="删除" placement="top">
-                                <el-button type="danger" size="small" circle @click="deleteCategorySubmit(scope.row)" class="action-btn">
+                                <el-button v-if="can('admin:tag:delete')" type="danger" size="small" circle @click="deleteCategorySubmit(scope.row)" class="action-btn">
                                     <el-icon>
                                         <Delete />
                                     </el-icon>
@@ -131,10 +131,15 @@
 // 引入所需图标
 import { getTagPageList, addTag, deleteTag } from '@/api/admin/tag'
 import { RefreshRight, Search, Plus, Delete, CollectionTag, DocumentCopy } from '@element-plus/icons-vue'
+import { hasAccess } from '@/composables/permission'
 import moment from 'moment'
 import { ref, reactive } from 'vue'
+import { useUserStore } from '@/stores/user'
 import { showMessage, showModel } from '@/composables/util'
 import AdminPagination from '@/components/admin/AdminPagination.vue'
+
+const userStore = useUserStore()
+const can = (permission) => hasAccess(userStore.userInfo, permission)
 
 
 // 表格数据

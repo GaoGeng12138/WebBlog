@@ -16,13 +16,18 @@ import com.gaog.weblog.admin.service.AdminUserService;
 import com.gaog.weblog.common.domain.dos.RoleDO;
 import com.gaog.weblog.common.domain.dos.UserDO;
 import com.gaog.weblog.common.domain.dos.UserRoleDO;
+import com.gaog.weblog.common.domain.mapper.ArticleMapper;
 import com.gaog.weblog.common.domain.mapper.RoleMapper;
 import com.gaog.weblog.common.domain.mapper.UserMapper;
 import com.gaog.weblog.common.domain.mapper.UserRoleMapper;
 import com.gaog.weblog.common.enums.ResponseCodeEnum;
+import com.gaog.weblog.common.model.vo.SelectRspVO;
 import com.gaog.weblog.common.utils.PageResponse;
 import com.gaog.weblog.common.utils.Response;
+import com.gaog.weblog.common.utils.TransportCryptoUtils;
 import com.gaog.weblog.jwt.model.CustomUserDetails;
+import com.gaog.weblog.jwt.model.LoginRspVO;
+import com.gaog.weblog.jwt.utils.JwtTokenHelper;
 import com.gaog.weblog.jwt.utils.SecurityContextUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -33,8 +38,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -54,9 +61,15 @@ public class AdminUserServiceImpl implements AdminUserService {
     @Autowired
     private UserRoleMapper userRoleMapper;
     @Autowired
+    private ArticleMapper articleMapper;
+    @Autowired
     private RoleMapper roleMapper;
     @Autowired
     private PasswordEncoder passwordEncoder;
+    @Autowired
+    private JwtTokenHelper jwtTokenHelper;
+    @Autowired
+    private TransportCryptoUtils transportCryptoUtils;
 
     /**
      * 修改密码
@@ -114,16 +127,23 @@ public class AdminUserServiceImpl implements AdminUserService {
      */
     @Override
     public Response findUserInfo() {
-        // 直接从 SecurityContext 中获取用户信息
         CustomUserDetails currentUser = SecurityContextUtil.getCurrentUser();
-
-        if (currentUser == null) {
+        if (currentUser == null || currentUser.getUserId() == null) {
             return Response.fail("用户未登录");
         }
 
+        UserDO latestUser = userMapper.selectById(currentUser.getUserId());
+        if (latestUser == null || Boolean.TRUE.equals(latestUser.getIsDeleted())) {
+            return Response.fail(ResponseCodeEnum.USER_NOT_FOUND);
+        }
+
         return Response.success(FindUserInfoRspVO.builder()
-                .username(currentUser.getUsername())
-                .roles(new HashSet<>(currentUser.getRoles()))
+                .userId(latestUser.getId())
+                .username(latestUser.getUsername())
+                .nickname(latestUser.getNickname())
+                .avatar(latestUser.getAvatar())
+                .roles(currentUser.getRoles() == null ? new HashSet<>() : new HashSet<>(currentUser.getRoles()))
+                .permissions(currentUser.getPermissions() == null ? new HashSet<>() : new HashSet<>(currentUser.getPermissions()))
                 .build());
     }
 
@@ -355,6 +375,7 @@ public class AdminUserServiceImpl implements AdminUserService {
         String twitterUrl = updateUserInfoReqVO.getTwitterUrl();
         String weiboUrl = updateUserInfoReqVO.getWeiboUrl();
         List<Long> roleIds = updateUserInfoReqVO.getRoleIds();
+        CustomUserDetails currentUser = SecurityContextUtil.getCurrentUser();
 
         // 1. 检查用户是否存在
         UserDO userDO = userMapper.selectById(id);
@@ -362,6 +383,7 @@ public class AdminUserServiceImpl implements AdminUserService {
             log.warn("更新用户信息失败，用户不存在: {}", id);
             return Response.fail(ResponseCodeEnum.USER_NOT_FOUND);
         }
+        String oldNickname = userDO.getNickname();
 
         //加密密码
         if (StringUtils.isNotBlank(password)) {
@@ -400,7 +422,36 @@ public class AdminUserServiceImpl implements AdminUserService {
             }
         }
 
+        if (StringUtils.isNotBlank(nickname)) {
+            articleMapper.updateAuthorByUserId(id, nickname);
+        }
+
         log.info("更新用户信息成功: userId={}", id);
+
+        boolean updatingCurrentUser = currentUser != null && Objects.equals(currentUser.getUserId(), id);
+        boolean passwordChanged = updatingCurrentUser && StringUtils.isNotBlank(updateUserInfoReqVO.getPassword());
+        boolean usernameChanged = updatingCurrentUser
+                && StringUtils.isNotBlank(username)
+                && !StringUtils.equals(userDO.getUsername(), username);
+
+        if (usernameChanged || passwordChanged) {
+            Map<String, Object> result = new HashMap<>(4);
+
+            if (usernameChanged) {
+                String token = jwtTokenHelper.generateToken(username);
+                LoginRspVO loginRspVO = LoginRspVO.builder()
+                        .token(transportCryptoUtils.encryptIfNecessary(token))
+                        .build();
+                result.put("token", loginRspVO.getToken());
+            }
+
+            if (passwordChanged) {
+                result.put("reloginRequired", true);
+            }
+
+            return Response.success(result);
+        }
+
         return Response.success();
     }
 
@@ -440,5 +491,22 @@ public class AdminUserServiceImpl implements AdminUserService {
         }
 
         return Response.success(roleNames);
+    }
+
+    @Override
+    public Response findUserSelectList() {
+        List<SelectRspVO> options = userMapper.selectList(new LambdaQueryWrapper<UserDO>()
+                        .eq(UserDO::getIsDeleted, false)
+                        .eq(UserDO::getIsEnabled, true)
+                        .orderByDesc(UserDO::getCreateTime))
+                .stream()
+                .map(user -> SelectRspVO.builder()
+                        .label(StringUtils.isNotBlank(user.getNickname())
+                                ? user.getNickname() + " (" + user.getUsername() + ")"
+                                : user.getUsername())
+                        .value(user.getId())
+                        .build())
+                .collect(Collectors.toList());
+        return Response.success(options);
     }
 }

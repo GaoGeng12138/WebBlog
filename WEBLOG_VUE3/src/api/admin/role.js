@@ -25,7 +25,7 @@ export function addRole(data) {
  * @returns {Promise}
  */
 export function updateRole(id, data) {
-    return axios.post(`/admin/role/update/${id}`, data)
+    return axios.post('/admin/role/update', { id, ...data })
 }
 
 /**

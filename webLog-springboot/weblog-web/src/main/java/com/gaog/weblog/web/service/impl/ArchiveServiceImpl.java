@@ -8,6 +8,7 @@ import com.gaog.weblog.common.domain.dos.CategoryDO;
 import com.gaog.weblog.common.domain.mapper.ArticleCategoryRelMapper;
 import com.gaog.weblog.common.domain.mapper.ArticleMapper;
 import com.gaog.weblog.common.domain.mapper.CategoryMapper;
+import com.gaog.weblog.common.service.ContentVisibilityService;
 import com.gaog.weblog.common.utils.PageResponse;
 import com.gaog.weblog.common.utils.Response;
 import com.gaog.weblog.jwt.utils.SecurityContextUtil;
@@ -44,6 +45,8 @@ public class ArchiveServiceImpl implements ArchiveService {
     private ArticleCategoryRelMapper articleCategoryRelMapper;
     @Autowired
     private CategoryMapper categoryMapper;
+    @Autowired
+    private ContentVisibilityService contentVisibilityService;
 
     /**
      * 获取文章归档分页数据
@@ -59,7 +62,16 @@ public class ArchiveServiceImpl implements ArchiveService {
         Long userId = SecurityContextUtil.getCurrentUserId();
 
         // 分页查询
-        IPage<ArticleDO> page = articleMapper.selectPageList(current, size, title, userId, null, null);
+        IPage<ArticleDO> page = articleMapper.selectPageList(
+                current,
+                size,
+                title,
+                userId,
+                null,
+                null,
+                userId,
+                contentVisibilityService.isCurrentUserPrivileged()
+        );
         List<ArticleDO> articleDOS = page.getRecords();
 
         List<FindArchiveArticlePageListRspVO> vos = Lists.newArrayList();

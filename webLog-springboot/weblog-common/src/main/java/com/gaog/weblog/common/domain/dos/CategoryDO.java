@@ -42,6 +42,11 @@ public class CategoryDO {
      */
     private Boolean showOnFront;
 
+    /**
+     * 可见范围：1-公开，2-指定用户可见
+     */
+    private Integer visibilityScope;
+
     private LocalDateTime createTime;
 
     private LocalDateTime updateTime;

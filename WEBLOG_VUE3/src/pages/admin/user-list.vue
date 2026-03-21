@@ -33,7 +33,7 @@
           </el-select>
         </div>
         <div class="flex gap-2">
-          <el-button type="primary" @click="handleAddUser" size="default">
+          <el-button v-if="can('admin:user:create')" type="primary" @click="handleAddUser" size="default">
             <el-icon><Plus /></el-icon>
             新增用户
           </el-button>
@@ -94,6 +94,7 @@
           <template #default="scope">
             <div class="flex flex-wrap gap-1">
               <el-button
+                v-if="can('admin:user:update')"
                 size="small"
                 type="primary"
                 @click="handleEdit(scope.row)"
@@ -101,6 +102,7 @@
                 编辑
               </el-button>
               <el-button
+                v-if="can('admin:user:role-assign')"
                 size="small"
                 type="info"
                 @click="handleAuthorize(scope.row)"
@@ -108,6 +110,7 @@
                 授权
               </el-button>
               <el-button
+                v-if="can('admin:user:password')"
                 size="small"
                 type="warning"
                 @click="handleChangePassword(scope.row)"
@@ -115,6 +118,7 @@
                 修改密码
               </el-button>
               <el-button
+                v-if="can('admin:user:status')"
                 size="small"
                 :type="scope.row.isEnabled ? 'warning' : 'success'"
                 @click="handleChangeStatus(scope.row)"
@@ -122,6 +126,7 @@
                 {{ scope.row.isEnabled ? '停用' : '启用' }}
               </el-button>
               <el-button
+                v-if="can('admin:user:delete')"
                 size="small"
                 type="danger"
                 @click="handleDelete(scope.row)"
@@ -401,6 +406,7 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { hasAccess } from '@/composables/permission'
 import {
   getUserList,
   addUser,
@@ -411,7 +417,14 @@ import {
 import { uploadFile } from '@/api/admin/file'
 import { getRoleList,assignRole } from '@/api/admin/role'
 import { Search, Plus, User, DocumentCopy } from '@element-plus/icons-vue'
+import { setToken } from '@/composables/cookie'
+import { useUserStore } from '@/stores/user'
 import moment from 'moment'
+import { useRouter } from 'vue-router'
+
+const userStore = useUserStore()
+const router = useRouter()
+const can = (permission) => hasAccess(userStore.userInfo, permission)
 
 // 搜索表单
 const searchForm = reactive({
@@ -725,6 +738,13 @@ const handleSubmitPassword = () => {
       }
       const response = await updateUser(updateData)
       if (response.success) {
+        if (response.data?.reloginRequired) {
+          userStore.logout()
+          ElMessage.success('密码修改成功，请重新登录')
+          await router.push('/login')
+          return
+        }
+
         ElMessage.success('密码修改成功')
         passwordDialogVisible.value = false
         loadUserList()
@@ -858,6 +878,22 @@ const handleSubmit = () => {
       }
       
       if (response.success) {
+        if (response.data?.reloginRequired) {
+          userStore.logout()
+          ElMessage.success('密码已修改，请重新登录')
+          dialogVisible.value = false
+          await router.push('/login')
+          return
+        }
+
+        if (response.data?.token) {
+          setToken(response.data.token)
+          await userStore.ensureUserInfoReady(true)
+        }
+        if (userForm.id && userStore.userInfo?.userId === userForm.id) {
+          await userStore.ensureUserInfoReady(true)
+          await userStore.ensureFrontendUserInfoReady(true)
+        }
         ElMessage.success(userForm.id ? '更新成功' : '新增成功')
         dialogVisible.value = false
         loadUserList()

@@ -4,7 +4,9 @@ import com.gaog.weblog.admin.model.vo.role.AddRoleReqVO;
 import com.gaog.weblog.admin.model.vo.role.AssignRoleReqVO;
 import com.gaog.weblog.admin.model.vo.role.DeleteRoleReqVO;
 import com.gaog.weblog.admin.model.vo.role.FindRolePageListReqVO;
+import com.gaog.weblog.admin.model.vo.role.FindRolePermissionsReqVO;
 import com.gaog.weblog.admin.model.vo.role.FindRoleSelectListReqVO;
+import com.gaog.weblog.admin.model.vo.role.UpdateRolePermissionsReqVO;
 import com.gaog.weblog.admin.model.vo.role.UpdateRoleReqVO;
 import com.gaog.weblog.common.utils.Response;
 
@@ -65,4 +67,8 @@ public interface AdminRoleService {
      * @return Response
      */
     Response assignRole(AssignRoleReqVO assignRoleReqVO);
+
+    Response findRolePermissions(FindRolePermissionsReqVO reqVO);
+
+    Response updateRolePermissions(UpdateRolePermissionsReqVO reqVO);
 }

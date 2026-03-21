@@ -68,6 +68,26 @@ public class FindArticleDetailRspVO {
     private String articleSourceLabel;
 
     /**
+     * 文章状态
+     */
+    private Integer status;
+
+    /**
+     * 状态文案
+     */
+    private String statusLabel;
+
+    /**
+     * 可见范围
+     */
+    private Integer visibilityScope;
+
+    /**
+     * 指定可见用户
+     */
+    private List<Long> visibleUserIds;
+
+    /**
      * 创建时间
      */
     private LocalDateTime createTime;
