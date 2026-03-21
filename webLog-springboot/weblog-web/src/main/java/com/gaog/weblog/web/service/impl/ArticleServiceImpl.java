@@ -243,6 +243,7 @@ public class ArticleServiceImpl implements ArticleService {
                 new Page<>(current, size),
                 Wrappers.<ArticleDO>lambdaQuery()
                         .in(ArticleDO::getId, articleIds)
+                        .eq(ArticleDO::getStatus, ArticleStatusEnum.PUBLISH.getCode())
                         .like(org.apache.commons.lang3.StringUtils.isNotBlank(keyword), ArticleDO::getTitle, keyword)
                         .orderByDesc(ArticleDO::getCreateTime)
         );
@@ -335,8 +336,8 @@ public class ArticleServiceImpl implements ArticleService {
 
         ArticleDO articleDO = articleMapper.selectById(articleId);
 
-        // 判断文章是否存在
-        if (Objects.isNull(articleDO)) {
+        // 判断文章是否存在，且前台仅允许访问已发布文章
+        if (Objects.isNull(articleDO) || !Objects.equals(articleDO.getStatus(), ArticleStatusEnum.PUBLISH.getCode())) {
             log.warn("==> 该文章不存在, articleId: {}", articleId);
             throw new BizException(ResponseCodeEnum.ARTICLE_NOT_FOUND);
         }
@@ -450,6 +451,7 @@ public class ArticleServiceImpl implements ArticleService {
                 new Page<>(current, size),
                 Wrappers.<ArticleDO>lambdaQuery()
                         .in(ArticleDO::getId, articleIds)
+                        .eq(ArticleDO::getStatus, ArticleStatusEnum.PUBLISH.getCode())
                         .like(org.apache.commons.lang3.StringUtils.isNotBlank(keyword), ArticleDO::getTitle, keyword)
                         .orderByDesc(ArticleDO::getCreateTime)
         );

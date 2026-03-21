@@ -5,6 +5,10 @@ server:
     context-path: ${SERVER_SERVLET_CONTEXT_PATH:/webLog}
 
 spring:
+  servlet:
+    multipart:
+      max-file-size: ${SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE:10MB}
+      max-request-size: ${SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE:10MB}
   datasource:
     driver-class-name: ${SPRING_DATASOURCE_DRIVER_CLASS_NAME:com.mysql.cj.jdbc.Driver}
     url: ${SPRING_DATASOURCE_URL:jdbc:mysql://${DB_HOST:mysql-server}:${DB_PORT:3306}/${DB_NAME:weblog}?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&useSSL=false&zeroDateTimeBehavior=convertToNull&serverTimezone=Asia/Shanghai}
