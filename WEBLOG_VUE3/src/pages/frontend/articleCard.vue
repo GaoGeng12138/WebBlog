@@ -8,8 +8,11 @@
     <div class="relative h-24 overflow-hidden bg-slate-100 sm:h-full sm:min-h-[92px]">
       <img
         v-if="article.cover"
-        :src="article.cover"
+        :src="coverImageUrl"
         :alt="articleAlt"
+        :loading="imageLoadingAttrs.loading"
+        :fetchpriority="imageLoadingAttrs.fetchpriority"
+        :decoding="imageLoadingAttrs.decoding"
         class="h-full w-full bg-slate-950 object-contain transition-transform duration-500 ease-out group-hover:scale-[1.02]"
       />
       <div v-else class="card-fallback">
@@ -68,8 +71,11 @@
     <div class="relative min-h-[260px] overflow-hidden bg-slate-100">
       <img
         v-if="article.cover"
-        :src="article.cover"
+        :src="featuredCoverImageUrl"
         :alt="articleAlt"
+        :loading="imageLoadingAttrs.loading"
+        :fetchpriority="imageLoadingAttrs.fetchpriority"
+        :decoding="imageLoadingAttrs.decoding"
         class="h-full w-full bg-slate-950 object-contain transition-transform duration-700 ease-out group-hover:scale-[1.02]"
       />
       <div v-else class="featured-fallback">
@@ -134,8 +140,11 @@
     <div class="relative h-36 overflow-hidden bg-slate-100 sm:h-38">
       <img
         v-if="article.cover"
-        :src="article.cover"
+        :src="coverImageUrl"
         :alt="articleAlt"
+        :loading="imageLoadingAttrs.loading"
+        :fetchpriority="imageLoadingAttrs.fetchpriority"
+        :decoding="imageLoadingAttrs.decoding"
         class="h-full w-full bg-slate-950 object-contain transition-transform duration-500 ease-out group-hover:scale-[1.02]"
       />
       <div v-else class="card-fallback">
@@ -184,6 +193,7 @@
 import { computed, toRefs } from 'vue'
 import { useRoute } from 'vue-router'
 import moment from 'moment'
+import { getImageLoadingAttrs, getOptimizedImageUrl } from '@/utils/image'
 
 const props = defineProps({
   article: {
@@ -205,6 +215,10 @@ const props = defineProps({
   featured: {
     type: Boolean,
     default: false
+  },
+  imageIndex: {
+    type: Number,
+    default: 99
   }
 })
 
@@ -251,6 +265,20 @@ const articleContentPreview = computed(() => {
 const articleAlt = computed(() => {
   return displayTitle.value || article.value.summary || '文章封面'
 })
+
+const imageLoadingAttrs = computed(() => getImageLoadingAttrs(props.imageIndex))
+
+const coverImageUrl = computed(() => getOptimizedImageUrl(article.value?.cover, {
+  width: props.variant === 'list' ? 360 : 420,
+  height: props.variant === 'list' ? 220 : 260,
+  fit: 'contain'
+}))
+
+const featuredCoverImageUrl = computed(() => getOptimizedImageUrl(article.value?.cover, {
+  width: 960,
+  height: 540,
+  fit: 'contain'
+}))
 
 const readTimeText = computed(() => {
   const source = `${displayTitle.value || ''} ${article.value.summary || ''} ${trimContent(article.value.content || '')}`

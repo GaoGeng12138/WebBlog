@@ -130,7 +130,7 @@
                 class="reveal-item"
                 :style="{ animationDelay: `${Math.min(index * 80, 480)}ms` }"
               >
-                <ArticleCard :article="article" :compact="true" />
+                <ArticleCard :article="article" :compact="true" :image-index="index" />
               </div>
             </div>
           </transition-group>

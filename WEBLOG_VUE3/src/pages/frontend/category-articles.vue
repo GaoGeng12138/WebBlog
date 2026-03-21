@@ -72,11 +72,12 @@
             <div v-else>
               <div class="mb-7 flex flex-col gap-3.5">
                 <ArticleCard 
-                  v-for="article in articles" 
+                  v-for="(article, index) in articles" 
                   :key="article.id" 
                   :article="article"
                   variant="list"
                   :category-id="categoryId"
+                  :image-index="index"
                 />
               </div>
 

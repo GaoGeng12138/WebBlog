@@ -17,8 +17,11 @@
             <div class="sidebar-hot-cover">
               <img
                 v-if="item.cover"
-                :src="item.cover"
+                :src="getOptimizedImageUrl(item.cover, { width: 320, height: 180, fit: 'contain' })"
                 :alt="item.title"
+                loading="lazy"
+                fetchpriority="low"
+                decoding="async"
                 class="h-full w-full bg-slate-950 object-contain transition-transform duration-500 group-hover:scale-[1.02]"
               />
               <div v-else class="sidebar-hot-cover__fallback">
@@ -59,6 +62,7 @@
 import { onMounted, ref } from 'vue'
 import moment from 'moment'
 import { getArticlePageList } from '@/api/frontend/article'
+import { getOptimizedImageUrl } from '@/utils/image'
 
 const hotArticles = ref([])
 
