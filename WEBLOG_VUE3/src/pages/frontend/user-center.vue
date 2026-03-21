@@ -136,6 +136,16 @@
                                     后台管理系统
                                 </el-button>
                             </div>
+                            <div class="profile-quick-links">
+                                <button v-for="item in quickActionItems" :key="item.label" type="button"
+                                    class="profile-quick-link"
+                                    :class="{ 'profile-quick-link--primary': item.type === 'primary' }"
+                                    @click="item.action">
+                                    <span class="profile-quick-link__title">{{ item.label }}</span>
+                                    <span class="profile-quick-link__desc">{{ item.desc }}</span>
+                                </button>
+                            </div>
+                            <div class="profile-quick-note">近 {{ recentActiveDays }} 天有活跃记录</div>
                         </div>
                     </div>
                 </div>
@@ -157,6 +167,12 @@
                                     <Document />
                                 </el-icon>
                                 <span>我的文章</span>
+                            </el-menu-item>
+                            <el-menu-item index="drafts">
+                                <el-icon>
+                                    <EditPen />
+                                </el-icon>
+                                <span>草稿箱</span>
                             </el-menu-item>
                             <el-menu-item index="collections">
                                 <el-icon>
@@ -386,12 +402,12 @@
                             </section>
                         </div>
 
-                        <div v-if="activeTab === 'articles'" class="animate-fade-in">
+                        <div v-if="activeTab === 'articles' || activeTab === 'drafts'" class="animate-fade-in">
                             <div class="flex justify-between items-center mb-6">
-                                <h3 class="text-lg font-bold text-gray-800">我的文章 <span
-                                        class="text-gray-400 font-normal text-sm ml-2">共 {{ articles.length }} 篇</span>
+                                <h3 class="text-lg font-bold text-gray-800">{{ activeTab === 'drafts' ? '草稿箱' : '我的文章' }} <span
+                                        class="text-gray-400 font-normal text-sm ml-2">共 {{ articlePagination.total || articles.length }} 篇</span>
                                 </h3>
-                                <div class="flex items-center gap-3">
+                                <div class="flex flex-wrap items-center justify-end gap-3">
                                     <span v-if="!siteConfig.isFeatureEnabled('userPublishEnabled')" class="text-xs text-amber-600 bg-amber-50 border border-amber-100 rounded-full px-3 py-1">
                                         当前已关闭前台投稿
                                     </span>
@@ -403,9 +419,19 @@
                                 </div>
                             </div>
 
-                            <el-empty v-if="!articles.length" description="暂无文章" />
+                            <div class="mb-5 flex flex-wrap items-center gap-2">
+                                <button v-for="option in articleFilters" :key="option.key" type="button"
+                                    class="article-filter-chip"
+                                    :class="{ 'article-filter-chip--active': articleStatusFilter === option.key }"
+                                    @click="setArticleStatusFilter(option.key)">
+                                    {{ option.label }}
+                                    <span class="article-filter-chip__count">{{ articleStatusCounts[option.key] || 0 }}</span>
+                                </button>
+                            </div>
+
+                            <el-empty v-if="!filteredArticles.length" :description="articleEmptyDescription" />
                             <div v-else class="space-y-4">
-                                <div v-for="item in articles" :key="item.id"
+                                <div v-for="item in filteredArticles" :key="item.id"
                                     class="group flex flex-col md:flex-row justify-between items-start md:items-center p-5 rounded-xl border border-gray-100 hover:border-blue-200 hover:shadow-md hover:bg-blue-50/30 transition-all duration-300">
                                     <div class="flex-1">
                                         <div class="flex items-center gap-3 mb-2">
@@ -442,7 +468,7 @@
                                 </div>
                             </div>
 
-                            <div v-if="articles.length > 0" class="mt-8 flex justify-center">
+                            <div v-if="filteredArticles.length > 0" class="mt-8 flex justify-center">
                                 <Pagination v-model:current-page="articlePagination.current"
                                     v-model:page-size="articlePagination.size" :total="articlePagination.total"
                                     @page-change="loadArticles" @size-change="loadArticles" />
@@ -635,7 +661,7 @@
                                     v-model:page-size="commentHistoryPagination.size"
                                     :total="commentHistoryPagination.total" @page-change="loadCommentHistory"
                                     @size-change="loadCommentHistory" />
-                            </div>·
+                            </div>
                         </div>
 
                     </div>
@@ -725,6 +751,56 @@ const collectedArticlesPagination = reactive({
 })
 const favoriteCount = ref(0)
 const commentCount = ref(0)
+const articleStatusFilter = ref('all')
+
+const articleFilters = computed(() => [
+    { key: 'all', label: '全部' },
+    { key: '3', label: '草稿' },
+    { key: '0', label: '待审核' },
+    { key: '1', label: '审核通过' },
+    { key: '4', label: '已发布' },
+    { key: '2', label: '未通过' }
+])
+
+const articleStatusCounts = computed(() => {
+    const counts = {
+        all: articles.value.length,
+        '0': 0,
+        '1': 0,
+        '2': 0,
+        '3': 0,
+        '4': 0
+    }
+
+    articles.value.forEach((article) => {
+        const key = String(article.status)
+        if (Object.prototype.hasOwnProperty.call(counts, key)) {
+            counts[key] += 1
+        }
+    })
+
+    return counts
+})
+
+const filteredArticles = computed(() => {
+    if (articleStatusFilter.value === 'all') {
+        return articles.value
+    }
+
+    return articles.value.filter((article) => String(article.status) === articleStatusFilter.value)
+})
+
+const articleEmptyDescription = computed(() => {
+    if (activeTab.value === 'drafts' && articleStatusFilter.value === '3') {
+        return '暂无草稿，先写一篇内容试试吧'
+    }
+
+    if (articleStatusFilter.value === 'all') {
+        return '暂无文章'
+    }
+
+    return `暂无${articleFilters.value.find((item) => item.key === articleStatusFilter.value)?.label || '该状态'}文章`
+})
 
 // 评论历史相关
 const commentHistory = ref([])
@@ -839,6 +915,7 @@ const activeTabName = computed(() => {
     const map = {
         overview: '总览',
         articles: '我的文章',
+        drafts: '草稿箱',
         collections: '我的收藏',
         comments: '评论历史',
         security: '安全设置'
@@ -875,23 +952,6 @@ const getStatusInfo = (status) => {
 // 检查用户是否已登录
 const isLoggedIn = computed(() => {
     return !!userStore.frontendUserInfo && !!userStore.frontendUserInfo.userId
-})
-
-onMounted(() => {
-    loadCurrentLocation()
-    siteConfig.fetchPermissions().catch((error) => {
-        console.error('Failed to load publish permissions:', error)
-    })
-
-    // Load frontend user info first, then load articles
-    userStore.setFrontendUserInfo().then(() => {
-        loadStatistics()
-        loadArticles()
-    }).catch((error) => {
-        console.error('Failed to load user info:', error)
-        // Even if user info fails to load, we still try to load articles
-        loadArticles()
-    })
 })
 
 // 3. 增加 status 字段的映射
@@ -1204,6 +1264,15 @@ const openEditDialog = () => {
     showEditProfile.value = true
 }
 
+const setArticleStatusFilter = (status) => {
+    articleStatusFilter.value = status
+}
+
+const jumpToDrafts = () => {
+    articleStatusFilter.value = '3'
+    activeTab.value = 'drafts'
+}
+
 const saveProfile = async () => {
     if (profileSaving.value) {
         return
@@ -1291,6 +1360,12 @@ const handleAvatarChange = async (event) => {
 // 处理 tab 选择
 const handleTabSelect = (index) => {
     activeTab.value = index
+
+    if (index === 'articles') {
+        articleStatusFilter.value = 'all'
+    } else if (index === 'drafts') {
+        articleStatusFilter.value = '3'
+    }
 }
 
 // 获取动态类型名称
@@ -1398,7 +1473,7 @@ const deleteComment = async (commentId) => {
 watch(activeTab, (newTab) => {
     if (newTab === 'collections') {
         loadCollectedArticles()
-    } else if (newTab === 'articles') {
+    } else if (newTab === 'articles' || newTab === 'drafts') {
         loadArticles()
     } else if (newTab === 'comments') {
         loadCommentHistory()
@@ -1408,14 +1483,36 @@ watch(activeTab, (newTab) => {
     }
 })
 
-// 初始化加载统计数据
+const recentActiveDays = computed(() => activityData.value.trend.filter((item) => item.score > 0).length)
+
+const quickActionItems = computed(() => [
+    { label: '写文章', desc: '开始一篇新内容', action: goToPublish, type: 'primary' },
+    { label: '草稿箱', desc: '继续未完成的内容', action: jumpToDrafts },
+    { label: '评论管理', desc: '查看互动与反馈', action: () => handleTabSelect('comments') },
+    { label: '账号安全', desc: '修改密码和邮箱', action: () => handleTabSelect('security') }
+])
+
+// 初始化加载统计数据和概览模块
 onMounted(() => {
-    loadStatistics()
-    // 如果默认 tab 是 overview，则加载动态数据和活跃度数据
-    if (activeTab.value === 'overview') {
-        loadDynamics()
-        loadActivityScore()
-    }
+    loadCurrentLocation()
+    siteConfig.fetchPermissions().catch((error) => {
+        console.error('Failed to load publish permissions:', error)
+    })
+
+    userStore.setFrontendUserInfo().then(() => {
+        loadStatistics()
+        if (activeTab.value === 'overview') {
+            loadDynamics()
+            loadActivityScore()
+        }
+    }).catch((error) => {
+        console.error('Failed to load user info:', error)
+        loadStatistics()
+        if (activeTab.value === 'overview') {
+            loadDynamics()
+            loadActivityScore()
+        }
+    })
 })
 
 </script>
@@ -1543,6 +1640,97 @@ onMounted(() => {
     border: 1px solid rgba(129, 158, 196, 0.28) !important;
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(246, 249, 253, 0.94)) !important;
     color: #35527a !important;
+}
+
+.profile-quick-links {
+    display: grid;
+    width: 100%;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.profile-quick-link {
+    display: flex;
+    min-height: 86px;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+    border-radius: 18px;
+    border: 1px solid rgba(129, 158, 196, 0.18);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(246, 249, 253, 0.92));
+    padding: 14px 16px;
+    text-align: left;
+    box-shadow: 0 12px 26px rgba(120, 146, 184, 0.08);
+    transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+}
+
+.profile-quick-link:hover {
+    transform: translateY(-2px);
+    border-color: rgba(116, 149, 195, 0.28);
+    box-shadow: 0 18px 30px rgba(108, 137, 184, 0.12);
+}
+
+.profile-quick-link--primary {
+    background: linear-gradient(135deg, rgba(109, 145, 226, 0.98), rgba(83, 122, 206, 0.94));
+    color: #ffffff;
+}
+
+.profile-quick-link--primary .profile-quick-link__desc {
+    color: rgba(255, 255, 255, 0.84);
+}
+
+.profile-quick-link__title {
+    font-size: 14px;
+    font-weight: 700;
+    color: inherit;
+}
+
+.profile-quick-link__desc {
+    font-size: 12px;
+    color: #6b7d97;
+}
+
+.profile-quick-note {
+    font-size: 12px;
+    color: #8a97ab;
+    text-align: center;
+}
+
+.article-filter-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border-radius: 999px;
+    border: 1px solid rgba(129, 158, 196, 0.18);
+    background: rgba(255, 255, 255, 0.82);
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #58749c;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+.article-filter-chip:hover {
+    transform: translateY(-1px);
+    border-color: rgba(116, 149, 195, 0.28);
+    box-shadow: 0 10px 22px rgba(120, 146, 184, 0.1);
+}
+
+.article-filter-chip--active {
+    background: linear-gradient(135deg, rgba(111, 151, 231, 0.18), rgba(90, 130, 212, 0.18));
+    border-color: rgba(90, 130, 212, 0.3);
+    color: #35527a;
+}
+
+.article-filter-chip__count {
+    min-width: 20px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.72);
+    padding: 0 6px;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 18px;
+    color: #5e77a0;
 }
 
 @keyframes fadeIn {
@@ -1707,19 +1895,22 @@ onMounted(() => {
     /* 轨道颜色 */
 }
 
-activity-section {
-    padding: 1.5rem;
-    background: linear-gradient(180deg, rgba(248, 251, 255, 0.98), rgba(242, 247, 252, 0.96));
-    border-radius: 12px;
-    border: 1px solid rgba(129, 158, 196, 0.16);
-}
-
 .activity-summary {
     display: flex;
     justify-content: space-between;
-    background: rgba(255, 255, 255, 0.9);
+    align-items: center;
+    margin: 1.5rem 0;
     padding: 1rem;
-    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 0.9rem;
+    border: 1px solid rgba(129, 158, 196, 0.14);
+    box-shadow: 0 16px 40px rgba(120, 146, 184, 0.08);
+}
+
+.score-display {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
 }
 
 .score-number {
@@ -1728,12 +1919,60 @@ activity-section {
     color: #6584b1;
 }
 
-.custom-scrollbar::-webkit-scrollbar {
-    height: 6px;
+.score-label {
+    color: #64748b;
+    font-size: 0.875rem;
 }
 
-.custom-scrollbar::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
-    border-radius: 4px;
+.rank-info {
+    color: #64748b;
+    font-size: 0.875rem;
+}
+
+.activity-breakdown {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+    margin: 1.5rem 0;
+}
+
+.activity-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 0.9rem;
+    border: 1px solid rgba(129, 158, 196, 0.14);
+    box-shadow: 0 14px 36px rgba(120, 146, 184, 0.08);
+}
+
+.activity-type {
+    font-size: 0.875rem;
+    color: #334155;
+}
+
+.activity-count {
+    font-size: 0.875rem;
+    color: #64748b;
+}
+
+.activity-item-score {
+    font-weight: 600;
+    color: #6584b1;
+}
+
+/* 活跃度统计数据样式 */
+.activity-stats {
+    margin-top: 1.5rem;
+}
+
+.stat-card {
+    transition: all 0.2s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 16px 36px rgba(120, 146, 184, 0.14);
 }
 </style>
