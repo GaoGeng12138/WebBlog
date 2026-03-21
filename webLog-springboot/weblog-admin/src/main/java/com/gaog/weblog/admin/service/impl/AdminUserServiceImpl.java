@@ -158,6 +158,7 @@ public class AdminUserServiceImpl implements AdminUserService {
         Long current = findUserListReqVO.getCurrent();
         Long size = findUserListReqVO.getSize();
         String username = findUserListReqVO.getUsername();
+        Boolean isDeleted = findUserListReqVO.getIsDeleted();
         Boolean isEnabled = findUserListReqVO.getIsEnabled();
 
         // 构建分页对象
@@ -166,8 +167,8 @@ public class AdminUserServiceImpl implements AdminUserService {
         // 构建查询条件
         LambdaQueryWrapper<UserDO> wrapper = new LambdaQueryWrapper<>();
         wrapper.like(StringUtils.isNotBlank(username), UserDO::getUsername, username)
+                .eq(Objects.nonNull(isDeleted), UserDO::getIsDeleted, isDeleted)
                 .eq(Objects.nonNull(isEnabled), UserDO::getIsEnabled, isEnabled)
-                .eq(UserDO::getIsDeleted, false)
                 .orderByDesc(UserDO::getCreateTime);
 
         //查询用户角色
@@ -204,6 +205,7 @@ public class AdminUserServiceImpl implements AdminUserService {
                             .email(userDO.getEmail())
                             .avatar(userDO.getAvatar())
                             .isEnabled(userDO.getIsEnabled())
+                            .isDeleted(userDO.getIsDeleted())
                             .roles(roleNames)
                             .createTime(userDO.getCreateTime())
                             .updateTime(userDO.getUpdateTime())

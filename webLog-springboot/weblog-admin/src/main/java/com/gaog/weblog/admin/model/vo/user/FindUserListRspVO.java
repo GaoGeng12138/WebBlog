@@ -43,6 +43,9 @@ public class FindUserListRspVO {
     @ApiModelProperty(value = "启用状态")
     private Boolean isEnabled;
 
+    @ApiModelProperty(value = "注销状态")
+    private Boolean isDeleted;
+
     @ApiModelProperty(value = "Role name list")
     private List<String> roles;
 

@@ -31,6 +31,16 @@
             <el-option label="启用" :value="1" />
             <el-option label="停用" :value="0" />
           </el-select>
+          <el-select
+            v-model="searchForm.isDeleted"
+            placeholder="注销状态"
+            clearable
+            class="md:w-40"
+            @change="handleSearch"
+          >
+            <el-option label="正常" :value="false" />
+            <el-option label="已注销" :value="true" />
+          </el-select>
         </div>
         <div class="flex gap-2">
           <el-button v-if="can('admin:user:create')" type="primary" @click="handleAddUser" size="default">
@@ -78,9 +88,12 @@
             </div>
           </template>
         </el-table-column>
-        <el-table-column prop="isEnabled" label="状态" width="80">
+        <el-table-column prop="isEnabled" label="账号状态" width="100">
           <template #default="scope">
-            <el-tag :type="scope.row.isEnabled ? 'success' : 'danger'" size="small">
+            <el-tag v-if="scope.row.isDeleted" type="danger" size="small">
+              已注销
+            </el-tag>
+            <el-tag v-else :type="scope.row.isEnabled ? 'success' : 'warning'" size="small">
               {{ scope.row.isEnabled ? '启用' : '停用' }}
             </el-tag>
           </template>
@@ -93,46 +106,51 @@
         <el-table-column label="操作" width="360" fixed="right">
           <template #default="scope">
             <div class="flex flex-wrap gap-1">
-              <el-button
-                v-if="can('admin:user:update')"
-                size="small"
-                type="primary"
-                @click="handleEdit(scope.row)"
-              >
-                编辑
-              </el-button>
-              <el-button
-                v-if="can('admin:user:role-assign')"
-                size="small"
-                type="info"
-                @click="handleAuthorize(scope.row)"
-              >
-                授权
-              </el-button>
-              <el-button
-                v-if="can('admin:user:password')"
-                size="small"
-                type="warning"
-                @click="handleChangePassword(scope.row)"
-              >
-                修改密码
-              </el-button>
-              <el-button
-                v-if="can('admin:user:status')"
-                size="small"
-                :type="scope.row.isEnabled ? 'warning' : 'success'"
-                @click="handleChangeStatus(scope.row)"
-              >
-                {{ scope.row.isEnabled ? '停用' : '启用' }}
-              </el-button>
-              <el-button
-                v-if="can('admin:user:delete')"
-                size="small"
-                type="danger"
-                @click="handleDelete(scope.row)"
-              >
-                删除
-              </el-button>
+              <template v-if="!scope.row.isDeleted">
+                <el-button
+                  v-if="can('admin:user:update')"
+                  size="small"
+                  type="primary"
+                  @click="handleEdit(scope.row)"
+                >
+                  编辑
+                </el-button>
+                <el-button
+                  v-if="can('admin:user:role-assign')"
+                  size="small"
+                  type="info"
+                  @click="handleAuthorize(scope.row)"
+                >
+                  授权
+                </el-button>
+                <el-button
+                  v-if="can('admin:user:password')"
+                  size="small"
+                  type="warning"
+                  @click="handleChangePassword(scope.row)"
+                >
+                  修改密码
+                </el-button>
+                <el-button
+                  v-if="can('admin:user:status')"
+                  size="small"
+                  :type="scope.row.isEnabled ? 'warning' : 'success'"
+                  @click="handleChangeStatus(scope.row)"
+                >
+                  {{ scope.row.isEnabled ? '停用' : '启用' }}
+                </el-button>
+                <el-button
+                  v-if="can('admin:user:delete')"
+                  size="small"
+                  type="danger"
+                  @click="handleDelete(scope.row)"
+                >
+                  删除
+                </el-button>
+              </template>
+              <el-tag v-else type="info" effect="plain" size="small">
+                已注销账号不可操作
+              </el-tag>
             </div>
           </template>
         </el-table-column>
@@ -429,7 +447,8 @@ const can = (permission) => hasAccess(userStore.userInfo, permission)
 // 搜索表单
 const searchForm = reactive({
   keyword: '',
-  isEnabled: ''
+  isEnabled: '',
+  isDeleted: ''
 })
 
 // 分页
@@ -582,6 +601,7 @@ const handleSearch = () => {
 const handleReset = () => {
   searchForm.keyword = ''
   searchForm.isEnabled = ''
+  searchForm.isDeleted = ''
   pagination.currentPage = 1
   loadUserList()
 }

@@ -22,6 +22,9 @@ public class FindUserListReqVO extends BasePageQuery {
     @ApiModelProperty(value = "用户名")
     private String username;
 
+    @ApiModelProperty(value = "注销状态：null-全部，false-正常，true-已注销")
+    private Boolean isDeleted;
+
     @ApiModelProperty(value = "启用状态：null-全部，true-已启用，false-未启用")
     private Boolean isEnabled;
 }
