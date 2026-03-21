@@ -161,6 +161,12 @@
     </div>
 
     <div class="px-3.5 py-3">
+      <div v-if="showCategoryTag && displayCategory" class="mb-2">
+        <span class="category-chip" :class="categoryToneClass">
+          <span class="category-chip__dot"></span>
+          {{ displayCategory }}
+        </span>
+      </div>
       <h3 v-if="hasTitle" class="line-clamp-2 min-h-[2.7rem] text-[15px] font-bold leading-5 text-slate-900">
         {{ displayTitle }}
       </h3>
