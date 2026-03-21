@@ -39,11 +39,11 @@ onMounted(() => {
             <!-- 主内容区域 -->
             <el-main class="p-0 bg-transparent">
                 <!-- 主内容（根据路由动态展示不同页面） -->
-                <router-view v-slot="{ Component }">
+                <router-view v-slot="{ Component, route }">
                     <Transition name="fade" mode="out-in">
                         <!-- max 指定最多缓存 10 个组件 -->
                         <KeepAlive :max="10">
-                            <component :is="Component"></component>
+                            <component :is="Component" :key="route.fullPath"></component>
                         </KeepAlive>
                     </Transition>
                 </router-view>

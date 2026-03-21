@@ -94,7 +94,7 @@ import { getTagSelectList } from '@/api/admin/tag'
 import { useTagList } from '@/composables/useTagList'
 import { showMessage } from '@/composables/util'
 import { ArrowLeft, Plus } from '@element-plus/icons-vue'
-import { onBeforeUnmount, onMounted, reactive, ref, shallowRef } from 'vue'
+import { nextTick, onBeforeUnmount, onMounted, reactive, ref, shallowRef, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import MarkdownEditorSurface from '@/components/article/MarkdownEditorSurface.vue'
 
@@ -112,6 +112,17 @@ const editorRef = shallowRef()
 
 // 表单数据
 const form = reactive({
+    title: '',
+    cover: '',
+    categoryId: null,
+    tagIds: [],
+    summary: '',
+    content: '',
+    articleSource: 1,
+    articleSourceLabel: '后台发布'
+})
+
+const getDefaultFormState = () => ({
     title: '',
     cover: '',
     categoryId: null,
@@ -238,6 +249,27 @@ const handleCoverChange = (file) => {
 const formRef = ref(null)
 const btnLoading = ref(false)
 
+const resetFormState = async () => {
+    Object.assign(form, getDefaultFormState())
+
+    await nextTick()
+    formRef.value?.clearValidate()
+}
+
+const syncPageState = async (id) => {
+    await resetFormState()
+
+    if (id) {
+        isEdit.value = true
+        articleId.value = id
+        loadArticleDetail()
+        return
+    }
+
+    isEdit.value = false
+    articleId.value = null
+}
+
 // 提交表单
 const onSubmit = () => {
     formRef.value.validate((valid) => {
@@ -286,22 +318,16 @@ onMounted(() => {
     // 获取分类和标签列表
     getCategories()
     getTags()
-    console.log('route.params.id', route.params.id)
-    // 如果是编辑模式，加载文章详情
-    if (route.params.id) {
-        isEdit.value = true
-        articleId.value = route.params.id
-        loadArticleDetail()
-    } else {
-        //发布模式 全部清空
-        formRef.value.resetFields()
-        // 添加发布文章标签页到标签列表
-        // addTab({
-        //     title: '发布文章',
-        //     path: route.path
-        // })
-    }
+    syncPageState(route.params.id)
 })
+
+watch(
+    () => route.params.id,
+    (newId, oldId) => {
+        if (newId === oldId) return
+        syncPageState(newId)
+    }
+)
 
 // 加载文章详情
 const loadArticleDetail = () => {
