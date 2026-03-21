@@ -263,70 +263,59 @@
                                             </div>
                                         </div>
 
-                                        <div class="relative w-full h-48 border-b border-gray-100">
-                                            <div class="flex items-end h-full overflow-x-auto pb-2 custom-scrollbar"
+                                        <div class="relative w-full h-48 border-b border-gray-200">
+                                            <div class="flex items-end h-full overflow-x-auto pb-3 custom-scrollbar"
                                                 v-loading="activityLoading">
+                                                <div v-for="(item, index) in activityData.trend"
+                                                    :key="index"
+                                                    class="h-full flex flex-col justify-end items-center flex-shrink-0 px-2 min-w-[90px]">
+                                                    <!-- 柱子容器 -->
+                                                    <div class="relative w-full h-full flex items-end justify-center">
+                                                        <span v-if="item.score > 0" class="activity-score-badge">
+                                                            {{ item.score }}
+                                                        </span>
 
-                                                <div class="activity-chart mt-6 relative">
-                                                    <div class="relative w-full h-48 border-b border-gray-200">
-                                                        <div class="flex items-end h-full overflow-x-auto pb-3 custom-scrollbar"
-                                                            v-loading="activityLoading">
-                                                            <div v-for="(item, index) in activityData.trend"
-                                                                :key="index"
-                                                                class="h-full flex flex-col justify-end items-center flex-shrink-0 px-2 min-w-[90px]">
-                                                                <!-- 柱子容器 -->
-                                                                <div
-                                                                    class="relative w-full h-full flex items-end justify-center">
-
-                                                                    <span v-if="item.score > 0"
-                                                                        class="activity-score-badge">
-                                                                        {{ item.score }}
-                                                                    </span>
-
-                                                                    <!-- 实际柱子 -->
-                                                                    <div class="w-full max-w-[40px] rounded-t shadow-sm transition-all duration-300"
-                                                                        :class="item.score > 0
-                                                                            ? 'bg-gradient-to-t from-[var(--theme-primary-deep)] to-[var(--theme-primary)]'
-                                                                            : 'bg-gray-200'"
-                                                                        :style="{ height: calculateBarHeight(item.score) + '%' }">
-                                                                    </div>
-
-                                                                    <!-- 透明命中层（关键） -->
-                                                                    <div class="absolute inset-0 cursor-pointer"
-                                                                        @mouseenter="showTooltip($event, index, true)"
-                                                                        @mouseleave="showTooltip($event, index, false)"
-                                                                        @click="showTooltip($event, index, !tooltipVisible[index])">
-                                                                    </div>
-                                                                </div>
-
-                                                                <!-- X 轴 -->
-                                                                <div class="text-[11px] text-gray-500 mt-2 font-medium">
-                                                                    {{ formatDateByRange(item.date, selectedTimeRange)
-                                                                    }}
-                                                                </div>
-                                                            </div>
-
-                                                            <div v-if="!activityLoading && activityData.trend.length === 0"
-                                                                class="absolute inset-0 flex items-center justify-center text-gray-400 text-sm">
-                                                                暂无活跃度数据
-                                                            </div>
+                                                        <!-- 实际柱子 -->
+                                                        <div class="w-full max-w-[40px] rounded-t shadow-sm transition-all duration-300 activity-bar"
+                                                            :class="item.score > 0 ? 'activity-bar-positive' : 'activity-bar-negative'"
+                                                            :style="{
+                                                              height: calculateBarHeight(item.score) + '%',
+                                                              minHeight: item.score > 0 ? '18px' : '10px'
+                                                            }">
                                                         </div>
+
+                                                        <!-- 透明命中层（关键） -->
+                                                        <div class="absolute inset-0 cursor-pointer"
+                                                            @mouseenter="showTooltip($event, index, true)"
+                                                            @mouseleave="showTooltip($event, index, false)"
+                                                            @click="showTooltip($event, index, !tooltipVisible[index])">
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- X 轴 -->
+                                                    <div class="text-[11px] text-gray-500 mt-2 font-medium">
+                                                        {{ formatDateByRange(item.date, selectedTimeRange) }}
                                                     </div>
                                                 </div>
 
-                                                <Teleport to="body">
-                                                    <div v-if="activeTooltipIndex !== null"
-                                                        class="fixed z-[9999] bg-gray-800 text-white text-xs rounded px-2 py-1.5 shadow-lg pointer-events-none"
-                                                        :style="tooltipPosition">
-                                                        <div class="flex items-center gap-1 font-medium">
-                                                            <el-icon class="text-yellow-300">
-                                                                <Star />
-                                                            </el-icon>
-                                                            {{ activityData.trend[activeTooltipIndex]?.score }} 积分
-                                                        </div>
-                                                    </div>
-                                                </Teleport>
+                                                <div v-if="!activityLoading && activityData.trend.length === 0"
+                                                    class="absolute inset-0 flex items-center justify-center text-gray-400 text-sm">
+                                                    暂无活跃度数据
+                                                </div>
                                             </div>
+
+                                            <Teleport to="body">
+                                                <div v-if="activeTooltipIndex !== null"
+                                                    class="fixed z-[9999] bg-gray-800 text-white text-xs rounded px-2 py-1.5 shadow-lg pointer-events-none"
+                                                    :style="tooltipPosition">
+                                                    <div class="flex items-center gap-1 font-medium">
+                                                        <el-icon class="text-yellow-300">
+                                                            <Star />
+                                                        </el-icon>
+                                                        {{ activityData.trend[activeTooltipIndex]?.score }} 积分
+                                                    </div>
+                                                </div>
+                                            </Teleport>
                                         </div>
                                     </div>
 
@@ -899,11 +888,12 @@ const getMaxScore = () => {
 
 const calculateBarHeight = (score) => {
     const maxScore = getMaxScore()
-    const minHeight = 12
-    const maxHeight = 90
+    const minHeight = 10
+    const positiveMinHeight = 18
+    const maxHeight = 88
 
     if (score <= 0) return minHeight
-    return Math.max(minHeight, (score / maxScore) * maxHeight)
+    return Math.max(positiveMinHeight, (score / maxScore) * maxHeight)
 }
 
 /* ======================= 其他 ======================= */
@@ -2081,6 +2071,19 @@ onMounted(() => {
     color: #ffffff;
     box-shadow: 0 10px 18px rgba(31, 41, 55, 0.16);
     pointer-events: none;
+}
+
+.activity-bar {
+    border-radius: 12px 12px 0 0;
+}
+
+.activity-bar-positive {
+    background: linear-gradient(180deg, #7da6ff 0%, #4f7cff 100%);
+    box-shadow: 0 10px 18px rgba(79, 124, 255, 0.18);
+}
+
+.activity-bar-negative {
+    background: #e5e7eb;
 }
 
 @media (max-width: 640px) {
