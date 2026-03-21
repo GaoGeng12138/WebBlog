@@ -252,6 +252,7 @@ public class UserServiceImpl implements UserService {
         String githubUrl = updateUserProfileReqVO.getGithubUrl();
         String twitterUrl = updateUserProfileReqVO.getTwitterUrl();
         String weiboUrl = updateUserProfileReqVO.getWeiboUrl();
+        String oldNickname = userDO.getNickname();
 
         com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<UserDO> updateWrapper =
                 new com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<>();
@@ -270,6 +271,10 @@ public class UserServiceImpl implements UserService {
         if (count != 1) {
             log.error("更新前台用户资料失败，数据库更新失败: {}", currentUserId);
             return Response.fail(ResponseCodeEnum.UPDATE_USER_INFO_FAILED);
+        }
+
+        if (StringUtils.isNotBlank(nickname)) {
+            articleMapper.updateAuthorByUserId(currentUserId, nickname);
         }
 
         return Response.success();

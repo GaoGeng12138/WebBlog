@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  *
@@ -40,6 +41,16 @@ public class FindCategoryPageListRspVO {
      * 是否在前台展示
      */
     private Boolean showOnFront;
+
+    /**
+     * 可见范围
+     */
+    private Integer visibilityScope;
+
+    /**
+     * 指定可见用户
+     */
+    private List<Long> visibleUserIds;
 
     /**
      * 创建时间

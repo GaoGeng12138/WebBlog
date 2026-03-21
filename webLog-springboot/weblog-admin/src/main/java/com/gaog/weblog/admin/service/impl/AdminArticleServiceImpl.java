@@ -12,12 +12,14 @@ import com.gaog.weblog.admin.model.vo.article.FindArticlePageListRspVO;
 import com.gaog.weblog.admin.model.vo.article.PublishArticleReqVO;
 import com.gaog.weblog.admin.model.vo.article.UpdateArticleReqVO;
 import com.gaog.weblog.admin.service.AdminArticleService;
+import com.gaog.weblog.common.domain.dos.ArticleAccessUserDO;
 import com.gaog.weblog.common.domain.dos.ArticleCategoryRelDO;
 import com.gaog.weblog.common.domain.dos.ArticleContentDO;
 import com.gaog.weblog.common.domain.dos.ArticleDO;
 import com.gaog.weblog.common.domain.dos.ArticleTagRelDO;
 import com.gaog.weblog.common.domain.dos.CategoryDO;
 import com.gaog.weblog.common.domain.dos.TagDO;
+import com.gaog.weblog.common.domain.mapper.ArticleAccessUserMapper;
 import com.gaog.weblog.common.domain.mapper.ArticleCategoryRelMapper;
 import com.gaog.weblog.common.domain.mapper.ArticleContentMapper;
 import com.gaog.weblog.common.domain.mapper.ArticleMapper;
@@ -27,8 +29,10 @@ import com.gaog.weblog.common.domain.mapper.TagMapper;
 import com.gaog.weblog.common.enums.ArticleSourceEnum;
 import com.gaog.weblog.common.enums.ArticleStatusEnum;
 import com.gaog.weblog.common.enums.ResponseCodeEnum;
+import com.gaog.weblog.common.enums.VisibilityScopeEnum;
 import com.gaog.weblog.common.exception.BizException;
 import com.gaog.weblog.common.model.vo.SelectRspVO;
+import com.gaog.weblog.common.service.ContentVisibilityService;
 import com.gaog.weblog.common.utils.FileUtil;
 import com.gaog.weblog.common.utils.PageResponse;
 import com.gaog.weblog.common.utils.Response;
@@ -69,6 +73,10 @@ public class AdminArticleServiceImpl implements AdminArticleService {
     private TagMapper tagMapper;
     @Autowired
     private ArticleTagRelMapper articleTagRelMapper;
+    @Autowired
+    private ArticleAccessUserMapper articleAccessUserMapper;
+    @Autowired
+    private ContentVisibilityService contentVisibilityService;
 
     /**
      * 发布文章
@@ -91,6 +99,7 @@ public class AdminArticleServiceImpl implements AdminArticleService {
                 .userId(userId)
                 .author(nickname)
                 .articleSource(ArticleSourceEnum.ADMIN.getCode())
+                .visibilityScope(resolveVisibilityScope(publishArticleReqVO.getVisibilityScope()))
                 .readNum(0L)
                 .createTime(LocalDateTime.now())
                 .updateTime(LocalDateTime.now())
@@ -129,6 +138,7 @@ public class AdminArticleServiceImpl implements AdminArticleService {
         // 4. 保存文章关联的标签集合
         List<String> publishTags = publishArticleReqVO.getTags();
         insertTags(articleId, publishTags);
+        saveVisibleUsers(articleId, articleDO.getVisibilityScope(), publishArticleReqVO.getVisibleUserIds());
 
         return Response.success();
 
@@ -431,6 +441,8 @@ public class AdminArticleServiceImpl implements AdminArticleService {
                 .tags(tags)
                 .articleSource(articleDO.getArticleSource())
                 .articleSourceLabel(ArticleSourceEnum.getDescByCode(articleDO.getArticleSource()))
+                .visibilityScope(contentVisibilityService.normalizeScope(articleDO.getVisibilityScope()))
+                .visibleUserIds(findVisibleUserIds(articleId))
                 .createTime(articleDO.getCreateTime())
                 .build();
 
@@ -460,6 +472,7 @@ public class AdminArticleServiceImpl implements AdminArticleService {
                 .title(StringUtils.trimToEmpty(updateArticleReqVO.getTitle()))
                 .cover(updateArticleReqVO.getCover())
                 .summary(updateArticleReqVO.getSummary())
+                .visibilityScope(resolveVisibilityScope(updateArticleReqVO.getVisibilityScope()))
                 .updateTime(LocalDateTime.now())
                 .build();
         articleMapper.updateById(updateArticleDO);
@@ -499,6 +512,7 @@ public class AdminArticleServiceImpl implements AdminArticleService {
         // 插入新的标签关联
         List<String> publishTags = updateArticleReqVO.getTags();
         insertTags(articleId, publishTags);
+        saveVisibleUsers(articleId, updateArticleDO.getVisibilityScope(), updateArticleReqVO.getVisibleUserIds());
 
         return Response.success();
     }
@@ -529,6 +543,41 @@ public class AdminArticleServiceImpl implements AdminArticleService {
         articleMapper.updateById(updateArticleDO);
 
         return Response.success();
+    }
+
+    private Integer resolveVisibilityScope(Integer visibilityScope) {
+        if (!contentVisibilityService.canCurrentUserConfigureVisibility()) {
+            return VisibilityScopeEnum.PUBLIC.getCode();
+        }
+        return contentVisibilityService.normalizeScope(visibilityScope);
+    }
+
+    private void saveVisibleUsers(Long articleId, Integer visibilityScope, List<Long> visibleUserIds) {
+        articleAccessUserMapper.delete(new LambdaQueryWrapper<ArticleAccessUserDO>()
+                .eq(ArticleAccessUserDO::getArticleId, articleId));
+
+        if (!VisibilityScopeEnum.ASSIGNED_USERS.getCode().equals(visibilityScope)) {
+            return;
+        }
+
+        List<Long> normalizedUserIds = contentVisibilityService.normalizeAssignedUserIds(visibleUserIds);
+        if (CollectionUtils.isEmpty(normalizedUserIds)) {
+            return;
+        }
+
+        normalizedUserIds.forEach(userId -> articleAccessUserMapper.insert(ArticleAccessUserDO.builder()
+                .articleId(articleId)
+                .userId(userId)
+                .createTime(LocalDateTime.now())
+                .build()));
+    }
+
+    private List<Long> findVisibleUserIds(Long articleId) {
+        return articleAccessUserMapper.selectList(new LambdaQueryWrapper<ArticleAccessUserDO>()
+                        .eq(ArticleAccessUserDO::getArticleId, articleId))
+                .stream()
+                .map(ArticleAccessUserDO::getUserId)
+                .collect(Collectors.toList());
     }
 
 }

@@ -42,4 +42,8 @@ public class FrontendUpdateArticleReqVO {
     private Long categoryId;
 
     private List<String> tags;
+
+    private Integer visibilityScope;
+
+    private List<Long> visibleUserIds;
 }

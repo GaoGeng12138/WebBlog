@@ -97,9 +97,19 @@ public class DatabaseInitializationConfig {
                     "ALTER TABLE `t_article` ADD COLUMN `article_source` tinyint(1) NOT NULL DEFAULT '1' COMMENT '文章来源：1-后台发布，2-前台发布' AFTER `author`"
             );
             ensureColumnExists(
+                    "t_article",
+                    "visibility_scope",
+                    "ALTER TABLE `t_article` ADD COLUMN `visibility_scope` tinyint(1) NOT NULL DEFAULT '1' COMMENT '可见范围：1-公开，2-指定用户可见' AFTER `article_source`"
+            );
+            ensureColumnExists(
                     "t_category",
                     "show_on_front",
                     "ALTER TABLE `t_category` ADD COLUMN `show_on_front` tinyint(1) NOT NULL DEFAULT '1' COMMENT '是否在前台导航展示：1-是，0-否' AFTER `illustrate`"
+            );
+            ensureColumnExists(
+                    "t_category",
+                    "visibility_scope",
+                    "ALTER TABLE `t_category` ADD COLUMN `visibility_scope` tinyint(1) NOT NULL DEFAULT '1' COMMENT '可见范围：1-公开，2-指定用户可见' AFTER `show_on_front`"
             );
             removeColumnIfExists("t_blog_settings", "slogan");
             removeColumnIfExists("t_blog_settings", "contact_email");

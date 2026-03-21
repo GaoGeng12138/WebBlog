@@ -39,6 +39,11 @@ public class ArticleDO {
 
     private Integer articleSource;
 
+    /**
+     * 可见范围：1-公开，2-指定用户可见
+     */
+    private Integer visibilityScope;
+
     private String summary;
 
     private LocalDateTime createTime;

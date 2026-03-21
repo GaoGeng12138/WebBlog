@@ -52,3 +52,8 @@ export function deleteUser(id) {
 export function updateUserStatus(data) {
     return axios.post(`/admin/user/status/update`, data)
 }
+
+// 获取用户下拉列表
+export function getUserSelectList() {
+    return axios.post('/admin/user/select/list')
+}

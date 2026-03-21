@@ -19,6 +19,10 @@
                     <el-upload class="avatar-uploader" :show-file-list="false" :on-change="handleCoverChange"
                         :auto-upload="false" :before-upload="beforeUpload">
                         <img v-if="form.cover" :src="form.cover" class="avatar" />
+                        <div v-if="coverUploading" class="cover-uploading-mask">
+                            <el-icon class="is-loading"><Loading /></el-icon>
+                            <span>上传中...</span>
+                        </div>
                         <el-icon v-else class="avatar-uploader-icon">
                             <Plus />
                         </el-icon>
@@ -52,6 +56,26 @@
                 <el-form-item label="文章摘要" prop="summary">
                     <!-- :rows="3" 指定 textarea 默认显示 3 行 -->
                     <el-input v-model="form.summary" :rows="3" type="textarea" placeholder="请输入文章摘要" class="admin-input" />
+                </el-form-item>
+
+                <el-form-item v-if="canConfigureVisibility()" label="可见范围">
+                    <el-radio-group v-model="form.visibilityScope">
+                        <el-radio :label="1">公开</el-radio>
+                        <el-radio :label="2">指定用户可见</el-radio>
+                    </el-radio-group>
+                </el-form-item>
+
+                <el-form-item v-if="canConfigureVisibility() && form.visibilityScope === 2" label="指定用户">
+                    <el-select
+                        v-model="form.visibleUserIds"
+                        multiple
+                        filterable
+                        clearable
+                        placeholder="请选择可查看的用户"
+                        style="width: 400px"
+                    >
+                        <el-option v-for="item in users" :key="item.value" :label="item.label" :value="item.value" />
+                    </el-select>
                 </el-form-item>
 
                 <!-- 文章内容 -->
@@ -91,16 +115,20 @@ import { getArticleDetail, publishArticle, updateArticle } from '@/api/admin/art
 import { getCategorySelectList } from '@/api/admin/category'
 import { uploadFile } from '@/api/admin/file'
 import { getTagSelectList } from '@/api/admin/tag'
+import { getUserSelectList } from '@/api/admin/user'
 import { useTagList } from '@/composables/useTagList'
 import { showMessage } from '@/composables/util'
-import { ArrowLeft, Plus } from '@element-plus/icons-vue'
+import { ArrowLeft, Loading, Plus } from '@element-plus/icons-vue'
 import { nextTick, onBeforeUnmount, onMounted, reactive, ref, shallowRef, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import MarkdownEditorSurface from '@/components/article/MarkdownEditorSurface.vue'
+import { useUserStore } from '@/stores/user'
 
 const router = useRouter()
 const route = useRoute()
 const { menuStore, activeTab, tabList, tabChange, removeTab, handleCloseTab } = useTagList()
+const userStore = useUserStore()
+const canConfigureVisibility = () => ['ROLE_ADMIN', 'ROLE_EDITOR'].some(role => userStore.userInfo?.roles?.includes(role))
 
 
 // 判断是否为编辑模式
@@ -109,6 +137,8 @@ const articleId = ref(null)
 
 // 富文本编辑器实例
 const editorRef = shallowRef()
+const coverUploading = ref(false)
+const localCoverPreviewUrl = ref('')
 
 // 表单数据
 const form = reactive({
@@ -119,7 +149,9 @@ const form = reactive({
     summary: '',
     content: '',
     articleSource: 1,
-    articleSourceLabel: '后台发布'
+    articleSourceLabel: '后台发布',
+    visibilityScope: 1,
+    visibleUserIds: []
 })
 
 const getDefaultFormState = () => ({
@@ -130,7 +162,9 @@ const getDefaultFormState = () => ({
     summary: '',
     content: '',
     articleSource: 1,
-    articleSourceLabel: '后台发布'
+    articleSourceLabel: '后台发布',
+    visibilityScope: 1,
+    visibleUserIds: []
 })
 
 // 表单校验规则
@@ -150,6 +184,8 @@ const rules = {
 const categories = ref([])
 // 标签列表
 const tags = ref([])
+// 用户列表
+const users = ref([])
 // 标签搜索加载状态
 const tagsLoading = ref(false)
 
@@ -207,12 +243,25 @@ const onUploadImg = async (files, callback) => {
     }
 }
 
+const getUsers = () => {
+    if (!canConfigureVisibility()) return
+    getUserSelectList().then((res) => {
+        if (res.success) {
+            users.value = res.data || []
+        }
+    })
+}
+
 
 // 组件销毁时，销毁编辑器
 onBeforeUnmount(() => {
     const editor = editorRef.value
     if (editor == null) return
     editor.destroy()
+
+    if (localCoverPreviewUrl.value) {
+        URL.revokeObjectURL(localCoverPreviewUrl.value)
+    }
 })
 
 
@@ -232,6 +281,19 @@ const beforeUpload = (file) => {
 
 // 上传文章封面图片
 const handleCoverChange = (file) => {
+    if (!file?.raw || !beforeUpload(file.raw)) {
+        return
+    }
+
+    if (localCoverPreviewUrl.value) {
+        URL.revokeObjectURL(localCoverPreviewUrl.value)
+    }
+
+    const previewUrl = URL.createObjectURL(file.raw)
+    localCoverPreviewUrl.value = previewUrl
+    form.cover = previewUrl
+    coverUploading.value = true
+
     // 表单对象
     let formData = new FormData()
     // 添加 file 字段，并将文件传入 
@@ -240,6 +302,7 @@ const handleCoverChange = (file) => {
         // 响参失败，提示错误消息
         if (e.success == false) {
             let message = e.message
+            form.cover = ''
             showMessage(message, 'error')
             return
         }
@@ -247,6 +310,15 @@ const handleCoverChange = (file) => {
         // 成功则设置表单对象中的封面链接，并提示上传成功
         form.cover = e.data.url
         showMessage('上传成功')
+    }).catch(() => {
+        form.cover = ''
+        showMessage('上传失败', 'error')
+    }).finally(() => {
+        coverUploading.value = false
+        if (localCoverPreviewUrl.value) {
+            URL.revokeObjectURL(localCoverPreviewUrl.value)
+            localCoverPreviewUrl.value = ''
+        }
     })
 }
 
@@ -293,7 +365,9 @@ const onSubmit = () => {
             categoryId: form.categoryId,
             summary: form.summary,
             content: form.content,
-            tags: form.tagIds // 后端接收 tags 字段，为标签名称数组
+            tags: form.tagIds, // 后端接收 tags 字段，为标签名称数组
+            visibilityScope: canConfigureVisibility() ? form.visibilityScope : 1,
+            visibleUserIds: canConfigureVisibility() && form.visibilityScope === 2 ? form.visibleUserIds : []
         }
 
         // 根据编辑或新增调用不同接口
@@ -326,6 +400,7 @@ onMounted(() => {
     // 获取分类和标签列表
     getCategories()
     getTags()
+    getUsers()
     syncPageState(route.params.id)
 })
 
@@ -357,6 +432,8 @@ const loadArticleDetail = (id = articleId.value) => {
             form.content = article.content
             form.articleSource = article.articleSource || 1
             form.articleSourceLabel = article.articleSourceLabel || '后台发布'
+            form.visibilityScope = article.visibilityScope || 1
+            form.visibleUserIds = article.visibleUserIds || []
         } else {
             showMessage('加载文章详情失败', 'error')
         }
@@ -369,6 +446,7 @@ const loadArticleDetail = (id = articleId.value) => {
     width: 178px;
     height: 178px;
     display: block;
+    object-fit: cover;
 }
 
 .avatar-uploader .el-upload {
@@ -382,6 +460,20 @@ const loadArticleDetail = (id = articleId.value) => {
 
 .avatar-uploader .el-upload:hover {
     border-color: var(--el-color-primary);
+}
+
+.cover-uploading-mask {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.72);
+    color: #475569;
+    font-size: 13px;
+    font-weight: 600;
 }
 
 .el-icon.avatar-uploader-icon {

@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.gaog.weblog.admin.model.vo.article.PublishArticleReqVO;
 import com.gaog.weblog.admin.model.vo.article.UpdateArticleReqVO;
 import com.gaog.weblog.common.domain.dos.ArticleCategoryRelDO;
+import com.gaog.weblog.common.domain.dos.ArticleAccessUserDO;
 import com.gaog.weblog.common.domain.dos.ArticleContentDO;
 import com.gaog.weblog.common.domain.dos.ArticleDO;
 import com.gaog.weblog.common.domain.dos.ArticleReadLogDO;
@@ -15,6 +16,7 @@ import com.gaog.weblog.common.domain.dos.BlogSettingDO;
 import com.gaog.weblog.common.domain.dos.CategoryDO;
 import com.gaog.weblog.common.domain.dos.TagDO;
 import com.gaog.weblog.common.domain.dos.VisitorLogDO;
+import com.gaog.weblog.common.domain.mapper.ArticleAccessUserMapper;
 import com.gaog.weblog.common.domain.mapper.ArticleCategoryRelMapper;
 import com.gaog.weblog.common.domain.mapper.ArticleContentMapper;
 import com.gaog.weblog.common.domain.mapper.ArticleMapper;
@@ -28,7 +30,9 @@ import com.gaog.weblog.common.domain.mapper.VisitorLogMapper;
 import com.gaog.weblog.common.enums.ArticleStatusEnum;
 import com.gaog.weblog.common.enums.ArticleSourceEnum;
 import com.gaog.weblog.common.enums.ResponseCodeEnum;
+import com.gaog.weblog.common.enums.VisibilityScopeEnum;
 import com.gaog.weblog.common.exception.BizException;
+import com.gaog.weblog.common.service.ContentVisibilityService;
 import com.gaog.weblog.common.utils.IpUtil;
 import com.gaog.weblog.common.utils.PageResponse;
 import com.gaog.weblog.common.utils.Response;
@@ -79,6 +83,8 @@ public class ArticleServiceImpl implements ArticleService {
     @Autowired
     private ArticleReadLogMapper articleReadLogMapper;
     @Autowired
+    private ArticleAccessUserMapper articleAccessUserMapper;
+    @Autowired
     private ArticleContentMapper articleContentMapper;
     @Autowired
     private CategoryMapper categoryMapper;
@@ -94,6 +100,8 @@ public class ArticleServiceImpl implements ArticleService {
     private VisitorLogMapper visitorLogMapper;
     @Autowired
     private SiteSettingMapper siteSettingMapper;
+    @Autowired
+    private ContentVisibilityService contentVisibilityService;
 
     /**
      * 获取首页文章分页数据  支持个人中心查询自己发布的文章
@@ -109,6 +117,8 @@ public class ArticleServiceImpl implements ArticleService {
         String keyword = findIndexArticlePageListReqVO.getName();
         // 从 SecurityContext 获取用户ID
         Long userId = findIndexArticlePageListReqVO.getUserId();
+        Long viewerUserId = contentVisibilityService.getCurrentUserIdSafely();
+        boolean privilegedViewer = contentVisibilityService.isCurrentUserPrivileged();
 
         // 记录网站访问量（只有当userId为null时才统计，即非个人中心查询）
         if (Objects.isNull(userId)) {
@@ -121,9 +131,9 @@ public class ArticleServiceImpl implements ArticleService {
 
         Page<ArticleDO> articleDOPage = null;
         if (Objects.nonNull(userId)) {
-            articleDOPage = articleMapper.selectPageList(current, size, keyword, userId, null, null);
+            articleDOPage = articleMapper.selectPageList(current, size, keyword, userId, null, null, viewerUserId, privilegedViewer);
         } else {
-            articleDOPage = articleMapper.selectPageList(current, size, keyword, null, null, null);
+            articleDOPage = articleMapper.selectPageList(current, size, keyword, null, null, null, viewerUserId, privilegedViewer);
         }
 
         // 返回的分页数据
@@ -219,6 +229,15 @@ public class ArticleServiceImpl implements ArticleService {
         Long size = findArticleByCategoryReqVO.getSize();
         String keyword = findArticleByCategoryReqVO.getName();
         Long categoryId = findArticleByCategoryReqVO.getCategoryId();
+        Long viewerUserId = contentVisibilityService.getCurrentUserIdSafely();
+        boolean privilegedViewer = contentVisibilityService.isCurrentUserPrivileged();
+
+        CategoryDO currentCategory = categoryMapper.selectById(categoryId);
+        if (Objects.isNull(currentCategory) || !contentVisibilityService.canAccessCategory(currentCategory)) {
+            Page<ArticleDO> emptyPage = new Page<>(current, size);
+            emptyPage.setTotal(0);
+            return PageResponse.success(emptyPage, Lists.newArrayList());
+        }
 
         // 先查询该分类下所有的文章ID
         List<ArticleCategoryRelDO> articleCategoryRelDOS = articleCategoryRelMapper.selectList(
@@ -239,14 +258,13 @@ public class ArticleServiceImpl implements ArticleService {
                 .collect(Collectors.toList());
 
         // 根据文章ID列表分页查询文章
-        Page<ArticleDO> articleDOPage = articleMapper.selectPage(
-                new Page<>(current, size),
-                Wrappers.<ArticleDO>lambdaQuery()
-                        .in(ArticleDO::getId, articleIds)
-                        .eq(ArticleDO::getStatus, ArticleStatusEnum.PUBLISH.getCode())
-                        .like(org.apache.commons.lang3.StringUtils.isNotBlank(keyword), ArticleDO::getTitle, keyword)
-                        .orderByDesc(ArticleDO::getCreateTime)
-        );
+        LambdaQueryWrapper<ArticleDO> articleQueryWrapper = Wrappers.<ArticleDO>lambdaQuery()
+                .in(ArticleDO::getId, articleIds)
+                .eq(ArticleDO::getStatus, ArticleStatusEnum.PUBLISH.getCode())
+                .like(org.apache.commons.lang3.StringUtils.isNotBlank(keyword), ArticleDO::getTitle, keyword)
+                .orderByDesc(ArticleDO::getCreateTime);
+        articleMapper.applyVisibilityFilter(articleQueryWrapper, viewerUserId, privilegedViewer);
+        Page<ArticleDO> articleDOPage = articleMapper.selectPage(new Page<>(current, size), articleQueryWrapper);
 
         // 返回的分页数据
         List<ArticleDO> articleDOS = articleDOPage.getRecords();
@@ -342,6 +360,13 @@ public class ArticleServiceImpl implements ArticleService {
             throw new BizException(ResponseCodeEnum.ARTICLE_NOT_FOUND);
         }
 
+        ArticleCategoryRelDO articleCategoryRelDO = articleCategoryRelMapper.selectByArticleId(articleId);
+        Long categoryId = articleCategoryRelDO == null ? null : articleCategoryRelDO.getCategoryId();
+        if (!contentVisibilityService.canAccessArticle(articleDO, categoryId)) {
+            log.warn("==> 文章无访问权限, articleId: {}", articleId);
+            throw new BizException(ResponseCodeEnum.ARTICLE_NOT_FOUND);
+        }
+
         // 单日内同一登录用户或同一匿名IP仅增加一次文章阅读数
         if (increaseArticleReadNumIfNeeded(articleId, request)) {
             articleDO = articleMapper.selectById(articleId);
@@ -364,7 +389,6 @@ public class ArticleServiceImpl implements ArticleService {
                 .build();
 
         // 查询所属分类
-        ArticleCategoryRelDO articleCategoryRelDO = articleCategoryRelMapper.selectByArticleId(articleId);
         CategoryDO categoryDO = categoryMapper.selectById(articleCategoryRelDO.getCategoryId());
         // DO 转 VO
         FindCategoryListRspVO findCategoryListRspVO = FindCategoryListRspVO.builder()
@@ -427,6 +451,8 @@ public class ArticleServiceImpl implements ArticleService {
         Long size = findArticleByTagReqVO.getSize();
         String keyword = findArticleByTagReqVO.getName();
         Long tagId = findArticleByTagReqVO.getTagId();
+        Long viewerUserId = contentVisibilityService.getCurrentUserIdSafely();
+        boolean privilegedViewer = contentVisibilityService.isCurrentUserPrivileged();
 
         // 先查询该标签下所有的文章ID
         List<ArticleTagRelDO> tagArticleRelDOS = articleTagRelMapper.selectList(
@@ -447,14 +473,13 @@ public class ArticleServiceImpl implements ArticleService {
                 .collect(Collectors.toList());
 
         // 根据文章ID列表分页查询文章，并增加userId过滤条件
-        Page<ArticleDO> articleDOPage = articleMapper.selectPage(
-                new Page<>(current, size),
-                Wrappers.<ArticleDO>lambdaQuery()
-                        .in(ArticleDO::getId, articleIds)
-                        .eq(ArticleDO::getStatus, ArticleStatusEnum.PUBLISH.getCode())
-                        .like(org.apache.commons.lang3.StringUtils.isNotBlank(keyword), ArticleDO::getTitle, keyword)
-                        .orderByDesc(ArticleDO::getCreateTime)
-        );
+        LambdaQueryWrapper<ArticleDO> articleQueryWrapper = Wrappers.<ArticleDO>lambdaQuery()
+                .in(ArticleDO::getId, articleIds)
+                .eq(ArticleDO::getStatus, ArticleStatusEnum.PUBLISH.getCode())
+                .like(org.apache.commons.lang3.StringUtils.isNotBlank(keyword), ArticleDO::getTitle, keyword)
+                .orderByDesc(ArticleDO::getCreateTime);
+        articleMapper.applyVisibilityFilter(articleQueryWrapper, viewerUserId, privilegedViewer);
+        Page<ArticleDO> articleDOPage = articleMapper.selectPage(new Page<>(current, size), articleQueryWrapper);
 
         // 返回的分页数据
         List<ArticleDO> articleDOS = articleDOPage.getRecords();
@@ -561,6 +586,7 @@ public class ArticleServiceImpl implements ArticleService {
                 .author(nickName)
                 .userId(userId)
                 .articleSource(ArticleSourceEnum.FRONTEND.getCode())
+                .visibilityScope(resolveVisibilityScope(publishArticleReqVO.getVisibilityScope()))
                 .readNum(0L)
                 .status(status)
                 .createTime(LocalDateTime.now())
@@ -600,6 +626,7 @@ public class ArticleServiceImpl implements ArticleService {
         // 4. 保存文章关联的标签集合
         List<String> publishTags = publishArticleReqVO.getTags();
         insertTags(articleId, publishTags);
+        saveVisibleUsers(articleId, articleDO.getVisibilityScope(), publishArticleReqVO.getVisibleUserIds());
 
         return Response.success();
 
@@ -725,6 +752,7 @@ public class ArticleServiceImpl implements ArticleService {
                 .title(StringUtils.trimToEmpty(updateArticleReqVO.getTitle()))
                 .cover(updateArticleReqVO.getCover())
                 .summary(updateArticleReqVO.getSummary())
+                .visibilityScope(resolveVisibilityScope(updateArticleReqVO.getVisibilityScope()))
                 .status(setting != null && Boolean.TRUE.equals(setting.getArticleReviewRequired())
                         ? ArticleStatusEnum.TO_DO_APPROVE.getCode()
                         : null)
@@ -767,8 +795,36 @@ public class ArticleServiceImpl implements ArticleService {
         // 插入新的标签关联
         List<String> publishTags = updateArticleReqVO.getTags();
         insertTags(articleId, publishTags);
+        saveVisibleUsers(articleId, updateArticleDO.getVisibilityScope(), updateArticleReqVO.getVisibleUserIds());
 
         return Response.success();
+    }
+
+    private Integer resolveVisibilityScope(Integer visibilityScope) {
+        if (!contentVisibilityService.canCurrentUserConfigureVisibility()) {
+            return VisibilityScopeEnum.PUBLIC.getCode();
+        }
+        return contentVisibilityService.normalizeScope(visibilityScope);
+    }
+
+    private void saveVisibleUsers(Long articleId, Integer visibilityScope, List<Long> visibleUserIds) {
+        articleAccessUserMapper.delete(new LambdaQueryWrapper<ArticleAccessUserDO>()
+                .eq(ArticleAccessUserDO::getArticleId, articleId));
+
+        if (!VisibilityScopeEnum.ASSIGNED_USERS.getCode().equals(visibilityScope)) {
+            return;
+        }
+
+        List<Long> normalizedUserIds = contentVisibilityService.normalizeAssignedUserIds(visibleUserIds);
+        if (CollectionUtils.isEmpty(normalizedUserIds)) {
+            return;
+        }
+
+        normalizedUserIds.forEach(userId -> articleAccessUserMapper.insert(ArticleAccessUserDO.builder()
+                .articleId(articleId)
+                .userId(userId)
+                .createTime(LocalDateTime.now())
+                .build()));
     }
 
     /**

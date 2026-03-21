@@ -102,4 +102,12 @@ public class AdminUserController {
         return userService.getUserRoles(userId);
     }
 
+    @PostMapping("/user/select/list")
+    @ApiOperation(value = "获取用户下拉列表")
+    @ApiOperationLog(description = "获取用户下拉列表")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','admin:user:list','admin:user:role-assign')")
+    public Response findUserSelectList() {
+        return userService.findUserSelectList();
+    }
+
 }

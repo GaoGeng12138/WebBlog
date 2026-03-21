@@ -16,10 +16,12 @@ import com.gaog.weblog.admin.service.AdminUserService;
 import com.gaog.weblog.common.domain.dos.RoleDO;
 import com.gaog.weblog.common.domain.dos.UserDO;
 import com.gaog.weblog.common.domain.dos.UserRoleDO;
+import com.gaog.weblog.common.domain.mapper.ArticleMapper;
 import com.gaog.weblog.common.domain.mapper.RoleMapper;
 import com.gaog.weblog.common.domain.mapper.UserMapper;
 import com.gaog.weblog.common.domain.mapper.UserRoleMapper;
 import com.gaog.weblog.common.enums.ResponseCodeEnum;
+import com.gaog.weblog.common.model.vo.SelectRspVO;
 import com.gaog.weblog.common.utils.PageResponse;
 import com.gaog.weblog.common.utils.Response;
 import com.gaog.weblog.common.utils.TransportCryptoUtils;
@@ -58,6 +60,8 @@ public class AdminUserServiceImpl implements AdminUserService {
     private UserMapper userMapper;
     @Autowired
     private UserRoleMapper userRoleMapper;
+    @Autowired
+    private ArticleMapper articleMapper;
     @Autowired
     private RoleMapper roleMapper;
     @Autowired
@@ -379,6 +383,7 @@ public class AdminUserServiceImpl implements AdminUserService {
             log.warn("更新用户信息失败，用户不存在: {}", id);
             return Response.fail(ResponseCodeEnum.USER_NOT_FOUND);
         }
+        String oldNickname = userDO.getNickname();
 
         //加密密码
         if (StringUtils.isNotBlank(password)) {
@@ -415,6 +420,10 @@ public class AdminUserServiceImpl implements AdminUserService {
                         .build();
                 userRoleMapper.insert(userRoleDO);
             }
+        }
+
+        if (StringUtils.isNotBlank(nickname)) {
+            articleMapper.updateAuthorByUserId(id, nickname);
         }
 
         log.info("更新用户信息成功: userId={}", id);
@@ -482,5 +491,22 @@ public class AdminUserServiceImpl implements AdminUserService {
         }
 
         return Response.success(roleNames);
+    }
+
+    @Override
+    public Response findUserSelectList() {
+        List<SelectRspVO> options = userMapper.selectList(new LambdaQueryWrapper<UserDO>()
+                        .eq(UserDO::getIsDeleted, false)
+                        .eq(UserDO::getIsEnabled, true)
+                        .orderByDesc(UserDO::getCreateTime))
+                .stream()
+                .map(user -> SelectRspVO.builder()
+                        .label(StringUtils.isNotBlank(user.getNickname())
+                                ? user.getNickname() + " (" + user.getUsername() + ")"
+                                : user.getUsername())
+                        .value(user.getId())
+                        .build())
+                .collect(Collectors.toList());
+        return Response.success(options);
     }
 }

@@ -87,10 +87,27 @@
                     </template>
                 </el-table-column>
 
+                <el-table-column prop="visibilityScope" label="可见范围" width="140" align="center">
+                    <template #default="{ row }">
+                        <el-tag :type="row.visibilityScope === 2 ? 'warning' : 'success'">
+                            {{ row.visibilityScope === 2 ? '指定用户' : '公开' }}
+                        </el-tag>
+                    </template>
+                </el-table-column>
+
                 <el-table-column prop="createTime" label="创建时间" width="180" align="center" />
 
-                <el-table-column label="操作" width="150" fixed="right" align="center">
+                <el-table-column label="操作" width="240" fixed="right" align="center">
                     <template #default="scope">
+                        <el-button
+                            v-if="canConfigureVisibility()"
+                            type="primary"
+                            size="small"
+                            @click="openVisibilityDialog(scope.row)"
+                            class="admin-btn-primary"
+                        >
+                            权限
+                        </el-button>
                         <el-button v-if="can('admin:category:delete')" type="danger" size="small" @click="deleteCategorySubmit(scope.row)" class="admin-btn-secondary">
                             <el-icon class="mr-1"><Delete /></el-icon>
                             删除
@@ -126,6 +143,24 @@
                 <el-form-item label="前台展示" prop="showOnFront" size="large">
                     <el-switch v-model="form.showOnFront" inline-prompt active-text="显示" inactive-text="隐藏" />
                 </el-form-item>
+                <el-form-item v-if="canConfigureVisibility()" label="可见范围" size="large">
+                    <el-radio-group v-model="form.visibilityScope">
+                        <el-radio :label="1">公开</el-radio>
+                        <el-radio :label="2">指定用户可见</el-radio>
+                    </el-radio-group>
+                </el-form-item>
+                <el-form-item v-if="canConfigureVisibility() && form.visibilityScope === 2" label="指定用户" size="large">
+                    <el-select
+                        v-model="form.visibleUserIds"
+                        multiple
+                        filterable
+                        clearable
+                        placeholder="请选择可查看的用户"
+                        style="width: 100%"
+                    >
+                        <el-option v-for="item in userOptions" :key="item.value" :label="item.label" :value="item.value" />
+                    </el-select>
+                </el-form-item>
             </el-form>
             <template #footer>
                 <span class="dialog-footer">
@@ -134,11 +169,41 @@
                 </span>
             </template>
         </el-dialog>
+
+        <el-dialog v-model="visibilityDialogVisible" title="分类权限设置" width="40%" :draggable="true">
+            <el-form :model="visibilityForm" label-width="96px">
+                <el-form-item label="可见范围">
+                    <el-radio-group v-model="visibilityForm.visibilityScope">
+                        <el-radio :label="1">公开</el-radio>
+                        <el-radio :label="2">指定用户可见</el-radio>
+                    </el-radio-group>
+                </el-form-item>
+                <el-form-item v-if="visibilityForm.visibilityScope === 2" label="指定用户">
+                    <el-select
+                        v-model="visibilityForm.visibleUserIds"
+                        multiple
+                        filterable
+                        clearable
+                        placeholder="请选择可查看的用户"
+                        style="width: 100%"
+                    >
+                        <el-option v-for="item in userOptions" :key="item.value" :label="item.label" :value="item.value" />
+                    </el-select>
+                </el-form-item>
+            </el-form>
+            <template #footer>
+                <span class="dialog-footer">
+                    <el-button @click="visibilityDialogVisible = false" class="admin-btn-secondary">取消</el-button>
+                    <el-button type="primary" @click="submitVisibility" class="admin-btn-primary">保存</el-button>
+                </span>
+            </template>
+        </el-dialog>
     </div>
 </template>
 
 <script setup>
-import { addCategory, deleteCategory, getCategoryPageList, updateCategoryShowOnFront } from '@/api/admin/category'
+import { addCategory, deleteCategory, getCategoryPageList, updateCategoryShowOnFront, updateCategoryVisibility } from '@/api/admin/category'
+import { getUserSelectList } from '@/api/admin/user'
 import { hasAccess } from '@/composables/permission'
 import { RefreshRight, Search, Plus, Delete, FolderOpened, DocumentCopy } from '@element-plus/icons-vue'
 import moment from 'moment'
@@ -149,6 +214,7 @@ import AdminPagination from '@/components/admin/AdminPagination.vue'
 
 const userStore = useUserStore()
 const can = (permission) => hasAccess(userStore.userInfo, permission)
+const canConfigureVisibility = () => ['ROLE_ADMIN', 'ROLE_EDITOR'].some(role => userStore.userInfo?.roles?.includes(role))
 
 const tableData = ref([])
 const pagination = ref({
@@ -158,14 +224,24 @@ const pagination = ref({
 })
 
 const dialogVisible = ref(false)
+const visibilityDialogVisible = ref(false)
 const btnLoading = ref(false)
 const tableLoading = ref(false)
 const formRef = ref(null)
+const userOptions = ref([])
 
 const form = reactive({
   name: '',
   illustrate: '',
-  showOnFront: true
+  showOnFront: true,
+  visibilityScope: 1,
+  visibleUserIds: []
+})
+
+const visibilityForm = reactive({
+  id: null,
+  visibilityScope: 1,
+  visibleUserIds: []
 })
 
 const rules = {
@@ -184,6 +260,8 @@ const addCategoryBtnClick = () => {
     form.name = ''
     form.illustrate = ''
     form.showOnFront = true
+    form.visibilityScope = 1
+    form.visibleUserIds = []
     if (formRef.value) {
         formRef.value.resetFields()
     }
@@ -273,6 +351,15 @@ function getTableData() {
 }
 getTableData()
 
+const loadUserOptions = () => {
+    if (!canConfigureVisibility()) return
+    getUserSelectList().then((res) => {
+        if (res.success) {
+            userOptions.value = res.data || []
+        }
+    })
+}
+
 const onSubmit = () => {
     formRef.value.validate((valid) => {
         if (!valid) {
@@ -282,7 +369,9 @@ const onSubmit = () => {
         addCategory({
             name: form.name,
             illustrate: form.illustrate,
-            showOnFront: form.showOnFront
+            showOnFront: form.showOnFront,
+            visibilityScope: canConfigureVisibility() ? form.visibilityScope : 1,
+            visibleUserIds: canConfigureVisibility() && form.visibilityScope === 2 ? form.visibleUserIds : []
         }).then((res) => {
             if (res.success === true) {
                 showMessage('添加成功')
@@ -294,6 +383,29 @@ const onSubmit = () => {
         }).finally(() => {
             btnLoading.value = false
         })
+    })
+}
+
+const openVisibilityDialog = (row) => {
+    visibilityForm.id = row.id
+    visibilityForm.visibilityScope = row.visibilityScope || 1
+    visibilityForm.visibleUserIds = row.visibleUserIds || []
+    visibilityDialogVisible.value = true
+}
+
+const submitVisibility = () => {
+    updateCategoryVisibility({
+        id: visibilityForm.id,
+        visibilityScope: visibilityForm.visibilityScope,
+        visibleUserIds: visibilityForm.visibilityScope === 2 ? visibilityForm.visibleUserIds : []
+    }).then((res) => {
+        if (res.success === true) {
+            showMessage('权限更新成功')
+            visibilityDialogVisible.value = false
+            getTableData()
+        } else {
+            showMessage(res.message, 'error')
+        }
     })
 }
 
@@ -329,6 +441,8 @@ const deleteCategorySubmit = (row) => {
         console.log('取消了')
     })
 }
+
+loadUserOptions()
 </script>
 
 <style scoped>

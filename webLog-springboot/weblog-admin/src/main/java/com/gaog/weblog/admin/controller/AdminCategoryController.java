@@ -4,6 +4,7 @@ import com.gaog.weblog.admin.model.vo.category.AddCategoryReqVO;
 import com.gaog.weblog.admin.model.vo.category.DeleteCategoryReqVO;
 import com.gaog.weblog.admin.model.vo.category.FindCategoryPageListReqVO;
 import com.gaog.weblog.admin.model.vo.category.UpdateCategoryShowOnFrontReqVO;
+import com.gaog.weblog.admin.model.vo.category.UpdateCategoryVisibilityReqVO;
 import com.gaog.weblog.admin.service.AdminCategoryService;
 import com.gaog.weblog.common.aspect.ApiOperationLog;
 import com.gaog.weblog.common.utils.PageResponse;
@@ -73,5 +74,13 @@ public class AdminCategoryController {
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','admin:category:update-front')")
     public Response updateCategoryShowOnFront(@RequestBody @Validated UpdateCategoryShowOnFrontReqVO updateCategoryShowOnFrontReqVO) {
         return categoryService.updateCategoryShowOnFront(updateCategoryShowOnFrontReqVO);
+    }
+
+    @PostMapping("/category/update/visibility")
+    @ApiOperation(value = "更新分类可见范围")
+    @ApiOperationLog(description = "更新分类可见范围")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','admin:category:add')")
+    public Response updateCategoryVisibility(@RequestBody @Validated UpdateCategoryVisibilityReqVO updateCategoryVisibilityReqVO) {
+        return categoryService.updateCategoryVisibility(updateCategoryVisibilityReqVO);
     }
 }

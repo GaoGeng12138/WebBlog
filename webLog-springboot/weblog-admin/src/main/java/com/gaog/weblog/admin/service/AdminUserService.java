@@ -72,4 +72,10 @@ public interface AdminUserService {
      * @return
      */
     Response getUserRoles(Long userId);
+
+    /**
+     * 获取用户下拉列表
+     * @return
+     */
+    Response findUserSelectList();
 }

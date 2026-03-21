@@ -8,20 +8,27 @@ import com.gaog.weblog.admin.model.vo.category.DeleteCategoryReqVO;
 import com.gaog.weblog.admin.model.vo.category.FindCategoryPageListReqVO;
 import com.gaog.weblog.admin.model.vo.category.FindCategoryPageListRspVO;
 import com.gaog.weblog.admin.model.vo.category.UpdateCategoryShowOnFrontReqVO;
+import com.gaog.weblog.admin.model.vo.category.UpdateCategoryVisibilityReqVO;
+import com.gaog.weblog.common.domain.dos.CategoryAccessUserDO;
 import com.gaog.weblog.admin.service.AdminCategoryService;
 import com.gaog.weblog.common.domain.dos.CategoryDO;
+import com.gaog.weblog.common.domain.mapper.CategoryAccessUserMapper;
 import com.gaog.weblog.common.domain.mapper.CategoryMapper;
+import com.gaog.weblog.common.enums.VisibilityScopeEnum;
 import com.gaog.weblog.common.enums.ResponseCodeEnum;
 import com.gaog.weblog.common.exception.BizException;
 import com.gaog.weblog.common.model.vo.SelectRspVO;
+import com.gaog.weblog.common.service.ContentVisibilityService;
 import com.gaog.weblog.common.utils.PageResponse;
 import com.gaog.weblog.common.utils.Response;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -39,6 +46,10 @@ public class AdminCategoryServiceimpl implements AdminCategoryService {
 
     @Autowired
     private CategoryMapper categoryMapper;
+    @Autowired
+    private CategoryAccessUserMapper categoryAccessUserMapper;
+    @Autowired
+    private ContentVisibilityService contentVisibilityService;
 
     /**
      * 添加分类
@@ -58,15 +69,22 @@ public class AdminCategoryServiceimpl implements AdminCategoryService {
             throw new BizException(ResponseCodeEnum.CATEGORY_NAME_IS_EXISTED);
         }
 
+        Integer visibilityScope = contentVisibilityService.canCurrentUserConfigureVisibility()
+                ? contentVisibilityService.normalizeScope(addCategoryReqVO.getVisibilityScope())
+                : VisibilityScopeEnum.PUBLIC.getCode();
+
         // 构建 DO 类
         CategoryDO insertCategoryDO = CategoryDO.builder()
                 .name(addCategoryReqVO.getName().trim())
                 .illustrate(addCategoryReqVO.getIllustrate().trim())
                 .showOnFront(Boolean.TRUE.equals(addCategoryReqVO.getShowOnFront()))
+                .visibilityScope(visibilityScope)
                 .build();
 
         // 执行 insert
         categoryMapper.insert(insertCategoryDO);
+
+        saveVisibleUsers(insertCategoryDO.getId(), visibilityScope, addCategoryReqVO.getVisibleUserIds());
 
         return Response.success();
     }
@@ -106,6 +124,8 @@ public class AdminCategoryServiceimpl implements AdminCategoryService {
                             .name(categoryDO.getName())
                             .illustrate(categoryDO.getIllustrate())
                             .showOnFront(!Boolean.FALSE.equals(categoryDO.getShowOnFront()))
+                            .visibilityScope(contentVisibilityService.normalizeScope(categoryDO.getVisibilityScope()))
+                            .visibleUserIds(findVisibleUserIds(categoryDO.getId()))
                             .createTime(categoryDO.getCreateTime())
                             .build())
                     .collect(Collectors.toList());
@@ -163,5 +183,56 @@ public class AdminCategoryServiceimpl implements AdminCategoryService {
                 .build();
         categoryMapper.updateById(updateCategoryDO);
         return Response.success();
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Response updateCategoryVisibility(UpdateCategoryVisibilityReqVO updateCategoryVisibilityReqVO) {
+        Long categoryId = updateCategoryVisibilityReqVO.getId();
+        CategoryDO categoryDO = categoryMapper.selectById(categoryId);
+        if (Objects.isNull(categoryDO)) {
+            throw new BizException(ResponseCodeEnum.CATEGORY_NOT_EXISTED);
+        }
+
+        Integer visibilityScope = contentVisibilityService.canCurrentUserConfigureVisibility()
+                ? contentVisibilityService.normalizeScope(updateCategoryVisibilityReqVO.getVisibilityScope())
+                : VisibilityScopeEnum.PUBLIC.getCode();
+
+        categoryMapper.updateById(CategoryDO.builder()
+                .id(categoryId)
+                .visibilityScope(visibilityScope)
+                .updateTime(LocalDateTime.now())
+                .build());
+
+        saveVisibleUsers(categoryId, visibilityScope, updateCategoryVisibilityReqVO.getVisibleUserIds());
+        return Response.success();
+    }
+
+    private void saveVisibleUsers(Long categoryId, Integer visibilityScope, List<Long> visibleUserIds) {
+        categoryAccessUserMapper.delete(new LambdaQueryWrapper<CategoryAccessUserDO>()
+                .eq(CategoryAccessUserDO::getCategoryId, categoryId));
+
+        if (!VisibilityScopeEnum.ASSIGNED_USERS.getCode().equals(visibilityScope)) {
+            return;
+        }
+
+        List<Long> normalizedUserIds = contentVisibilityService.normalizeAssignedUserIds(visibleUserIds);
+        if (CollectionUtils.isEmpty(normalizedUserIds)) {
+            return;
+        }
+
+        normalizedUserIds.forEach(userId -> categoryAccessUserMapper.insert(CategoryAccessUserDO.builder()
+                .categoryId(categoryId)
+                .userId(userId)
+                .createTime(LocalDateTime.now())
+                .build()));
+    }
+
+    private List<Long> findVisibleUserIds(Long categoryId) {
+        return categoryAccessUserMapper.selectList(new LambdaQueryWrapper<CategoryAccessUserDO>()
+                        .eq(CategoryAccessUserDO::getCategoryId, categoryId))
+                .stream()
+                .map(CategoryAccessUserDO::getUserId)
+                .collect(Collectors.toList());
     }
 }
