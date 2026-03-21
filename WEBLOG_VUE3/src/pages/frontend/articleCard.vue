@@ -29,8 +29,9 @@
 
     <div class="flex min-w-0 flex-col justify-between p-3 sm:p-3.5">
       <div>
-        <div v-if="displayCategory" class="mb-2">
+        <div v-if="showCategoryTag && displayCategory" class="mb-2">
           <span class="category-chip" :class="categoryToneClass">
+            <span class="category-chip__dot"></span>
             {{ displayCategory }}
           </span>
         </div>
@@ -88,7 +89,8 @@
       <div class="absolute inset-0 bg-gradient-to-tr from-slate-950/70 via-slate-900/20 to-transparent"></div>
 
       <div class="absolute left-5 top-5 flex flex-wrap gap-2">
-        <span v-if="displayCategory" class="category-chip" :class="categoryToneClass">
+        <span v-if="showCategoryTag && displayCategory" class="category-chip" :class="categoryToneClass">
+          <span class="category-chip__dot"></span>
           {{ displayCategory }}
         </span>
         <span class="rounded-full bg-white/20 px-3 py-1 text-xs font-medium text-white backdrop-blur">
@@ -215,6 +217,10 @@ const props = defineProps({
   featured: {
     type: Boolean,
     default: false
+  },
+  showCategoryTag: {
+    type: Boolean,
+    default: true
   },
   imageIndex: {
     type: Number,
@@ -369,31 +375,60 @@ function formatDate(ts) {
 .category-chip {
   display: inline-flex;
   align-items: center;
+  gap: 0.42rem;
   border-radius: 9999px;
-  padding: 0.45rem 0.9rem;
-  font-size: 0.75rem;
-  font-weight: 500;
-  backdrop-filter: blur(12px);
+  padding: 0.34rem 0.75rem 0.34rem 0.66rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.05);
+  backdrop-filter: blur(14px);
+}
+
+.category-chip__dot {
+  width: 0.42rem;
+  height: 0.42rem;
+  flex: none;
+  border-radius: 9999px;
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.22);
 }
 
 .category-chip--blue {
-  background: rgba(239, 246, 255, 0.88);
-  color: #2563eb;
+  background: rgba(245, 250, 255, 0.9);
+  color: #3564d4;
 }
 
 .category-chip--emerald {
-  background: rgba(236, 253, 245, 0.88);
-  color: #059669;
+  background: rgba(240, 252, 246, 0.9);
+  color: #0f8a62;
 }
 
 .category-chip--amber {
-  background: rgba(255, 251, 235, 0.9);
-  color: #d97706;
+  background: rgba(255, 250, 239, 0.92);
+  color: #c86e06;
 }
 
 .category-chip--violet {
-  background: rgba(245, 243, 255, 0.9);
-  color: #7c3aed;
+  background: rgba(248, 245, 255, 0.92);
+  color: #6d4be8;
+}
+
+.category-chip--blue .category-chip__dot {
+  background: #5b87f0;
+}
+
+.category-chip--emerald .category-chip__dot {
+  background: #20b889;
+}
+
+.category-chip--amber .category-chip__dot {
+  background: #f59e0b;
+}
+
+.category-chip--violet .category-chip__dot {
+  background: #8b5cf6;
 }
 
 .line-clamp-2,
