@@ -57,7 +57,7 @@
                         @error="handleAvatarError"
                         alt="avatar"
                         class="mr-2 w-8 h-8 rounded-full object-cover border border-[rgba(149,171,210,0.28)] shadow-[0_0_0_4px_rgba(255,255,255,0.42)]" />
-                    <span class="hidden md:inline mr-1">{{ userStore.userInfo.username }}</span>
+                    <span class="hidden md:inline mr-1">{{ userStore.userInfo.nickname || userStore.userInfo.username }}</span>
                     <el-icon class="el-icon--right hidden md:inline">
                         <arrow-down />
                     </el-icon>

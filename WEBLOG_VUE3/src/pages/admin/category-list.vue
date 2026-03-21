@@ -43,7 +43,7 @@
         <div class="w-full bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow duration-200">
             <div class="flex justify-between items-center px-6 pt-5 pb-4">
                 <div>
-                    <el-button type="primary" @click="addCategoryBtnClick">
+                    <el-button v-if="can('admin:category:add')" type="primary" @click="addCategoryBtnClick">
                         <el-icon class="mr-1"><Plus /></el-icon>
                         新增分类
                     </el-button>
@@ -81,6 +81,7 @@
                             inline-prompt
                             active-text="显示"
                             inactive-text="隐藏"
+                            :disabled="!can('admin:category:update-front')"
                             @change="(value) => handleShowOnFrontChange(row, value)"
                         />
                     </template>
@@ -90,7 +91,7 @@
 
                 <el-table-column label="操作" width="150" fixed="right" align="center">
                     <template #default="scope">
-                        <el-button type="danger" size="small" @click="deleteCategorySubmit(scope.row)" class="admin-btn-secondary">
+                        <el-button v-if="can('admin:category:delete')" type="danger" size="small" @click="deleteCategorySubmit(scope.row)" class="admin-btn-secondary">
                             <el-icon class="mr-1"><Delete /></el-icon>
                             删除
                         </el-button>
@@ -138,11 +139,16 @@
 
 <script setup>
 import { addCategory, deleteCategory, getCategoryPageList, updateCategoryShowOnFront } from '@/api/admin/category'
+import { hasAccess } from '@/composables/permission'
 import { RefreshRight, Search, Plus, Delete, FolderOpened, DocumentCopy } from '@element-plus/icons-vue'
 import moment from 'moment'
 import { reactive, ref } from 'vue'
+import { useUserStore } from '@/stores/user'
 import { showMessage, showModel } from '@/composables/util'
 import AdminPagination from '@/components/admin/AdminPagination.vue'
+
+const userStore = useUserStore()
+const can = (permission) => hasAccess(userStore.userInfo, permission)
 
 const tableData = ref([])
 const pagination = ref({

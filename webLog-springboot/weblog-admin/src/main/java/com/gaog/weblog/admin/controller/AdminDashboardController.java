@@ -12,6 +12,7 @@ import com.gaog.weblog.common.utils.Response;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -36,6 +37,7 @@ public class AdminDashboardController {
     @GetMapping("/stats")
     @ApiOperation(value = "获取仪表盘统计信息")
     @ApiOperationLog(description = "获取仪表盘统计信息")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','admin:dashboard:view')")
     public Response<DashboardStatsRspVO> getDashboardStats() {
         return dashboardService.getDashboardStats();
     }
@@ -43,6 +45,7 @@ public class AdminDashboardController {
     @GetMapping("/article-publish-trend")
     @ApiOperation(value = "获取文章发布趋势")
     @ApiOperationLog(description = "获取文章发布趋势")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','admin:dashboard:view')")
     public Response<List<ArticlePublishTrendRspVO>> getArticlePublishTrend() {
         return dashboardService.getArticlePublishTrend();
     }
@@ -50,6 +53,7 @@ public class AdminDashboardController {
     @GetMapping("/pv-trend")
     @ApiOperation(value = "获取网站访问量趋势")
     @ApiOperationLog(description = "获取网站访问量趋势")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','admin:dashboard:view')")
     public Response<List<PvTrendRspVO>> getPvTrend() {
         return dashboardService.getPvTrend();
     }
@@ -57,6 +61,7 @@ public class AdminDashboardController {
     @PostMapping("/user-activity-trend")
     @ApiOperation(value = "获取用户活跃度趋势")
     @ApiOperationLog(description = "获取用户活跃度趋势")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','admin:dashboard:view')")
     public Response<List<UserActivityTrendRspVO>> getUserActivityTrend(@RequestBody UserActivityTrendReqVO reqVO) {
         return dashboardService.getUserActivityTrend(reqVO);
     }
@@ -64,6 +69,7 @@ public class AdminDashboardController {
     @GetMapping("/latest-articles")
     @ApiOperation(value = "获取最新文章列表")
     @ApiOperationLog(description = "获取最新文章列表")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','admin:dashboard:view')")
     public Response<List<LatestArticleRspVO>> getLatestArticles() {
         return dashboardService.getLatestArticles();
     }

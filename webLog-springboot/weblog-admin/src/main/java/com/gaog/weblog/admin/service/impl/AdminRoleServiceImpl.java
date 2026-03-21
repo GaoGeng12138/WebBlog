@@ -9,14 +9,19 @@ import com.gaog.weblog.admin.model.vo.role.AssignRoleReqVO;
 import com.gaog.weblog.admin.model.vo.role.DeleteRoleReqVO;
 import com.gaog.weblog.admin.model.vo.role.FindRolePageListReqVO;
 import com.gaog.weblog.admin.model.vo.role.FindRolePageListRspVO;
+import com.gaog.weblog.admin.model.vo.role.FindRolePermissionsReqVO;
 import com.gaog.weblog.admin.model.vo.role.FindRoleSelectListReqVO;
 import com.gaog.weblog.admin.model.vo.role.FindRoleSelectListRspVO;
+import com.gaog.weblog.admin.model.vo.role.UpdateRolePermissionsReqVO;
 import com.gaog.weblog.admin.model.vo.role.UpdateRoleReqVO;
+import com.gaog.weblog.admin.permission.AdminPermissionCatalog;
 import com.gaog.weblog.admin.service.AdminRoleService;
 import com.gaog.weblog.common.domain.dos.RoleDO;
+import com.gaog.weblog.common.domain.dos.RolePermissionDO;
 import com.gaog.weblog.common.domain.dos.UserDO;
 import com.gaog.weblog.common.domain.dos.UserRoleDO;
 import com.gaog.weblog.common.domain.mapper.RoleMapper;
+import com.gaog.weblog.common.domain.mapper.RolePermissionMapper;
 import com.gaog.weblog.common.domain.mapper.UserMapper;
 import com.gaog.weblog.common.domain.mapper.UserRoleMapper;
 import com.gaog.weblog.common.enums.ResponseCodeEnum;
@@ -53,6 +58,8 @@ public class AdminRoleServiceImpl implements AdminRoleService {
 
     @Autowired
     private UserRoleMapper userRoleMapper;
+    @Autowired
+    private RolePermissionMapper rolePermissionMapper;
 
     /**
      * Create a new role
@@ -280,7 +287,49 @@ public class AdminRoleServiceImpl implements AdminRoleService {
             }
         }
 
-        log.info("Roles assigned successfully: userId={}, roleCount={}", userId, roleIds.size());
+        log.info("Roles assigned successfully: userId={}, roleCount={}", userId, roleIds == null ? 0 : roleIds.size());
+        return Response.success();
+    }
+
+    @Override
+    public Response findRolePermissions(FindRolePermissionsReqVO reqVO) {
+        Long roleId = reqVO.getRoleId();
+
+        RoleDO roleDO = roleMapper.selectByIdNotDeleted(roleId);
+        if (Objects.isNull(roleDO)) {
+            return Response.fail(ResponseCodeEnum.ROLE_NOT_FOUND);
+        }
+
+        List<RolePermissionDO> rolePermissions = rolePermissionMapper.selectByRoleId(roleId);
+        List<String> permissionKeys = rolePermissions.stream()
+                .map(RolePermissionDO::getPermissionKey)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+
+        return Response.success(AdminPermissionCatalog.getPermissionIdsByKeys(permissionKeys));
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Response updateRolePermissions(UpdateRolePermissionsReqVO reqVO) {
+        Long roleId = reqVO.getRoleId();
+
+        RoleDO roleDO = roleMapper.selectByIdNotDeleted(roleId);
+        if (Objects.isNull(roleDO)) {
+            return Response.fail(ResponseCodeEnum.ROLE_NOT_FOUND);
+        }
+
+        rolePermissionMapper.deleteByRoleId(roleId);
+
+        List<String> permissionKeys = AdminPermissionCatalog.getPermissionKeysByIds(reqVO.getPermissionIds());
+        for (String permissionKey : permissionKeys) {
+            rolePermissionMapper.insert(RolePermissionDO.builder()
+                    .roleId(roleId)
+                    .permissionKey(permissionKey)
+                    .createTime(LocalDateTime.now())
+                    .build());
+        }
+
         return Response.success();
     }
 }

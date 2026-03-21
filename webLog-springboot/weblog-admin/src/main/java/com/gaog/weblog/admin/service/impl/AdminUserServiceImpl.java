@@ -22,7 +22,10 @@ import com.gaog.weblog.common.domain.mapper.UserRoleMapper;
 import com.gaog.weblog.common.enums.ResponseCodeEnum;
 import com.gaog.weblog.common.utils.PageResponse;
 import com.gaog.weblog.common.utils.Response;
+import com.gaog.weblog.common.utils.TransportCryptoUtils;
 import com.gaog.weblog.jwt.model.CustomUserDetails;
+import com.gaog.weblog.jwt.model.LoginRspVO;
+import com.gaog.weblog.jwt.utils.JwtTokenHelper;
 import com.gaog.weblog.jwt.utils.SecurityContextUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -33,8 +36,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -57,6 +62,10 @@ public class AdminUserServiceImpl implements AdminUserService {
     private RoleMapper roleMapper;
     @Autowired
     private PasswordEncoder passwordEncoder;
+    @Autowired
+    private JwtTokenHelper jwtTokenHelper;
+    @Autowired
+    private TransportCryptoUtils transportCryptoUtils;
 
     /**
      * 修改密码
@@ -114,16 +123,23 @@ public class AdminUserServiceImpl implements AdminUserService {
      */
     @Override
     public Response findUserInfo() {
-        // 直接从 SecurityContext 中获取用户信息
         CustomUserDetails currentUser = SecurityContextUtil.getCurrentUser();
-
-        if (currentUser == null) {
+        if (currentUser == null || currentUser.getUserId() == null) {
             return Response.fail("用户未登录");
         }
 
+        UserDO latestUser = userMapper.selectById(currentUser.getUserId());
+        if (latestUser == null || Boolean.TRUE.equals(latestUser.getIsDeleted())) {
+            return Response.fail(ResponseCodeEnum.USER_NOT_FOUND);
+        }
+
         return Response.success(FindUserInfoRspVO.builder()
-                .username(currentUser.getUsername())
-                .roles(new HashSet<>(currentUser.getRoles()))
+                .userId(latestUser.getId())
+                .username(latestUser.getUsername())
+                .nickname(latestUser.getNickname())
+                .avatar(latestUser.getAvatar())
+                .roles(currentUser.getRoles() == null ? new HashSet<>() : new HashSet<>(currentUser.getRoles()))
+                .permissions(currentUser.getPermissions() == null ? new HashSet<>() : new HashSet<>(currentUser.getPermissions()))
                 .build());
     }
 
@@ -355,6 +371,7 @@ public class AdminUserServiceImpl implements AdminUserService {
         String twitterUrl = updateUserInfoReqVO.getTwitterUrl();
         String weiboUrl = updateUserInfoReqVO.getWeiboUrl();
         List<Long> roleIds = updateUserInfoReqVO.getRoleIds();
+        CustomUserDetails currentUser = SecurityContextUtil.getCurrentUser();
 
         // 1. 检查用户是否存在
         UserDO userDO = userMapper.selectById(id);
@@ -401,6 +418,31 @@ public class AdminUserServiceImpl implements AdminUserService {
         }
 
         log.info("更新用户信息成功: userId={}", id);
+
+        boolean updatingCurrentUser = currentUser != null && Objects.equals(currentUser.getUserId(), id);
+        boolean passwordChanged = updatingCurrentUser && StringUtils.isNotBlank(updateUserInfoReqVO.getPassword());
+        boolean usernameChanged = updatingCurrentUser
+                && StringUtils.isNotBlank(username)
+                && !StringUtils.equals(userDO.getUsername(), username);
+
+        if (usernameChanged || passwordChanged) {
+            Map<String, Object> result = new HashMap<>(4);
+
+            if (usernameChanged) {
+                String token = jwtTokenHelper.generateToken(username);
+                LoginRspVO loginRspVO = LoginRspVO.builder()
+                        .token(transportCryptoUtils.encryptIfNecessary(token))
+                        .build();
+                result.put("token", loginRspVO.getToken());
+            }
+
+            if (passwordChanged) {
+                result.put("reloginRequired", true);
+            }
+
+            return Response.success(result);
+        }
+
         return Response.success();
     }
 

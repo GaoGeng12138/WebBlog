@@ -5,6 +5,7 @@ import com.gaog.weblog.common.domain.dos.RoleDO;
 import com.gaog.weblog.common.domain.dos.UserDO;
 import com.gaog.weblog.common.domain.dos.UserRoleDO;
 import com.gaog.weblog.common.domain.mapper.RoleMapper;
+import com.gaog.weblog.common.domain.mapper.RolePermissionMapper;
 import com.gaog.weblog.common.domain.mapper.UserMapper;
 import com.gaog.weblog.common.domain.mapper.UserRoleMapper;
 import com.gaog.weblog.jwt.exception.AccountDisabledException;
@@ -37,6 +38,8 @@ public class UserDetailServiceImpl implements UserDetailsService {
     private UserRoleMapper userRoleMapper;
     @Resource
     private RoleMapper roleMapper;
+    @Resource
+    private RolePermissionMapper rolePermissionMapper;
 
 
     /**
@@ -67,6 +70,7 @@ public class UserDetailServiceImpl implements UserDetailsService {
         List<UserRoleDO> roleDOS = userRoleMapper.selectByUserId(userDO.getId());
 
         List<String> roles = null;
+        List<String> permissions = null;
 
         if (CollectionUtils.isNotEmpty(roleDOS)) {
             // Query role names by role IDs
@@ -81,6 +85,8 @@ public class UserDetailServiceImpl implements UserDetailsService {
                             .map(RoleDO::getName)
                             .collect(Collectors.toList());
                 }
+
+                permissions = rolePermissionMapper.selectPermissionKeysByRoleIds(roleIds);
             }
         }
 
@@ -97,6 +103,7 @@ public class UserDetailServiceImpl implements UserDetailsService {
                 .twitterUrl(userDO.getTwitterUrl())
                 .weiboUrl(userDO.getWeiboUrl())
                 .roles(roles)
+                .permissions(permissions)
                 .enabled(true)
                 .accountNonExpired(true)
                 .credentialsNonExpired(true)

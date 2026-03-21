@@ -10,6 +10,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 import java.util.Date;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -69,6 +71,11 @@ public class CustomUserDetails implements UserDetails {
     private Collection<String> roles;
 
     /**
+     * User permissions
+     */
+    private Collection<String> permissions;
+
+    /**
      * Account enabled status
      */
     private boolean enabled = true;
@@ -95,7 +102,16 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return roles.stream()
+        Set<String> authorities = new LinkedHashSet<>();
+        if (roles != null) {
+            authorities.addAll(roles);
+        }
+        if (permissions != null) {
+            authorities.addAll(permissions);
+        }
+
+        return authorities.stream()
+                .filter(authority -> authority != null && !authority.trim().isEmpty())
                 .map(SimpleGrantedAuthority::new)
                 .collect(Collectors.toList());
     }

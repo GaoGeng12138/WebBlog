@@ -29,6 +29,7 @@ public class AdminFileController {
     @PostMapping("/upload")
     @ApiOperation(value = "文件上传")
     @ApiOperationLog(description = "文件上传")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','admin:article:list','admin:user:list','admin:setting:view')")
     public Response uploadFile(@RequestParam("file") MultipartFile file) {
         return fileService.uploadFile(file);
     }

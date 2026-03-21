@@ -34,7 +34,7 @@ public class AdminTagController {
     @PostMapping("/tag/add")
     @ApiOperation(value = "添加标签")
     @ApiOperationLog(description = "添加标签")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','admin:tag:add')")
     public Response addTag(@RequestBody @Validated AddTagReqVO addTagReqVO) {
         return tagService.addTag(addTagReqVO);
     }
@@ -43,7 +43,7 @@ public class AdminTagController {
     @PostMapping("/tag/list")
     @ApiOperation(value = "标签分页数据获取")
     @ApiOperationLog(description = "标签分页数据获取")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','admin:tag:list')")
     public PageResponse findTagList(@RequestBody @Validated FindTagPageListReqVO findTagPageListReqVO) {
         return tagService.findTagList(findTagPageListReqVO);
     }
@@ -52,7 +52,7 @@ public class AdminTagController {
     @PostMapping("/tag/delete")
     @ApiOperation(value = "删除标签")
     @ApiOperationLog(description = "删除标签")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','admin:tag:delete')")
     public Response deleteCategory(@RequestBody @Validated DeleteTagReqVO deleteCategoryReqVO) {
         return tagService.deleteTag(deleteCategoryReqVO);
     }
@@ -60,6 +60,7 @@ public class AdminTagController {
     @PostMapping("/tag/select/list")
     @ApiOperation(value = "标签 Select 下拉列表数据获取")
     @ApiOperationLog(description = "标签 Select 下拉列表数据获取")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','admin:tag:list')")
     public Response findCategorySelectList(@RequestBody @Validated FindTagSelectListReqVO findTagSelectListReqVO) {
         return tagService.findTagSelectList(findTagSelectListReqVO);
     }

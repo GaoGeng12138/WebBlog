@@ -36,7 +36,7 @@ public class AdminArticleController {
     @PostMapping("/publish")
     @ApiOperation(value = "文章发布")
     @ApiOperationLog(description = "文章发布")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','admin:article:publish')")
     public Response publishArticle(@RequestBody @Validated PublishArticleReqVO publishArticleReqVO) {
         return articleService.publishArticle(publishArticleReqVO);
     }
@@ -44,7 +44,7 @@ public class AdminArticleController {
     @PostMapping("/delete")
     @ApiOperation(value = "文章删除")
     @ApiOperationLog(description = "文章删除")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','admin:article:delete')")
     public Response deleteArticle(@RequestBody @Validated DeleteArticleReqVO deleteArticleReqVO) {
         return articleService.deleteArticle(deleteArticleReqVO);
     }
@@ -52,6 +52,7 @@ public class AdminArticleController {
     @PostMapping("/list")
     @ApiOperation(value = "文章分页数据获取")
     @ApiOperationLog(description = "文章分页数据获取")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','admin:article:list')")
     public PageResponse findArticlePageList(@RequestBody @Validated FindArticlePageListReqVO findArticlePageListReqVO) {
         return articleService.findArticlePageList(findArticlePageListReqVO);
     }
@@ -59,6 +60,7 @@ public class AdminArticleController {
     @PostMapping("/detail")
     @ApiOperation(value = "文章详情获取")
     @ApiOperationLog(description = "文章详情获取")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','admin:article:list','admin:article:update')")
     public Response findArticleDetail(@RequestBody @Validated FindArticleDetailReqVO findArticleDetailReqVO) {
         return articleService.findArticleDetail(findArticleDetailReqVO);
     }
@@ -66,7 +68,7 @@ public class AdminArticleController {
     @PostMapping("/update")
     @ApiOperation(value = "文章更新")
     @ApiOperationLog(description = "文章更新")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','admin:article:update')")
     public Response updateArticle(@RequestBody @Validated UpdateArticleReqVO updateArticleReqVO) {
         return articleService.updateArticle(updateArticleReqVO);
     }
@@ -74,7 +76,7 @@ public class AdminArticleController {
     @PostMapping("/audit")
     @ApiOperation(value = "文章审核")
     @ApiOperationLog(description = "文章审核")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','admin:article:audit')")
     public Response auditArticle(@RequestBody @Validated AuditArticleReqVO aditArticleReqVO) {
         return articleService.auditArticle(aditArticleReqVO);
     }

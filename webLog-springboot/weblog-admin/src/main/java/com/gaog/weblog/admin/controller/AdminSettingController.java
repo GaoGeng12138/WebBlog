@@ -26,6 +26,7 @@ public class AdminSettingController {
     @PostMapping("/settings/get")
     @ApiOperation(value = "获取站点设置")
     @ApiOperationLog(description = "获取站点设置")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','admin:setting:view')")
     public Response<FindSiteSettingRspVO> findSiteSetting() {
         return adminSettingService.findSiteSetting();
     }
@@ -33,7 +34,7 @@ public class AdminSettingController {
     @PostMapping("/settings/update")
     @ApiOperation(value = "更新站点设置")
     @ApiOperationLog(description = "更新站点设置")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','admin:setting:update')")
     public Response<Void> updateSiteSetting(@RequestBody @Validated UpdateSiteSettingReqVO reqVO) {
         return adminSettingService.updateSiteSetting(reqVO);
     }

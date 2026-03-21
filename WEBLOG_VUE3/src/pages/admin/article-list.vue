@@ -47,7 +47,7 @@
             <!-- 操作栏 -->
             <div class="flex justify-between items-center px-6 pt-5 pb-4">
                 <div>
-                    <el-button type="primary" @click="goToPublish">
+                    <el-button v-if="can('admin:article:publish')" type="primary" @click="goToPublish">
                         <el-icon class="mr-1">
                             <Plus />
                         </el-icon>
@@ -133,13 +133,13 @@
                 <el-table-column label="操作" width="200" fixed="right" align="center">
                     <template #default="{ row }">
                         <div class="flex gap-2 justify-center">
-                            <el-button type="primary" size="small" @click="goToEdit(row.id)" class="admin-btn-primary">
+                            <el-button v-if="can('admin:article:update')" type="primary" size="small" @click="goToEdit(row.id)" class="admin-btn-primary">
                                 <el-icon class="mr-1">
                                     <Edit />
                                 </el-icon>
                                 编辑
                             </el-button>
-                            <el-button type="danger" size="small" @click="deleteArticleSubmit(row)" class="admin-btn-secondary">
+                            <el-button v-if="can('admin:article:delete')" type="danger" size="small" @click="deleteArticleSubmit(row)" class="admin-btn-secondary">
                                 <el-icon class="mr-1">
                                     <Delete />
                                 </el-icon>
@@ -165,13 +165,17 @@
 <script setup>
 import { getArticlePageList, deleteArticle } from '@/api/admin/article'
 import { RefreshRight, Search, Plus, Edit, Delete, Picture, Document, DocumentCopy } from '@element-plus/icons-vue'
+import { hasAccess } from '@/composables/permission'
 import moment from 'moment'
 import { ref,onActivated } from 'vue'
+import { useUserStore } from '@/stores/user'
 import { showMessage, showModel } from '@/composables/util'
 import { useRouter } from 'vue-router'
 import AdminPagination from '@/components/admin/AdminPagination.vue'
 
 const router = useRouter()
+const userStore = useUserStore()
+const can = (permission) => hasAccess(userStore.userInfo, permission)
 // 页面激活时获取表格数据
 onActivated(() => {
     getTableData()

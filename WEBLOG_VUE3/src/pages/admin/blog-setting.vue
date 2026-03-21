@@ -158,6 +158,7 @@
                         <!-- 提交按钮 -->
                         <el-form-item>
                             <el-button 
+                                v-if="can('admin:setting:update')"
                                 type="primary" 
                                 @click="onSubmit" 
                                 :loading="btnLoading"
@@ -304,6 +305,7 @@
                         <!-- 提交按钮 -->
                         <el-form-item>
                             <el-button 
+                                v-if="can('admin:setting:update')"
                                 type="primary" 
                                 @click="onSubmitPermissions" 
                                 :loading="permissionBtnLoading"
@@ -325,9 +327,14 @@
 <script setup>
 import { getBlogSettings, updateBlogSettings } from '@/api/admin/blog'
 import { uploadFile } from '@/api/admin/file'
+import { hasAccess } from '@/composables/permission'
+import { useUserStore } from '@/stores/user'
 import { showMessage } from '@/composables/util'
 import { Link, Plus, Setting, Lock } from '@element-plus/icons-vue'
 import { onMounted, reactive, ref } from 'vue'
+
+const userStore = useUserStore()
+const can = (permission) => hasAccess(userStore.userInfo, permission)
 
 // 当前激活的标签页
 const activeTab = ref('basic')

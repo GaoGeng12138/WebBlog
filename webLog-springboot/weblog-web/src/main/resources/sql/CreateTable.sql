@@ -146,6 +146,17 @@ CREATE TABLE `t_role`
     KEY           `idx_is_enabled` (`is_enabled`) USING BTREE,
     KEY           `idx_create_time` (`create_time`) USING BTREE
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 ROW_FORMAT=DYNAMIC COMMENT='角色表';
+-- t_role_permission ddl
+CREATE TABLE `t_role_permission`
+(
+    `id`             bigint(20) unsigned NOT NULL AUTO_INCREMENT COMMENT 'id',
+    `role_id`        bigint(20) unsigned NOT NULL COMMENT '角色ID',
+    `permission_key` varchar(100) NOT NULL COMMENT '权限标识',
+    `create_time`    datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    PRIMARY KEY (`id`) USING BTREE,
+    UNIQUE KEY `uk_role_permission` (`role_id`,`permission_key`) USING BTREE,
+    KEY `idx_role_id` (`role_id`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 ROW_FORMAT=DYNAMIC COMMENT='角色权限表';
 -- t_statistics_article_pv ddl
 CREATE TABLE `t_statistics_article_pv`
 (

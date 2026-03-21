@@ -13,7 +13,7 @@
       <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div class="flex flex-col sm:flex-row gap-3">
           <el-input
-            v-model="searchForm.keyword"
+            v-model="searchForm.name"
             placeholder="🔍 搜索角色名称或标识"
             clearable
             @keyup.enter="handleSearch"
@@ -25,7 +25,7 @@
           </el-input>
         </div>
         <div class="flex gap-2">
-          <el-button type="primary" @click="handleAddRole">
+          <el-button v-if="can('admin:role:add')" type="primary" @click="handleAddRole">
             <el-icon><Plus /></el-icon>
             新增角色
           </el-button>
@@ -81,6 +81,7 @@
           <template #default="scope">
             <div class="flex flex-wrap gap-1">
               <el-button
+                v-if="can('admin:role:update')"
                 size="small"
                 type="primary"
                 @click="handleEdit(scope.row)"
@@ -88,6 +89,7 @@
                 编辑
               </el-button>
               <el-button
+                v-if="can('admin:role:permission-assign')"
                 size="small"
                 type="info"
                 @click="handleAssignPermissions(scope.row)"
@@ -95,6 +97,7 @@
                 权限
               </el-button>
               <el-button
+                v-if="can('admin:role:update')"
                 size="small"
                 :type="scope.row.isEnabled ? 'warning' : 'success'"
                 @click="handleChangeStatus(scope.row)"
@@ -102,6 +105,7 @@
                 {{ scope.row.isEnabled ? '停用' : '启用' }}
               </el-button>
               <el-button
+                v-if="can('admin:role:delete')"
                 size="small"
                 type="danger"
                 @click="handleDelete(scope.row)"
@@ -241,7 +245,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   getRoleList,
@@ -252,13 +256,18 @@ import {
   updateRolePermissions,
   getAllPermissions
 } from '@/api/admin/role'
+import { hasAccess } from '@/composables/permission'
+import { useUserStore } from '@/stores/user'
 import { Search, Plus, Menu, Position, Lock, DocumentCopy } from '@element-plus/icons-vue'
 import moment from 'moment'
 
 // 搜索表单
 const searchForm = reactive({
-  keyword: ''
+  name: ''
 })
+
+const userStore = useUserStore()
+const can = (permission) => hasAccess(userStore.userInfo, permission)
 
 // 分页
 const pagination = reactive({
@@ -318,12 +327,11 @@ const loadRoleList = async () => {
     const params = {
       current: pagination.currentPage,
       size: pagination.pageSize,
-      ...searchForm
+      name: searchForm.name || null
     }
     
     const response = await getRoleList(params)
     if (response.success) {
-      // API返回 data 作为直接数组，total 在根级别
       roleList.value = response.data || []
       total.value = response.total || 0
     } else {
@@ -345,7 +353,7 @@ const handleSearch = () => {
 
 // 重置搜索
 const handleReset = () => {
-  searchForm.keyword = ''
+  searchForm.name = ''
   pagination.currentPage = 1
   loadRoleList()
 }
@@ -479,17 +487,26 @@ const handleAssignPermissions = async (row) => {
   permissionDialogVisible.value = true
   
   try {
+    checkedPermissions.value = []
+    permissionTree.value = []
+
     // 获取所有权限
     const permissionsRes = await getAllPermissions()
-    if (permissionsRes.success) {
-      permissionTree.value = permissionsRes.data || []
+    if (!permissionsRes.success) {
+      ElMessage.error(permissionsRes.message || '获取权限列表失败')
+      return
     }
+    permissionTree.value = permissionsRes.data || []
     
     // 获取角色已有权限
     const rolePermissionsRes = await getRolePermissions(row.id)
-    if (rolePermissionsRes.success) {
-      checkedPermissions.value = rolePermissionsRes.data || []
+    if (!rolePermissionsRes.success) {
+      ElMessage.error(rolePermissionsRes.message || '获取角色权限失败')
+      return
     }
+    checkedPermissions.value = rolePermissionsRes.data || []
+    await nextTick()
+    permissionTreeRef.value?.setCheckedKeys(checkedPermissions.value, false)
   } catch (error) {
     console.error('加载权限数据失败:', error)
     ElMessage.error('加载权限数据失败')
@@ -510,6 +527,7 @@ const handleSubmitPermissions = async () => {
     })
     
     if (response.success) {
+      await userStore.ensureUserInfoReady(true)
       ElMessage.success('权限分配成功')
       permissionDialogVisible.value = false
     } else {
@@ -532,6 +550,7 @@ const handlePermissionDialogClose = () => {
   currentRole.value = null
   permissionTree.value = []
   checkedPermissions.value = []
+  permissionTreeRef.value?.setCheckedKeys([], false)
 }
 
 // 格式化日期

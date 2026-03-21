@@ -1,6 +1,9 @@
 import Admin from "@/layouts/admin/admin.vue";
 import { createRouter, createWebHistory } from "vue-router";
 import { useSiteConfigStore } from '@/stores/siteConfig'
+import { useUserStore } from '@/stores/user'
+import { getToken } from '@/composables/cookie'
+import { hasAccess } from '@/composables/permission'
 import { ElMessage } from 'element-plus'
 
 const Index = () => import("@/pages/frontend/index.vue")
@@ -121,70 +124,80 @@ const routes = [
                 path: "/admin/index",
                 component: AdminIndex,
                 meta: {
-                    title: '仪表盘'
+                    title: '仪表盘',
+                    permission: 'admin:dashboard:view'
                 }
             },
             {
                 path: "/admin/article/list",
                 component: AdminArticleList,
                 meta: {
-                    title: '文章管理'
+                    title: '文章管理',
+                    permission: 'admin:article:list'
                 }
             },
             {
                 path: "/admin/article/publish",
                 component: AdminArticleDetail,
                 meta: {
-                    title: '发布文章'
+                    title: '发布文章',
+                    permission: 'admin:article:publish'
                 }
             },
             {
                 path: "/admin/article/edit/:id",
                 component: AdminArticleDetail,
                 meta: {
-                    title: '编辑文章'
+                    title: '编辑文章',
+                    permission: 'admin:article:update'
                 }
             },
             {
                 path: "/admin/category/list",
                 component: AdminCategoryList,
                 meta: {
-                    title: '分类管理'
+                    title: '分类管理',
+                    permission: 'admin:category:list'
                 }
             },
             {
                 path: "/admin/tag/list",
                 component: AdminTagList,
                 meta: {
-                    title: '标签管理'
+                    title: '标签管理',
+                    permission: 'admin:tag:list'
                 }
             },
             {
                 path: "/admin/user/list",
                 component: () => import('@/pages/admin/user-list.vue'),
                 meta: {
-                    title: '用户管理'
+                    title: '用户管理',
+                    permission: 'admin:user:list'
                 }
             },
             {
                 path: "/admin/role/list",
                 component: () => import('@/pages/admin/role-list.vue'),
                 meta: {
-                    title: '角色管理'
+                    title: '角色管理',
+                    permission: 'admin:role:list'
                 }
             },
             {
                 path: "/admin/blog/setting",
                 component: AdminBlogSetting,
                 meta: {
-                    title: '博客设置'
+                    title: '博客设置',
+                    permission: 'admin:setting:view'
                 }
             },
             {
                 path: "/admin/visitor/list",
                 component: () => import('@/pages/admin/visitor-list.vue'),
                 meta: {
-                    title: '访客记录'
+                    title: '访客记录',
+                    permission: 'admin:visitor:list'
                 }
             },
         ]
@@ -203,6 +216,7 @@ const router = createRouter({
 // 添加全局路由守卫
 router.beforeEach(async (to, from, next) => {
     const siteConfig = useSiteConfigStore()
+    const userStore = useUserStore()
     
     // 检查是否允许用户注册
     if (to.path === '/register') {
@@ -220,6 +234,27 @@ router.beforeEach(async (to, from, next) => {
         if (!siteConfig.isFeatureEnabled('userPublishEnabled')) {
             ElMessage.warning('系统暂时关闭了用户发布文章功能')
             next('/')
+            return
+        }
+    }
+
+    if (to.path.startsWith('/admin')) {
+        const token = getToken()
+        if (!token) {
+            next('/login')
+            return
+        }
+
+        try {
+            await userStore.ensureUserInfoReady()
+        } catch (error) {
+            next('/login')
+            return
+        }
+
+        if (to.meta.permission && !hasAccess(userStore.userInfo, to.meta.permission)) {
+            ElMessage.warning('当前账号没有访问该页面的权限')
+            next('/admin/index')
             return
         }
     }
