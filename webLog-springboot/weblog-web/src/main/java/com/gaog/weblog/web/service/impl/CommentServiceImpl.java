@@ -326,9 +326,14 @@ public class CommentServiceImpl implements com.gaog.weblog.web.service.CommentSe
         if (comment.getReplyToId() != null) {
             CommentDO replyToComment = commentMapper.selectById(comment.getReplyToId());
             if (replyToComment != null) {
-                replyToNickname = replyToComment.getNickname();
+                UserDO replyToUser = replyToComment.getUserId() == null ? null : userMapper.selectById(replyToComment.getUserId());
+                replyToNickname = resolveCommentDisplayName(replyToComment, replyToUser, true);
             }
         }
+
+        UserDO commenter = comment.getUserId() == null ? null : userMapper.selectById(comment.getUserId());
+        boolean isUserDeleted = comment.getUserId() != null
+                && (commenter == null || Boolean.TRUE.equals(commenter.getIsDeleted()));
 
         // Check if commenter is article author
         Boolean isAuthor = comment.getUserId() != null
@@ -342,8 +347,9 @@ public class CommentServiceImpl implements com.gaog.weblog.web.service.CommentSe
                 .parentId(comment.getParentId())
                 .replyToId(comment.getReplyToId())
                 .replyToNickname(replyToNickname)
-                .nickname(comment.getNickname())
+                .nickname(resolveCommentDisplayName(comment, commenter, false))
                 .avatar(comment.getAvatar())
+                .isUserDeleted(isUserDeleted)
                 .content(comment.getContent())
                 .website(comment.getWebsite())
                 .likeCount(comment.getLikeCount())
@@ -351,6 +357,39 @@ public class CommentServiceImpl implements com.gaog.weblog.web.service.CommentSe
                 .createTime(comment.getCreateTime())
                 .isAuthor(isAuthor)
                 .build();
+    }
+
+    private String resolveCommentDisplayName(CommentDO comment, UserDO commenter, boolean deletedAsLabel) {
+        if (comment == null) {
+            return deletedAsLabel ? "已注销用户" : "匿名用户";
+        }
+
+        if (comment.getUserId() == null) {
+            if (StringUtils.isNotBlank(comment.getNickname())) {
+                return comment.getNickname();
+            }
+            return "匿名用户";
+        }
+
+        if (commenter == null || Boolean.TRUE.equals(commenter.getIsDeleted())) {
+            if (deletedAsLabel) {
+                return "已注销用户";
+            }
+            if (StringUtils.isNotBlank(comment.getNickname())) {
+                return comment.getNickname();
+            }
+            return "已注销用户";
+        }
+
+        if (StringUtils.isNotBlank(commenter.getNickname())) {
+            return commenter.getNickname();
+        }
+
+        if (StringUtils.isNotBlank(commenter.getUsername())) {
+            return commenter.getUsername();
+        }
+
+        return StringUtils.isNotBlank(comment.getNickname()) ? comment.getNickname() : "匿名用户";
     }
 
     /**

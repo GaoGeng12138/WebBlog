@@ -1,6 +1,7 @@
 package com.gaog.weblog.web.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.gaog.weblog.common.domain.dos.UserDO;
 import com.gaog.weblog.common.domain.mapper.UserMapper;
@@ -20,6 +21,7 @@ import com.gaog.weblog.common.domain.mapper.SiteSettingMapper;
 import com.gaog.weblog.common.domain.mapper.UserFavoriteArticleMapper;
 import com.gaog.weblog.common.utils.IpLocationUtil;
 import com.gaog.weblog.common.utils.IpUtil;
+import com.gaog.weblog.web.model.vo.user.DeleteUserAccountReqVO;
 import com.gaog.weblog.web.model.vo.user.RegisterUserReqVO;
 import com.gaog.weblog.web.model.vo.user.UpdateUserProfileReqVO;
 import com.gaog.weblog.web.model.vo.user.UserCurrentLocationRspVO;
@@ -277,6 +279,47 @@ public class UserServiceImpl implements UserService {
             articleMapper.updateAuthorByUserId(currentUserId, nickname);
         }
 
+        return Response.success();
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Response deleteAccount(DeleteUserAccountReqVO deleteUserAccountReqVO) {
+        Long currentUserId = SecurityContextUtil.getCurrentUserId();
+        UserDO userDO = userMapper.selectById(currentUserId);
+        if (userDO == null || Boolean.TRUE.equals(userDO.getIsDeleted())) {
+            log.warn("注销账号失败，用户不存在: {}", currentUserId);
+            return Response.fail(ResponseCodeEnum.USER_NOT_FOUND);
+        }
+
+        if (!passwordEncoder.matches(deleteUserAccountReqVO.getPassword(), userDO.getPassword())) {
+            log.warn("注销账号失败，密码校验不通过: userId={}", currentUserId);
+            return Response.fail(ResponseCodeEnum.PASSWORD_ERROR);
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+
+        LambdaUpdateWrapper<UserDO> userUpdateWrapper = new LambdaUpdateWrapper<>();
+        userUpdateWrapper
+                .set(UserDO::getIsDeleted, true)
+                .set(UserDO::getUpdateTime, now)
+                .eq(UserDO::getId, currentUserId)
+                .eq(UserDO::getIsDeleted, false);
+        int userUpdateCount = userMapper.update(null, userUpdateWrapper);
+        if (userUpdateCount != 1) {
+            log.error("注销账号失败，用户逻辑删除失败: userId={}", currentUserId);
+            return Response.fail("注销账号失败");
+        }
+
+        LambdaUpdateWrapper<ArticleDO> articleUpdateWrapper = new LambdaUpdateWrapper<>();
+        articleUpdateWrapper
+                .set(ArticleDO::getIsDeleted, true)
+                .set(ArticleDO::getUpdateTime, now)
+                .eq(ArticleDO::getUserId, currentUserId)
+                .eq(ArticleDO::getIsDeleted, false);
+        int articleUpdateCount = articleMapper.update(null, articleUpdateWrapper);
+
+        log.info("前台账号注销成功: userId={}, deletedArticles={}", currentUserId, articleUpdateCount);
         return Response.success();
     }
     

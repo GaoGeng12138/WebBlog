@@ -136,14 +136,20 @@
                                     后台管理系统
                                 </el-button>
                             </div>
-                            <div class="profile-quick-links">
-                                <button v-for="item in quickActionItems" :key="item.label" type="button"
-                                    class="profile-quick-link"
-                                    :class="{ 'profile-quick-link--primary': item.type === 'primary' }"
-                                    @click="item.action">
-                                    <span class="profile-quick-link__title">{{ item.label }}</span>
-                                    <span class="profile-quick-link__desc">{{ item.desc }}</span>
-                                </button>
+                            <div class="profile-quick-panel">
+                                <div class="profile-quick-panel__title">快捷操作</div>
+                                <div class="profile-quick-links">
+                                    <button v-for="item in quickActionItems" :key="item.label" type="button"
+                                        class="profile-quick-link"
+                                        :class="{ 'profile-quick-link--primary': item.type === 'primary' }"
+                                        @click="item.action">
+                                        <span class="profile-quick-link__title">{{ item.label }}</span>
+                                        <span class="profile-quick-link__desc">{{ item.desc }}</span>
+                                    </button>
+                                </div>
+                                <div v-if="!canUserPublish" class="mt-3 rounded-2xl border border-amber-100 bg-amber-50/70 px-3 py-2 text-xs text-amber-700">
+                                    前台投稿已关闭，写文章入口已隐藏
+                                </div>
                             </div>
                             <div class="profile-quick-note">近 {{ recentActiveDays }} 天有活跃记录</div>
                         </div>
@@ -271,6 +277,11 @@
                                                                 <!-- 柱子容器 -->
                                                                 <div
                                                                     class="relative w-full h-full flex items-end justify-center">
+
+                                                                    <span v-if="item.score > 0"
+                                                                        class="activity-score-badge">
+                                                                        {{ item.score }}
+                                                                    </span>
 
                                                                     <!-- 实际柱子 -->
                                                                     <div class="w-full max-w-[40px] rounded-t shadow-sm transition-all duration-300"
@@ -411,8 +422,7 @@
                                     <span v-if="!siteConfig.isFeatureEnabled('userPublishEnabled')" class="text-xs text-amber-600 bg-amber-50 border border-amber-100 rounded-full px-3 py-1">
                                         当前已关闭前台投稿
                                     </span>
-                                    <el-button type="primary" icon="EditPen" round class="shadow-sm"
-                                        :disabled="!siteConfig.isFeatureEnabled('userPublishEnabled')"
+                                    <el-button v-if="canUserPublish" type="primary" icon="EditPen" round class="shadow-sm"
                                         @click="goToPublish">
                                         写文章
                                     </el-button>
@@ -592,22 +602,17 @@
                                         </div>
                                         <el-button round size="small" @click="logout">退出</el-button>
                                     </div>
-                                    <div
-                                        class="border border-red-100 bg-red-50/30 rounded-xl p-4 flex items-center justify-between mt-3">
-                                        <div>
-                                            <div class="font-medium text-gray-800">注销账号</div>
-                                            <div class="text-xs text-gray-500 mt-1">账号注销后无法恢复，请谨慎操作</div>
-                                        </div>
-                                        <el-popconfirm title="确定要注销吗？此操作无法撤销。" confirm-button-text="确认注销"
-                                            cancel-button-text="取消" confirm-button-type="danger" @confirm="logout">
-                                            <template #reference>
-                                                <el-button type="danger" plain size="small">注销</el-button>
-                                            </template>
-                                        </el-popconfirm>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                                     <div
+                                         class="border border-red-100 bg-red-50/30 rounded-xl p-4 flex items-center justify-between mt-3">
+                                         <div>
+                                             <div class="font-medium text-gray-800">注销账号</div>
+                                             <div class="text-xs text-gray-500 mt-1">输入登录密码确认后，将注销账号并逻辑删除你的文章</div>
+                                         </div>
+                                         <el-button type="danger" plain size="small" @click="openDeleteAccountDialog">注销</el-button>
+                                     </div>
+                                 </div>
+                             </div>
+                         </div>
 
                         <div v-if="activeTab === 'comments'" class="animate-fade-in">
                             <h3 class="text-lg font-bold text-gray-800 mb-6">评论历史</h3>
@@ -683,6 +688,25 @@
                     </span>
                 </template>
             </el-dialog>
+
+            <el-dialog v-model="showDeleteAccountDialog" title="注销账号" width="460px" align-center class="!rounded-2xl"
+                :before-close="closeDeleteAccountDialog">
+                <div class="mb-4 rounded-2xl border border-red-100 bg-red-50/40 px-4 py-3 text-sm text-red-700">
+                    该操作会逻辑删除当前账号及其文章，且无法恢复。请输入登录密码确认。
+                </div>
+                <el-form @submit.prevent="confirmDeleteAccount">
+                    <el-form-item label="登录密码">
+                        <el-input v-model="deleteAccountForm.password" type="password" show-password
+                            placeholder="请输入当前登录密码" autocomplete="current-password" />
+                    </el-form-item>
+                </el-form>
+                <template #footer>
+                    <span class="dialog-footer">
+                        <el-button @click="closeDeleteAccountDialog" round>取消</el-button>
+                        <el-button type="danger" :loading="deleteAccountSaving" @click="confirmDeleteAccount" round>确认注销</el-button>
+                    </span>
+                </template>
+            </el-dialog>
         </div>
     </div>
 </template>
@@ -696,12 +720,11 @@ import {
     Odometer, WarningFilled, Calendar, Setting
 } from '@element-plus/icons-vue'
 import moment from 'moment'
-import { removeToken } from "@/composables/cookie";
 import { useUserStore } from '@/stores/user'
 import { useSiteConfigStore } from '@/stores/siteConfig'
 import { getArticlePageList } from "@/api/frontend/article";
 import { getCollectedArticles, uncollectArticle } from "@/api/frontend/favorite";
-import { getUserCenterStatistics, getUserCenterComments, getUserCenterOverview, getActivityScore, getActivityStatistics, getActivityTrend, getCurrentUserLocation, updateUserProfile } from "@/api/frontend/user";
+import { getUserCenterStatistics, getUserCenterComments, getUserCenterOverview, getActivityScore, getActivityStatistics, getActivityTrend, getCurrentUserLocation, updateUserProfile, deleteUserAccount } from "@/api/frontend/user";
 import { deleteComment as deleteCommentApi } from "@/api/frontend/comment";
 import { uploadFile } from "@/api/frontend/file";
 import { useRouter } from 'vue-router'
@@ -728,6 +751,7 @@ const loadCurrentLocation = async () => {
 const userStore = useUserStore()
 const siteConfig = useSiteConfigStore()
 const user = computed(() => userStore.frontendUserInfo)
+const canUserPublish = computed(() => siteConfig.isFeatureEnabled('userPublishEnabled') === true)
 const currentLocationText = computed(() => {
     const parts = [province.value, city.value].filter(Boolean)
     return parts.length ? parts.join(' · ') : (locationLabel.value || '未知位置')
@@ -924,13 +948,18 @@ const activeTabName = computed(() => {
 })
 
 const showEditProfile = ref(false)
+const showDeleteAccountDialog = ref(false)
 const profileSaving = ref(false)
+const deleteAccountSaving = ref(false)
 const avatarUploading = ref(false)
 const avatarInputRef = ref(null)
 const editForm = reactive({
     nickname: '',
     introduction: '',
     avatar: ''
+})
+const deleteAccountForm = reactive({
+    password: ''
 })
 
 const articles = ref([]) // 初始为空数组
@@ -1248,6 +1277,21 @@ const logout = () => {
     router.push('/')
 }
 
+const openDeleteAccountDialog = () => {
+    deleteAccountForm.password = ''
+    showDeleteAccountDialog.value = true
+}
+
+const closeDeleteAccountDialog = (done) => {
+    if (deleteAccountSaving.value) {
+        return
+    }
+
+    showDeleteAccountDialog.value = false
+    deleteAccountForm.password = ''
+    done?.()
+}
+
 // Navigate to admin panel
 const goToAdminPanel = () => {
     router.push('/admin')
@@ -1271,6 +1315,16 @@ const setArticleStatusFilter = (status) => {
 const jumpToDrafts = () => {
     articleStatusFilter.value = '3'
     activeTab.value = 'drafts'
+}
+
+const refreshOverview = () => {
+    if (activeTab.value !== 'overview') {
+        activeTab.value = 'overview'
+        return
+    }
+
+    loadDynamics()
+    loadActivityScore()
 }
 
 const saveProfile = async () => {
@@ -1299,6 +1353,38 @@ const saveProfile = async () => {
         ElMessage.error(error?.response?.data?.message || '保存失败')
     } finally {
         profileSaving.value = false
+    }
+}
+
+const confirmDeleteAccount = async () => {
+    if (deleteAccountSaving.value) {
+        return
+    }
+
+    const password = deleteAccountForm.password?.trim()
+    if (!password) {
+        ElMessage.error('请输入登录密码')
+        return
+    }
+
+    deleteAccountSaving.value = true
+    try {
+        const res = await deleteUserAccount({ password })
+        if (!res?.success) {
+            ElMessage.error(res?.message || '账号注销失败')
+            return
+        }
+
+        userStore.logout()
+        showDeleteAccountDialog.value = false
+        deleteAccountForm.password = ''
+        ElMessage.success('账号已注销')
+        await router.push('/')
+    } catch (error) {
+        console.error('注销账号失败:', error)
+        ElMessage.error(error?.response?.data?.message || '账号注销失败')
+    } finally {
+        deleteAccountSaving.value = false
     }
 }
 
@@ -1486,10 +1572,9 @@ watch(activeTab, (newTab) => {
 const recentActiveDays = computed(() => activityData.value.trend.filter((item) => item.score > 0).length)
 
 const quickActionItems = computed(() => [
-    { label: '写文章', desc: '开始一篇新内容', action: goToPublish, type: 'primary' },
-    { label: '草稿箱', desc: '继续未完成的内容', action: jumpToDrafts },
-    { label: '评论管理', desc: '查看互动与反馈', action: () => handleTabSelect('comments') },
-    { label: '账号安全', desc: '修改密码和邮箱', action: () => handleTabSelect('security') }
+    { label: '刷新数据', desc: '重新加载概览', action: refreshOverview },
+    { label: '编辑资料', desc: '修改昵称和简介', action: openEditDialog },
+    ...(canUserPublish.value ? [{ label: '写文章', desc: '开始一篇新内容', action: goToPublish, type: 'primary' }] : [])
 ])
 
 // 初始化加载统计数据和概览模块
@@ -1645,20 +1730,39 @@ onMounted(() => {
 .profile-quick-links {
     display: grid;
     width: 100%;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 12px;
+}
+
+.profile-quick-panel {
+    width: 100%;
+    border-radius: 24px;
+    border: 1px solid rgba(129, 158, 196, 0.16);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.66), rgba(247, 250, 255, 0.9));
+    padding: 14px;
+    box-shadow: 0 16px 34px rgba(120, 146, 184, 0.08);
+    backdrop-filter: blur(18px);
+}
+
+.profile-quick-panel__title {
+    margin-bottom: 12px;
+    padding-left: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    color: #64748b;
 }
 
 .profile-quick-link {
     display: flex;
-    min-height: 86px;
+    min-height: 72px;
     flex-direction: column;
     justify-content: center;
     gap: 4px;
-    border-radius: 18px;
+    border-radius: 16px;
     border: 1px solid rgba(129, 158, 196, 0.18);
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(246, 249, 253, 0.92));
-    padding: 14px 16px;
+    padding: 12px 14px;
     text-align: left;
     box-shadow: 0 12px 26px rgba(120, 146, 184, 0.08);
     transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
@@ -1960,6 +2064,37 @@ onMounted(() => {
 .activity-item-score {
     font-weight: 600;
     color: #6584b1;
+}
+
+.activity-score-badge {
+    position: absolute;
+    top: -28px;
+    left: 50%;
+    transform: translateX(-50%);
+    min-width: 28px;
+    border-radius: 999px;
+    background: #1f2937;
+    padding: 3px 9px;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 16px;
+    color: #ffffff;
+    box-shadow: 0 10px 18px rgba(31, 41, 55, 0.16);
+    pointer-events: none;
+}
+
+@media (max-width: 640px) {
+    .profile-quick-links {
+        grid-template-columns: 1fr;
+    }
+
+    .profile-quick-panel {
+        padding: 12px;
+    }
+
+    .profile-quick-link {
+        min-height: 64px;
+    }
 }
 
 /* 活跃度统计数据样式 */

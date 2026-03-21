@@ -23,7 +23,7 @@
         <template #dropdown>
           <el-dropdown-menu>
             <el-dropdown-item @click="goUserCenter">用户中心</el-dropdown-item>
-            <el-dropdown-item @click="goPublish">写文章</el-dropdown-item>
+            <el-dropdown-item v-if="canUserPublish" @click="goPublish">写文章</el-dropdown-item>
             <el-dropdown-item divided @click="logout">登出</el-dropdown-item>
           </el-dropdown-menu>
         </template>
@@ -49,13 +49,16 @@
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
+import { useSiteConfigStore } from '@/stores/siteConfig'
 
 const router = useRouter()
 const userStore = useUserStore()
+const siteConfig = useSiteConfigStore()
 const user = computed(() => userStore.frontendUserInfo)
 const loading = computed(() => false)
 const defaultAvatar = `${import.meta.env.BASE_URL}default-avatar.svg`
 const displayAvatar = computed(() => user.value?.avatar || defaultAvatar)
+const canUserPublish = computed(() => siteConfig.isFeatureEnabled('userPublishEnabled') === true)
 
 const handleAvatarError = (event) => {
   if (event.target.src.endsWith('default-avatar.svg')) {

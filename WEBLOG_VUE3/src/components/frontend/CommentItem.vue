@@ -17,6 +17,7 @@
         <div class="flex items-center justify-between mb-2">
           <div class="flex items-center space-x-2">
             <span class="font-semibold text-gray-900">{{ comment.nickname || '匿名用户' }}</span>
+            <span v-if="comment.isUserDeleted" class="px-2 py-0.5 bg-gray-100 text-gray-500 text-xs rounded-full">已注销</span>
             <span v-if="comment.isAuthor" class="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full">作者</span>
             <span v-if="comment.isTop" class="px-2 py-0.5 bg-red-100 text-red-700 text-xs rounded-full">置顶</span>
             <span class="text-sm text-gray-500">{{ formatDate(comment.createTime) }}</span>

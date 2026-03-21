@@ -3,6 +3,7 @@ package com.gaog.weblog.web.controller;
 import com.gaog.weblog.common.aspect.ApiOperationLog;
 import com.gaog.weblog.common.utils.PageResponse;
 import com.gaog.weblog.common.utils.Response;
+import com.gaog.weblog.web.model.vo.user.DeleteUserAccountReqVO;
 import com.gaog.weblog.web.model.vo.user.RegisterUserReqVO;
 import com.gaog.weblog.web.model.vo.user.UpdateUserProfileReqVO;
 import com.gaog.weblog.web.model.vo.user.UserCurrentLocationRspVO;
@@ -63,6 +64,13 @@ public class UserController {
     @ApiOperationLog(description = "更新当前用户资料")
     public Response updateProfile(@RequestBody @Validated UpdateUserProfileReqVO updateUserProfileReqVO) {
         return userService.updateProfile(updateUserProfileReqVO);
+    }
+
+    @PostMapping("/account/delete")
+    @ApiOperation(value = "注销当前账号")
+    @ApiOperationLog(description = "注销当前账号")
+    public Response deleteAccount(@RequestBody @Validated DeleteUserAccountReqVO deleteUserAccountReqVO) {
+        return userService.deleteAccount(deleteUserAccountReqVO);
     }
     
     @GetMapping("/comment/history")
