@@ -66,7 +66,7 @@
                 stripe 
                 style="width: 100%" 
                 v-loading="tableLoading"
-                class="article-table"
+                class="article-table hidden md:block"
                 header-cell-class-name="bg-gradient-to-r from-blue-50 to-blue-100 font-semibold text-gray-800 border-b-2 border-blue-200"
             >
                 <el-table-column prop="title" label="文章标题" min-width="250" show-overflow-tooltip>
@@ -181,7 +181,7 @@
                 <article
                     v-for="row in tableData"
                     :key="row.id"
-                    class="rounded-2xl border border-[rgba(149,171,210,0.16)] bg-white p-4 shadow-[0_10px_24px_rgba(15,23,42,0.05)]"
+                    class="admin-mobile-card admin-mobile-card--article rounded-2xl border border-[rgba(149,171,210,0.16)] bg-white p-4 shadow-[0_10px_24px_rgba(15,23,42,0.05)]"
                 >
                     <div class="flex items-start gap-3">
                         <div class="h-20 w-20 flex-shrink-0 overflow-hidden rounded-xl bg-slate-100">

@@ -1057,30 +1057,55 @@ onMounted(() => {
         padding: 1rem !important;
     }
 
+    .admin-blog-setting-page > .mb-8 {
+        margin-bottom: 0.95rem !important;
+        padding: 0.95rem 1rem 1rem;
+        border: 1px solid rgba(148, 176, 231, 0.18);
+        border-radius: 24px;
+        background:
+            radial-gradient(circle at top left, rgba(148, 176, 231, 0.18), transparent 30%),
+            linear-gradient(160deg, rgba(255, 255, 255, 0.97), rgba(237, 244, 252, 0.98));
+        box-shadow: 0 16px 36px rgba(15, 23, 42, 0.06);
+    }
+
     .admin-blog-setting-page .mb-8 h1 {
-        font-size: 1.5rem;
-        line-height: 2rem;
+        font-size: 1.35rem;
+        line-height: 1.9rem;
     }
 
     .admin-blog-setting-page .bg-white.rounded-xl {
-        border-radius: 20px;
+        border-radius: 24px;
+        overflow: hidden;
     }
 
     .blog-setting-tabs :deep(.el-tabs__header) {
         padding: 0 12px;
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        backdrop-filter: blur(16px);
     }
 
     .blog-setting-tabs :deep(.el-tabs__nav-wrap) {
         overflow-x: auto;
     }
 
+    .blog-setting-tabs :deep(.el-tabs__nav) {
+        width: max-content;
+    }
+
     .blog-setting-tabs :deep(.el-tabs__item) {
         font-size: 13px;
         padding: 0 14px;
+        height: 44px;
     }
 
     .admin-blog-setting-page .p-6 {
         padding: 1rem !important;
+    }
+
+    .admin-blog-setting-page .p-6 > .mb-6 {
+        margin-bottom: 0.9rem;
     }
 
     .admin-blog-setting-page :deep(.el-form) {
@@ -1118,6 +1143,7 @@ onMounted(() => {
     .admin-blog-setting-page :deep(.el-form-item .flex) {
         flex-direction: column;
         align-items: stretch;
+        gap: 0.75rem;
     }
 
     .admin-blog-setting-page :deep(.el-form-item .ml-16) {
@@ -1125,16 +1151,19 @@ onMounted(() => {
     }
 
     .admin-blog-setting-page .activity-panel {
-        border-radius: 16px;
+        border-radius: 22px;
+        margin-bottom: 1rem;
     }
 
     .activity-panel__head {
         flex-direction: column;
         align-items: stretch;
+        padding: 1rem;
     }
 
     .activity-panel__body {
-        padding: 12px;
+        padding: 0.85rem;
+        overflow-x: auto;
     }
 
     .activity-panel :deep(.el-table .cell) {
@@ -1146,6 +1175,16 @@ onMounted(() => {
         overflow-x: auto;
     }
 
+    .activity-panel :deep(.el-table) {
+        min-width: 720px;
+    }
+
+    .activity-panel :deep(.el-input-number .el-input__wrapper),
+    .activity-panel :deep(.el-input .el-input__wrapper),
+    .activity-panel :deep(.el-select .el-input__wrapper) {
+        min-height: 42px;
+    }
+
     .admin-blog-setting-page .grid.gap-6 {
         grid-template-columns: 1fr !important;
     }
@@ -1153,6 +1192,10 @@ onMounted(() => {
     .admin-blog-setting-page .flex.gap-2 {
         width: 100%;
         flex-direction: column;
+    }
+
+    .admin-blog-setting-page :deep(.el-switch) {
+        align-self: flex-start;
     }
 }
 </style>
