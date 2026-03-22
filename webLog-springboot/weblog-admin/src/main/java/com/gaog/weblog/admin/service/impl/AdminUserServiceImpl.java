@@ -497,11 +497,25 @@ public class AdminUserServiceImpl implements AdminUserService {
 
     @Override
     public Response findUserSelectList() {
-        List<SelectRspVO> options = userMapper.selectList(new LambdaQueryWrapper<UserDO>()
-                        .eq(UserDO::getIsDeleted, false)
-                        .eq(UserDO::getIsEnabled, true)
-                        .orderByDesc(UserDO::getCreateTime))
-                .stream()
+        CustomUserDetails currentUser = SecurityContextUtil.getCurrentUser();
+        boolean isAdmin = currentUser != null && currentUser.getRoles() != null
+                && currentUser.getRoles().stream().anyMatch("ROLE_ADMIN"::equals);
+        boolean isEditor = currentUser != null && currentUser.getRoles() != null
+                && currentUser.getRoles().stream().anyMatch("ROLE_EDITOR"::equals);
+
+        List<UserDO> users = userMapper.selectList(new LambdaQueryWrapper<UserDO>()
+                .eq(UserDO::getIsDeleted, false)
+                .eq(UserDO::getIsEnabled, true)
+                .orderByDesc(UserDO::getCreateTime));
+
+        if (!isAdmin && isEditor) {
+            // 编辑仅能选择普通用户，避免把管理员/编辑账号纳入可见范围
+            users = users.stream()
+                    .filter(this::isNormalUser)
+                    .collect(Collectors.toList());
+        }
+
+        List<SelectRspVO> options = users.stream()
                 .map(user -> SelectRspVO.builder()
                         .label(StringUtils.isNotBlank(user.getNickname())
                                 ? user.getNickname() + " (" + user.getUsername() + ")"
@@ -510,5 +524,31 @@ public class AdminUserServiceImpl implements AdminUserService {
                         .build())
                 .collect(Collectors.toList());
         return Response.success(options);
+    }
+
+    private boolean isNormalUser(UserDO user) {
+        if (user == null || user.getId() == null) {
+            return false;
+        }
+
+        List<UserRoleDO> userRoles = userRoleMapper.selectByUserId(user.getId());
+        if (CollectionUtils.isEmpty(userRoles)) {
+            return true;
+        }
+
+        List<Long> roleIds = userRoles.stream()
+                .map(UserRoleDO::getRoleId)
+                .collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(roleIds)) {
+            return true;
+        }
+
+        List<RoleDO> roles = roleMapper.selectBatchIds(roleIds);
+        if (CollectionUtils.isEmpty(roles)) {
+            return true;
+        }
+
+        return roles.stream().noneMatch(role -> role != null
+                && ("ROLE_ADMIN".equals(role.getName()) || "ROLE_EDITOR".equals(role.getName())));
     }
 }
