@@ -36,7 +36,7 @@ public class DatabaseInitializationConfig {
             Pattern.compile("(?i)^ALTER\\s+TABLE\\s+`?(\\w+)`?\\s+DROP\\s+COLUMN\\s+`?(\\w+)`?");
 
     private static final String CREATE_TABLE_SQL = "sql/CreateTable.sql";
-    private static final String UPDATE_COLUMN_SQL = "sql/UpdateColumn.sql";
+    private static final String ADD_COLUMN_SQL = "sql/AddColumn.sql";
     private static final String UPDATE_DATA_SQL = "sql/UpdateData.sql";
     private static final String INSERT_DATA_SQL = "sql/InsertData.sql";
 
@@ -76,7 +76,7 @@ public class DatabaseInitializationConfig {
 
         try {
             executeCreateStatements(loadSqlStatements(CREATE_TABLE_SQL));
-            executeUpdateStatements(loadSqlStatements(UPDATE_COLUMN_SQL));
+            executeUpdateStatements(loadSqlStatements(ADD_COLUMN_SQL));
             executeUpdateStatements(loadSqlStatements(UPDATE_DATA_SQL));
 
             if (executeInserts) {
