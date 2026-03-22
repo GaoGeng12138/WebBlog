@@ -5,9 +5,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.event.EventListener;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
-import org.springframework.core.io.support.ResourcePatternResolver;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import javax.annotation.PostConstruct;
@@ -21,8 +19,6 @@ import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -30,7 +26,6 @@ import java.util.regex.Pattern;
 @Configuration
 @Slf4j
 public class DatabaseInitializationConfig {
-    private static final String SQL_RESOURCE_PATTERN = "classpath*:sql/*.sql";
     private static final Pattern INSERT_STATEMENT_PATTERN =
             Pattern.compile("(?i)^INSERT\\s+(?:IGNORE\\s+)?INTO\\b");
     private static final Pattern CREATE_TABLE_PATTERN =
@@ -40,9 +35,13 @@ public class DatabaseInitializationConfig {
     private static final Pattern ALTER_DROP_COLUMN_PATTERN =
             Pattern.compile("(?i)^ALTER\\s+TABLE\\s+`?(\\w+)`?\\s+DROP\\s+COLUMN\\s+`?(\\w+)`?");
 
+    private static final String CREATE_TABLE_SQL = "sql/CreateTable.sql";
+    private static final String UPDATE_COLUMN_SQL = "sql/UpdateColumn.sql";
+    private static final String UPDATE_DATA_SQL = "sql/UpdateData.sql";
+    private static final String INSERT_DATA_SQL = "sql/InsertData.sql";
+
     private final DataSource dataSource;
     private final JdbcTemplate jdbcTemplate;
-    private final ResourcePatternResolver resourcePatternResolver = new PathMatchingResourcePatternResolver();
 
     @Value("${spring.datasource.driver-class-name}")
     private String driverClassName;
@@ -76,30 +75,12 @@ public class DatabaseInitializationConfig {
         log.info("Starting database initialization check...");
 
         try {
-            List<String> createStatements = new ArrayList<>();
-            List<String> migrationStatements = new ArrayList<>();
-            List<String> insertStatements = new ArrayList<>();
-
-            for (String sql : loadSqlStatements()) {
-                String trimmedSql = sql.trim();
-                if (trimmedSql.isEmpty()) {
-                    continue;
-                }
-
-                if (isCreateTableStatement(trimmedSql)) {
-                    createStatements.add(trimmedSql);
-                } else if (isInsertStatement(trimmedSql)) {
-                    insertStatements.add(trimmedSql);
-                } else {
-                    migrationStatements.add(trimmedSql);
-                }
-            }
-
-            executeCreateStatements(createStatements);
-            executeMigrationStatements(migrationStatements);
+            executeCreateStatements(loadSqlStatements(CREATE_TABLE_SQL));
+            executeUpdateStatements(loadSqlStatements(UPDATE_COLUMN_SQL));
+            executeUpdateStatements(loadSqlStatements(UPDATE_DATA_SQL));
 
             if (executeInserts) {
-                executeInsertStatements(insertStatements);
+                executeInsertStatements(loadSqlStatements(INSERT_DATA_SQL));
             } else {
                 log.info("INSERT statement execution is disabled");
             }
@@ -111,32 +92,20 @@ public class DatabaseInitializationConfig {
     }
 
     /**
-     * Load all SQL statements from the classpath sql directory.
+     * Load SQL statements from one classpath resource.
      *
-     * @return all executable SQL statements sorted by file name
-     * @throws Exception when reading any SQL resource fails
-     */
-    private List<String> loadSqlStatements() throws Exception {
-        List<String> sqlStatements = new ArrayList<>();
-        Resource[] resources = resourcePatternResolver.getResources(SQL_RESOURCE_PATTERN);
-        Arrays.sort(resources, Comparator.comparing(Resource::getFilename, Comparator.nullsLast(String::compareToIgnoreCase)));
-
-        for (Resource resource : resources) {
-            sqlStatements.addAll(parseSqlResource(resource));
-        }
-
-        return sqlStatements;
-    }
-
-    /**
-     * Parse a SQL resource into executable statements.
-     *
-     * @param resource SQL resource to parse
+     * @param filePath sql file path under resources
      * @return parsed SQL statements
      * @throws Exception when reading the resource fails
      */
-    private List<String> parseSqlResource(Resource resource) throws Exception {
+    private List<String> loadSqlStatements(String filePath) throws Exception {
         List<String> sqlStatements = new ArrayList<>();
+        ClassPathResource resource = new ClassPathResource(filePath);
+
+        if (!resource.exists()) {
+            log.info("SQL file {} does not exist, skipping", filePath);
+            return sqlStatements;
+        }
 
         try (InputStream inputStream = resource.getInputStream();
              BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
@@ -150,7 +119,7 @@ public class DatabaseInitializationConfig {
                     continue;
                 }
 
-                currentStatement.append(line).append("\n");
+                currentStatement.append(line).append('\n');
                 if (trimmedLine.endsWith(";")) {
                     String statement = currentStatement.toString().trim();
                     if (!statement.isEmpty()) {
@@ -189,27 +158,27 @@ public class DatabaseInitializationConfig {
     }
 
     /**
-     * Execute migration statements in a safe, idempotent way.
+     * Execute UPDATE or ALTER statements in a safe way.
      *
-     * @param migrationStatements migration statements
+     * @param updateStatements update statements
      */
-    private void executeMigrationStatements(List<String> migrationStatements) {
-        for (String migrationSql : migrationStatements) {
-            if (shouldSkipAddColumnMigration(migrationSql) || shouldSkipDropColumnMigration(migrationSql)) {
+    private void executeUpdateStatements(List<String> updateStatements) {
+        for (String updateSql : updateStatements) {
+            if (shouldSkipAddColumnMigration(updateSql) || shouldSkipDropColumnMigration(updateSql)) {
                 continue;
             }
 
             try {
-                jdbcTemplate.execute(migrationSql);
-                log.info("Successfully executed migration statement");
+                jdbcTemplate.execute(updateSql);
+                log.info("Successfully executed update statement");
             } catch (Exception e) {
-                log.error("Failed to execute migration statement: {}", migrationSql, e);
+                log.error("Failed to execute update statement: {}", updateSql, e);
             }
         }
     }
 
     /**
-     * Execute insert statements as idempotent seed data.
+     * Execute INSERT statements as idempotent seed data.
      *
      * @param insertStatements insert statements
      */
@@ -297,11 +266,11 @@ public class DatabaseInitializationConfig {
     /**
      * Skip ADD COLUMN migrations if the target column already exists.
      *
-     * @param migrationSql migration statement
+     * @param updateSql update statement
      * @return true if the statement should be skipped
      */
-    private boolean shouldSkipAddColumnMigration(String migrationSql) {
-        Matcher matcher = ALTER_ADD_COLUMN_PATTERN.matcher(migrationSql.trim());
+    private boolean shouldSkipAddColumnMigration(String updateSql) {
+        Matcher matcher = ALTER_ADD_COLUMN_PATTERN.matcher(updateSql.trim());
         if (!matcher.find()) {
             return false;
         }
@@ -318,11 +287,11 @@ public class DatabaseInitializationConfig {
     /**
      * Skip DROP COLUMN migrations if the target column does not exist.
      *
-     * @param migrationSql migration statement
+     * @param updateSql update statement
      * @return true if the statement should be skipped
      */
-    private boolean shouldSkipDropColumnMigration(String migrationSql) {
-        Matcher matcher = ALTER_DROP_COLUMN_PATTERN.matcher(migrationSql.trim());
+    private boolean shouldSkipDropColumnMigration(String updateSql) {
+        Matcher matcher = ALTER_DROP_COLUMN_PATTERN.matcher(updateSql.trim());
         if (!matcher.find()) {
             return false;
         }
@@ -334,26 +303,6 @@ public class DatabaseInitializationConfig {
             return true;
         }
         return false;
-    }
-
-    /**
-     * Determine whether the statement is a CREATE TABLE statement.
-     *
-     * @param sql sql statement
-     * @return true if the statement creates a table
-     */
-    private boolean isCreateTableStatement(String sql) {
-        return CREATE_TABLE_PATTERN.matcher(sql).find();
-    }
-
-    /**
-     * Determine whether the statement is an INSERT statement.
-     *
-     * @param sql sql statement
-     * @return true if the statement inserts data
-     */
-    private boolean isInsertStatement(String sql) {
-        return INSERT_STATEMENT_PATTERN.matcher(sql).find();
     }
 
     /**
