@@ -508,8 +508,8 @@ public class AdminUserServiceImpl implements AdminUserService {
                 .eq(UserDO::getIsEnabled, true)
                 .orderByDesc(UserDO::getCreateTime));
 
-        if (!isAdmin && isEditor) {
-            // 编辑可以选择自己、其他编辑和普通用户，但不能选择管理员账号
+        // 指定可见用户列表里不包含管理员账号，管理员本身也不需要出现在可选项中
+        if (isAdmin || isEditor) {
             users = users.stream()
                     .filter(user -> !isAdminUser(user))
                     .collect(Collectors.toList());
@@ -533,14 +533,14 @@ public class AdminUserServiceImpl implements AdminUserService {
 
         List<UserRoleDO> userRoles = userRoleMapper.selectByUserId(user.getId());
         if (CollectionUtils.isEmpty(userRoles)) {
-            return true;
+            return false;
         }
 
         List<Long> roleIds = userRoles.stream()
                 .map(UserRoleDO::getRoleId)
                 .collect(Collectors.toList());
         if (CollectionUtils.isEmpty(roleIds)) {
-            return true;
+            return false;
         }
 
         List<RoleDO> roles = roleMapper.selectBatchIds(roleIds);
