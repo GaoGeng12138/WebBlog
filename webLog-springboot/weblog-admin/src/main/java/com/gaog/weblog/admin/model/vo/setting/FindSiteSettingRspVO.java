@@ -21,6 +21,12 @@ public class FindSiteSettingRspVO {
     @ApiModelProperty("前台文章列表每页数量")
     private Integer frontendArticlePageSize;
 
+    @ApiModelProperty("活跃度等级规则JSON")
+    private String activityLevelRules;
+
+    @ApiModelProperty("活跃度加分规则JSON")
+    private String activityScoreRules;
+
     @ApiModelProperty("是否启用GitHub功能")
     private Boolean githubEnabled;
 
@@ -81,6 +87,8 @@ public class FindSiteSettingRspVO {
         vo.setDescription(settingDO.getDescription());
         vo.setLogoUrl(settingDO.getLogoUrl());
         vo.setFrontendArticlePageSize(settingDO.getFrontendArticlePageSize());
+        vo.setActivityLevelRules(settingDO.getActivityLevelRules());
+        vo.setActivityScoreRules(settingDO.getActivityScoreRules());
         vo.setGithubEnabled(settingDO.getGithubEnabled());
         vo.setGithubShowFront(settingDO.getGithubShowFront());
         vo.setGithubShowRegister(settingDO.getGithubShowRegister());

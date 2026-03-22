@@ -42,9 +42,9 @@ public class UserActivityScoreScheduledTask {
             // Update activity scores for each user
             for (UserDO user : users) {
                 try {
-                    userActivityScoreService.calculateAndSaveActivityScores(
-                        user.getId(), 
-                        yesterday, 
+                    userActivityScoreService.recalculateActivityScores(
+                        user.getId(),
+                        yesterday,
                         yesterday
                     );
                     log.debug("Updated activity score for user: {}", user.getId());

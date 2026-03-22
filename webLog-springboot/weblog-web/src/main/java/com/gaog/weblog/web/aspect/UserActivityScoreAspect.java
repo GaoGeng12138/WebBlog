@@ -30,7 +30,7 @@ public class UserActivityScoreAspect {
             Long userId = SecurityContextUtil.getCurrentUserId();
             if (userId != null) {
                 LocalDate today = LocalDate.now();
-                userActivityScoreService.calculateAndSaveActivityScores(userId, today, today);
+                userActivityScoreService.recalculateActivityScores(userId, today, today);
                 log.debug("Updated activity score for user {} after publishing article", userId);
             }
         } catch (Exception e) {
@@ -47,7 +47,7 @@ public class UserActivityScoreAspect {
             Long userId = SecurityContextUtil.getCurrentUserId();
             if (userId != null) {
                 LocalDate today = LocalDate.now();
-                userActivityScoreService.calculateAndSaveActivityScores(userId, today, today);
+                userActivityScoreService.recalculateActivityScores(userId, today, today);
                 log.debug("Updated activity score for user {} after adding comment", userId);
             }
         } catch (Exception e) {
@@ -64,11 +64,45 @@ public class UserActivityScoreAspect {
             Long userId = SecurityContextUtil.getCurrentUserId();
             if (userId != null) {
                 LocalDate today = LocalDate.now();
-                userActivityScoreService.calculateAndSaveActivityScores(userId, today, today);
+                userActivityScoreService.recalculateActivityScores(userId, today, today);
                 log.debug("Updated activity score for user {} after favoriting article", userId);
             }
         } catch (Exception e) {
             log.error("Error updating activity score after favoriting article", e);
+        }
+    }
+
+    /**
+     * Update user activity score after liking a comment
+     */
+    @AfterReturning(pointcut = "execution(* com.gaog.weblog.web.service.impl.CommentServiceImpl.likeComment(..))")
+    public void afterLikeComment() {
+        try {
+            Long userId = SecurityContextUtil.getCurrentUserId();
+            if (userId != null) {
+                LocalDate today = LocalDate.now();
+                userActivityScoreService.recalculateActivityScores(userId, today, today);
+                log.debug("Updated activity score for user {} after liking comment", userId);
+            }
+        } catch (Exception e) {
+            log.error("Error updating activity score after liking comment", e);
+        }
+    }
+
+    /**
+     * Update user activity score after unliking a comment
+     */
+    @AfterReturning(pointcut = "execution(* com.gaog.weblog.web.service.impl.CommentServiceImpl.unlikeComment(..))")
+    public void afterUnlikeComment() {
+        try {
+            Long userId = SecurityContextUtil.getCurrentUserId();
+            if (userId != null) {
+                LocalDate today = LocalDate.now();
+                userActivityScoreService.recalculateActivityScores(userId, today, today);
+                log.debug("Updated activity score for user {} after unliking comment", userId);
+            }
+        } catch (Exception e) {
+            log.error("Error updating activity score after unliking comment", e);
         }
     }
 }

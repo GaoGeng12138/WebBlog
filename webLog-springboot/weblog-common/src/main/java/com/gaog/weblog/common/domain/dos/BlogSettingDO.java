@@ -30,6 +30,8 @@ public class BlogSettingDO {
     // 网站资源
     private String logoUrl;            // 网站图标
     private Integer frontendArticlePageSize; // 前台文章列表每页数量
+    private String activityLevelRules; // 活跃度等级规则JSON
+    private String activityScoreRules; // 活跃度加分规则JSON
     
     // 社交链接设置（控制是否在前台和注册页显示）
     private Boolean githubEnabled;         // 是否启用GitHub链接功能

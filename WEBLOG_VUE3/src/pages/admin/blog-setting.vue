@@ -67,6 +67,36 @@
                                 <el-text type="info" size="small">前台首页文章列表每页展示数量，仅展示页码分页</el-text>
                             </div>
                         </el-form-item>
+
+                        <el-form-item label="活跃度等级" prop="activityLevelRules">
+                            <div class="flex w-full flex-col gap-3">
+                                <el-input
+                                    v-model="form.activityLevelRules"
+                                    type="textarea"
+                                    :rows="8"
+                                    class="admin-input"
+                                    placeholder="请输入活跃度等级规则 JSON"
+                                />
+                                <el-text type="info" size="small">
+                                    这里控制前台用户中心显示的 Lv 等级，保存后会同步到前台读取。
+                                </el-text>
+                            </div>
+                        </el-form-item>
+
+                        <el-form-item label="活跃度加分" prop="activityScoreRules">
+                            <div class="flex w-full flex-col gap-3">
+                                <el-input
+                                    v-model="form.activityScoreRules"
+                                    type="textarea"
+                                    :rows="8"
+                                    class="admin-input"
+                                    placeholder="请输入活跃度加分规则 JSON"
+                                />
+                                <el-text type="info" size="small">
+                                    这里控制发文章、评论、收藏、点赞、登录各自的整数积分，保存后会同步到前台活跃度统计。
+                                </el-text>
+                            </div>
+                        </el-form-item>
                         <!-- 网站图标上传 -->
                         <el-form-item label="网站Logo" prop="logoUrl">
                             <div class="flex items-center gap-6">
@@ -327,6 +357,7 @@
 <script setup>
 import { getBlogSettings, updateBlogSettings } from '@/api/admin/blog'
 import { uploadFile } from '@/api/admin/file'
+import { DEFAULT_ACTIVITY_LEVEL_RULES_TEXT, DEFAULT_ACTIVITY_SCORE_RULES_TEXT } from '@/composables/activityLevel'
 import { hasAccess } from '@/composables/permission'
 import { useUserStore } from '@/stores/user'
 import { showMessage } from '@/composables/util'
@@ -344,6 +375,8 @@ const form = reactive({
     title: '',
     description: '',
     logoUrl: '',
+    activityLevelRules: DEFAULT_ACTIVITY_LEVEL_RULES_TEXT,
+    activityScoreRules: DEFAULT_ACTIVITY_SCORE_RULES_TEXT,
     githubEnabled: false,
     githubShowFront: false,
     githubShowRegister: false,
@@ -486,6 +519,8 @@ const onSubmit = () => {
             description: form.description,
             logoUrl: form.logoUrl,
             frontendArticlePageSize: form.frontendArticlePageSize,
+            activityLevelRules: form.activityLevelRules,
+            activityScoreRules: form.activityScoreRules,
             // 社交链接功能开关
             githubEnabled: form.githubEnabled,
             githubShowFront: form.githubShowFront,
@@ -522,6 +557,8 @@ const onSubmit = () => {
 // 重置表单
 const resetForm = () => {
     formRef.value.resetFields()
+    form.activityLevelRules = DEFAULT_ACTIVITY_LEVEL_RULES_TEXT
+    form.activityScoreRules = DEFAULT_ACTIVITY_SCORE_RULES_TEXT
     loadSettings()
 }
 
@@ -535,6 +572,8 @@ const loadSettings = () => {
                 description: res.data.description || '',
                 logoUrl: res.data.logoUrl || '',
                 frontendArticlePageSize: res.data.frontendArticlePageSize || 12,
+                activityLevelRules: res.data.activityLevelRules || DEFAULT_ACTIVITY_LEVEL_RULES_TEXT,
+                activityScoreRules: res.data.activityScoreRules || DEFAULT_ACTIVITY_SCORE_RULES_TEXT,
                 githubShowFront: res.data.githubShowFront || false,
                 githubShowRegister: res.data.githubShowRegister || false,
                 twitterShowFront: res.data.twitterShowFront || false,

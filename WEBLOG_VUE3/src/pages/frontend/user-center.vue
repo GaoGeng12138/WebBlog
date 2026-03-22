@@ -69,7 +69,13 @@
                                         <span class="admin-identity-badge__text">管理员</span>
                                     </span>
                                     <el-tag v-else effect="light" type="primary" size="small" round
-                                        class="!border-[rgba(116,149,195,0.18)] !bg-[rgba(116,149,195,0.12)] !text-[var(--theme-primary-deep)]">Lv.3 作者</el-tag>
+                                        class="!border-[rgba(116,149,195,0.18)] !bg-[rgba(116,149,195,0.12)] !text-[var(--theme-primary-deep)]">
+                                        {{ roleDisplayName }}
+                                    </el-tag>
+                                    <el-tag effect="light" type="success" size="small" round
+                                        class="!border-[rgba(116,149,195,0.18)] !bg-[rgba(116,149,195,0.12)] !text-[var(--theme-primary-deep)]">
+                                        {{ activityLevelLabel }}
+                                    </el-tag>
                                     <span class="rounded-md bg-[rgba(240,245,251,0.95)] px-2 py-0.5 text-xs text-slate-400">ID:{{
                                         user.userId
                                         }}</span>
@@ -242,7 +248,7 @@
                                     <div class="activity-breakdown">
                                         <div v-for="activity in activityData.activities" :key="activity.type"
                                             class="activity-item">
-                                            <span class="activity-type">{{ getActivityTypeName(activity.type) }}</span>
+                                            <span class="activity-type">{{ activity.name || getActivityTypeName(activity.type) }}</span>
                                             <span class="activity-count">{{ activity.count }}次</span>
                                             <span class="activity-item-score">+{{ activity.score }}分</span>
                                         </div>
@@ -711,6 +717,7 @@ import {
 import moment from 'moment'
 import { useUserStore } from '@/stores/user'
 import { useSiteConfigStore } from '@/stores/siteConfig'
+import { getActivityLevelLabel } from '@/composables/activityLevel'
 import { getArticlePageList } from "@/api/frontend/article";
 import { getCollectedArticles, uncollectArticle } from "@/api/frontend/favorite";
 import { getUserCenterStatistics, getUserCenterComments, getUserCenterOverview, getActivityScore, getActivityStatistics, getActivityTrend, getCurrentUserLocation, updateUserProfile, deleteUserAccount } from "@/api/frontend/user";
@@ -741,6 +748,25 @@ const userStore = useUserStore()
 const siteConfig = useSiteConfigStore()
 const user = computed(() => userStore.frontendUserInfo)
 const canUserPublish = computed(() => siteConfig.isFeatureEnabled('userPublishEnabled') === true)
+const roleDisplayName = computed(() => {
+    const roles = user.value?.roles || []
+
+    if (Array.isArray(roles)) {
+        if (roles.includes('ROLE_ADMIN')) {
+            return '管理员'
+        }
+
+        if (roles.includes('ROLE_EDITOR')) {
+            return '编辑'
+        }
+
+        if (roles.includes('ROLE_VISITOR')) {
+            return '访客'
+        }
+    }
+
+    return '用户'
+})
 const currentLocationText = computed(() => {
     const parts = [province.value, city.value].filter(Boolean)
     return parts.length ? parts.join(' · ') : (locationLabel.value || '未知位置')
@@ -842,6 +868,9 @@ const activityData = ref({
     totalUsers: 0,
     activities: [],
     trend: []
+})
+const activityLevelLabel = computed(() => {
+    return getActivityLevelLabel(activityData.value.totalScore, siteConfig.siteInfo.activityLevelRules)
 })
 const activityStatistics = ref({
     dailyAverage: 0,
@@ -1460,6 +1489,7 @@ const getActivityTypeName = (type) => {
         'article': '发布文章',
         'comment': '发表评论',
         'favorite': '收藏文章',
+        'like': '点赞评论',
         'login': '每日登录'
     }
     return typeMap[type] || '其他活动'
