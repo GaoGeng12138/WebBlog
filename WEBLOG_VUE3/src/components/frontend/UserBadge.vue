@@ -23,6 +23,7 @@
         <template #dropdown>
           <el-dropdown-menu>
             <el-dropdown-item @click="goUserCenter">用户中心</el-dropdown-item>
+            <el-dropdown-item v-if="canEnterAdmin" divided @click="goAdminCenter">进入后台</el-dropdown-item>
             <el-dropdown-item v-if="canUserPublish" @click="goPublish">写文章</el-dropdown-item>
             <el-dropdown-item divided @click="logout">登出</el-dropdown-item>
           </el-dropdown-menu>
@@ -46,8 +47,10 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { getToken } from '@/composables/cookie'
+import { hasAccess } from '@/composables/permission'
 import { useUserStore } from '@/stores/user'
 import { useSiteConfigStore } from '@/stores/siteConfig'
 
@@ -59,6 +62,7 @@ const loading = computed(() => false)
 const defaultAvatar = `${import.meta.env.BASE_URL}default-avatar.svg`
 const displayAvatar = computed(() => user.value?.avatar || defaultAvatar)
 const canUserPublish = computed(() => siteConfig.isFeatureEnabled('userPublishEnabled') === true)
+const canEnterAdmin = computed(() => hasAccess(userStore.userInfo, 'admin:dashboard:view'))
 
 const handleAvatarError = (event) => {
   if (event.target.src.endsWith('default-avatar.svg')) {
@@ -66,6 +70,12 @@ const handleAvatarError = (event) => {
   }
   event.target.src = defaultAvatar
 }
+
+onMounted(() => {
+  if (getToken()) {
+    userStore.ensureUserInfoReady().catch(() => {})
+  }
+})
 
 // 跳转登录页
 const goLogin = () => {
@@ -81,6 +91,11 @@ const logout = () => {
 // 跳转用户中心
 const goUserCenter = () => {
   router.push('/user')
+}
+
+// 跳转后台首页
+const goAdminCenter = () => {
+  router.push('/admin/index')
 }
 
 // 跳转写文章页
