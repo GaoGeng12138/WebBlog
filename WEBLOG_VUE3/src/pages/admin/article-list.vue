@@ -1,5 +1,5 @@
 <template>
-    <div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
+    <div class="admin-list-page admin-article-list-page min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
         <!-- 页面标题 -->
         <div class="mb-8">
             <h1 class="text-3xl font-bold text-gray-900 flex items-center gap-2">
@@ -316,9 +316,7 @@ const deleteArticleSubmit = (row) => {
                 showMessage(message, 'error')
             }
         })
-    }).catch(() => {
-        console.log('取消了')
-    })
+    }).catch(() => {})
 }
 </script>
 
@@ -370,5 +368,92 @@ const deleteArticleSubmit = (row) => {
   padding: 4px 8px;
   font-size: 12px;
   font-weight: 500;
+}
+</style>
+
+<style scoped>
+@media (max-width: 768px) {
+  .admin-article-list-page {
+    padding: 1rem !important;
+  }
+
+  .admin-article-list-page .mb-8 h1 {
+    font-size: 1.5rem;
+    line-height: 2rem;
+  }
+
+  .admin-article-list-page .bg-white.rounded-xl {
+    padding: 1rem !important;
+  }
+
+  .admin-article-list-page .flex.flex-wrap.items-center.gap-4 {
+    gap: 0.75rem !important;
+  }
+
+  .admin-article-list-page .flex.flex-wrap.items-center.gap-4 > div,
+  .admin-article-list-page .flex.flex-wrap.items-center.gap-4 .w-52,
+  .admin-article-list-page .flex.flex-wrap.items-center.gap-4 .w-60 {
+    width: 100% !important;
+  }
+
+  .admin-article-list-page .flex.justify-between.items-center {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .admin-article-list-page .flex.justify-between.items-center > div:first-child {
+    width: 100%;
+  }
+
+  .admin-article-list-page .flex.justify-between.items-center .el-button {
+    width: 100%;
+  }
+
+  .admin-article-list-page .el-date-editor {
+    width: 100% !important;
+  }
+
+  .article-table :deep(.el-table__header th),
+  .article-table :deep(.el-table__body td) {
+    font-size: 12px;
+  }
+
+  .article-table :deep(.el-table__header th:nth-child(2)),
+  .article-table :deep(.el-table__body td:nth-child(2)),
+  .article-table :deep(.el-table__header th:nth-child(3)),
+  .article-table :deep(.el-table__body td:nth-child(3)),
+  .article-table :deep(.el-table__header th:nth-child(4)),
+  .article-table :deep(.el-table__body td:nth-child(4)),
+  .article-table :deep(.el-table__header th:nth-child(5)),
+  .article-table :deep(.el-table__body td:nth-child(5)),
+  .article-table :deep(.el-table__header th:nth-child(7)),
+  .article-table :deep(.el-table__body td:nth-child(7)) {
+    display: none !important;
+  }
+
+  .article-table :deep(.el-table__header th:nth-child(1)),
+  .article-table :deep(.el-table__body td:nth-child(1)) {
+    width: auto !important;
+  }
+
+  .article-table :deep(.el-table__body td:nth-child(1) .font-medium) {
+    font-size: 0.95rem;
+  }
+
+  .article-table :deep(.el-table__body td:nth-child(6)),
+  .article-table :deep(.el-table__header th:nth-child(6)) {
+    width: 90px !important;
+  }
+
+  .article-table :deep(.el-table__body td:nth-child(8)),
+  .article-table :deep(.el-table__header th:nth-child(8)) {
+    width: 110px !important;
+  }
+
+  .article-table :deep(.el-button) {
+    min-width: 0;
+    padding-inline: 0.75rem;
+  }
 }
 </style>

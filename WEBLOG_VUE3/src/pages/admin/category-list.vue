@@ -1,5 +1,5 @@
 <template>
-    <div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
+    <div class="admin-list-page admin-category-list-page min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
         <div class="mb-8">
             <h1 class="text-3xl font-bold text-gray-900 flex items-center gap-2">
                 <el-icon class="text-blue-600"><FolderOpened /></el-icon>
@@ -437,9 +437,7 @@ const deleteCategorySubmit = (row) => {
                 showMessage(res.message, 'error')
             }
         })
-    }).catch(() => {
-        console.log('取消了')
-    })
+    }).catch(() => {})
 }
 
 loadUserOptions()
@@ -491,5 +489,75 @@ loadUserOptions()
   padding: 4px 8px;
   font-size: 12px;
   font-weight: 500;
+}
+</style>
+
+<style scoped>
+@media (max-width: 768px) {
+  .admin-category-list-page {
+    padding: 1rem !important;
+  }
+
+  .admin-category-list-page .mb-8 h1 {
+    font-size: 1.5rem;
+    line-height: 2rem;
+  }
+
+  .admin-category-list-page .bg-white.rounded-xl {
+    padding: 1rem !important;
+  }
+
+  .admin-category-list-page .flex.flex-wrap.items-center.gap-4 {
+    gap: 0.75rem !important;
+  }
+
+  .admin-category-list-page .flex.flex-wrap.items-center.gap-4 > div,
+  .admin-category-list-page .flex.flex-wrap.items-center.gap-4 .w-52,
+  .admin-category-list-page .flex.flex-wrap.items-center.gap-4 .w-60 {
+    width: 100% !important;
+  }
+
+  .admin-category-list-page .flex.justify-between.items-center {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .admin-category-list-page .flex.justify-between.items-center > div:first-child,
+  .admin-category-list-page .flex.justify-between.items-center .el-button {
+    width: 100%;
+  }
+
+  .admin-category-list-page .el-date-editor {
+    width: 100% !important;
+  }
+
+  .category-table :deep(.el-table__header th),
+  .category-table :deep(.el-table__body td) {
+    font-size: 12px;
+  }
+
+  .category-table :deep(.el-table__header th:nth-child(2)),
+  .category-table :deep(.el-table__body td:nth-child(2)),
+  .category-table :deep(.el-table__header th:nth-child(5)),
+  .category-table :deep(.el-table__body td:nth-child(5)) {
+    display: none !important;
+  }
+
+  .category-table :deep(.el-table__body td:nth-child(1) .el-tag) {
+    max-width: 110px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .category-table :deep(.el-button) {
+    min-width: 0;
+    padding-inline: 0.75rem;
+  }
+
+  .admin-category-list-page .el-dialog {
+    width: calc(100vw - 1rem) !important;
+  }
 }
 </style>

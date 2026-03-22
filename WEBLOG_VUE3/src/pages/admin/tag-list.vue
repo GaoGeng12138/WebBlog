@@ -1,5 +1,5 @@
 <template>
-    <div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
+    <div class="admin-list-page admin-tag-list-page min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
         <!-- 页面标题 -->
         <div class="mb-8">
             <h1 class="text-3xl font-bold text-gray-900 flex items-center gap-2">
@@ -275,7 +275,6 @@ const onSubmit = () => {
     // 先验证 form 表单字段
     formRef.value.validate((valid) => {
         if (!valid) {
-            console.log('表单验证不通过')
             return false
         }
         // 显示提交按钮 loading
@@ -317,9 +316,7 @@ const deleteCategorySubmit = (row) => {
                 showMessage(message, 'error')
             }
         })
-    }).catch(() => {
-        console.log('取消了')
-    })
+    }).catch(() => {})
 }
 
 // 格式化日期
@@ -401,5 +398,69 @@ function formatDate(timestamp) {
 }
 .admin-card .articles-list .article-card:hover {
     background-color: #fafafa;
+}
+
+@media (max-width: 768px) {
+    .admin-tag-list-page {
+        padding: 1rem !important;
+    }
+
+    .admin-tag-list-page .mb-8 h1 {
+        font-size: 1.5rem;
+        line-height: 2rem;
+    }
+
+    .admin-tag-list-page .bg-white.rounded-xl {
+        padding: 1rem !important;
+    }
+
+    .admin-tag-list-page .flex.flex-wrap.items-center.gap-4 {
+        gap: 0.75rem !important;
+    }
+
+    .admin-tag-list-page .flex.flex-wrap.items-center.gap-4 > div,
+    .admin-tag-list-page .flex.flex-wrap.items-center.gap-4 .w-52,
+    .admin-tag-list-page .flex.flex-wrap.items-center.gap-4 .w-60 {
+        width: 100% !important;
+    }
+
+    .admin-tag-list-page .flex.justify-between.items-center {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+
+    .admin-tag-list-page .flex.justify-between.items-center > div:first-child,
+    .admin-tag-list-page .flex.justify-between.items-center .el-button {
+        width: 100%;
+    }
+
+    .admin-tag-list-page .el-date-editor {
+        width: 100% !important;
+    }
+
+    .tag-table :deep(.el-table__header th),
+    .tag-table :deep(.el-table__body td) {
+        font-size: 12px;
+    }
+
+    .tag-table :deep(.el-table__header th:nth-child(2)),
+    .tag-table :deep(.el-table__body td:nth-child(2)) {
+        display: none !important;
+    }
+
+    .tag-table :deep(.el-table__body td:nth-child(1) .flex) {
+        flex-wrap: wrap;
+        gap: 0.4rem;
+    }
+
+    .tag-table :deep(.el-button) {
+        min-width: 0;
+        padding-inline: 0.75rem;
+    }
+
+    .admin-tag-list-page .el-dialog {
+        width: calc(100vw - 1rem) !important;
+    }
 }
 </style>

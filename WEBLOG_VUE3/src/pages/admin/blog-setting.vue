@@ -1,5 +1,5 @@
 <template>
-    <div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
+    <div class="admin-blog-setting-page min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
         <!-- 页面标题 -->
         <div class="mb-8">
             <h1 class="text-3xl font-bold text-gray-900 flex items-center gap-2">
@@ -1050,6 +1050,110 @@ onMounted(() => {
     display: flex;
     align-items: center;
     justify-content: center;
+}
+
+@media (max-width: 768px) {
+    .admin-blog-setting-page {
+        padding: 1rem !important;
+    }
+
+    .admin-blog-setting-page .mb-8 h1 {
+        font-size: 1.5rem;
+        line-height: 2rem;
+    }
+
+    .admin-blog-setting-page .bg-white.rounded-xl {
+        border-radius: 20px;
+    }
+
+    .blog-setting-tabs :deep(.el-tabs__header) {
+        padding: 0 12px;
+    }
+
+    .blog-setting-tabs :deep(.el-tabs__nav-wrap) {
+        overflow-x: auto;
+    }
+
+    .blog-setting-tabs :deep(.el-tabs__item) {
+        font-size: 13px;
+        padding: 0 14px;
+    }
+
+    .admin-blog-setting-page .p-6 {
+        padding: 1rem !important;
+    }
+
+    .admin-blog-setting-page :deep(.el-form) {
+        max-width: 100% !important;
+    }
+
+    .admin-blog-setting-page :deep(.el-form-item) {
+        margin-bottom: 16px;
+    }
+
+    .admin-blog-setting-page :deep(.el-form-item__label) {
+        float: none !important;
+        display: block !important;
+        width: auto !important;
+        text-align: left !important;
+        padding: 0 0 8px !important;
+        line-height: 1.4;
+    }
+
+    .admin-blog-setting-page :deep(.el-form-item__content) {
+        margin-left: 0 !important;
+    }
+
+    .admin-blog-setting-page :deep(.el-input),
+    .admin-blog-setting-page :deep(.el-input-number),
+    .admin-blog-setting-page :deep(.el-select),
+    .admin-blog-setting-page :deep(.el-textarea) {
+        width: 100%;
+    }
+
+    .admin-blog-setting-page :deep(.el-button) {
+        width: 100%;
+    }
+
+    .admin-blog-setting-page :deep(.el-form-item .flex) {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .admin-blog-setting-page :deep(.el-form-item .ml-16) {
+        margin-left: 0 !important;
+    }
+
+    .admin-blog-setting-page .activity-panel {
+        border-radius: 16px;
+    }
+
+    .activity-panel__head {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .activity-panel__body {
+        padding: 12px;
+    }
+
+    .activity-panel :deep(.el-table .cell) {
+        padding-left: 8px;
+        padding-right: 8px;
+    }
+
+    .activity-panel :deep(.el-table__body-wrapper) {
+        overflow-x: auto;
+    }
+
+    .admin-blog-setting-page .grid.gap-6 {
+        grid-template-columns: 1fr !important;
+    }
+
+    .admin-blog-setting-page .flex.gap-2 {
+        width: 100%;
+        flex-direction: column;
+    }
 }
 </style>
 

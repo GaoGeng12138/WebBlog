@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
+  <div class="admin-list-page admin-user-list-page min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
     <!-- 页面标题 -->
     <div class="mb-8">
       <h1 class="text-3xl font-bold text-gray-900 flex items-center gap-2">
@@ -1086,5 +1086,85 @@ onMounted(() => {
 /* 一般方框样式 */
 :deep(.el-drawer__header) {
   border-bottom: 1px solid #e5e7eb;
+}
+</style>
+
+<style scoped>
+@media (max-width: 768px) {
+  .admin-user-list-page {
+    padding: 1rem !important;
+  }
+
+  .admin-user-list-page .mb-8 h1 {
+    font-size: 1.5rem;
+    line-height: 2rem;
+  }
+
+  .admin-user-list-page .bg-white.rounded-xl {
+    padding: 1rem !important;
+  }
+
+  .admin-user-list-page .flex.flex-col.md\\:flex-row {
+    gap: 0.75rem !important;
+  }
+
+  .admin-user-list-page .flex.flex-col.sm\\:flex-row {
+    width: 100%;
+  }
+
+  .admin-user-list-page .flex.flex-col.sm\\:flex-row > * {
+    width: 100%;
+  }
+
+  .admin-user-list-page .flex.gap-2 {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .admin-user-list-page .flex.gap-2 .el-button {
+    width: 100%;
+  }
+
+  .user-table :deep(.el-table__header th),
+  .user-table :deep(.el-table__body td) {
+    font-size: 12px;
+  }
+
+  .user-table :deep(.el-table__header th:nth-child(1)),
+  .user-table :deep(.el-table__body td:nth-child(1)),
+  .user-table :deep(.el-table__header th:nth-child(2)),
+  .user-table :deep(.el-table__body td:nth-child(2)),
+  .user-table :deep(.el-table__header th:nth-child(5)),
+  .user-table :deep(.el-table__body td:nth-child(5)),
+  .user-table :deep(.el-table__header th:nth-child(8)),
+  .user-table :deep(.el-table__body td:nth-child(8)) {
+    display: none !important;
+  }
+
+  .user-table :deep(.el-table__header th:nth-child(3)),
+  .user-table :deep(.el-table__body td:nth-child(3)),
+  .user-table :deep(.el-table__header th:nth-child(4)),
+  .user-table :deep(.el-table__body td:nth-child(4)),
+  .user-table :deep(.el-table__header th:nth-child(6)),
+  .user-table :deep(.el-table__body td:nth-child(6)),
+  .user-table :deep(.el-table__header th:nth-child(7)),
+  .user-table :deep(.el-table__body td:nth-child(7)),
+  .user-table :deep(.el-table__header th:nth-child(9)),
+  .user-table :deep(.el-table__body td:nth-child(9)) {
+    min-width: 72px;
+  }
+
+  .user-table :deep(.el-table__body td:nth-child(9) .flex) {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .user-table :deep(.el-table__body td:nth-child(9) .el-button) {
+    width: 100%;
+  }
+
+  .admin-user-list-page .el-dialog {
+    width: calc(100vw - 1rem) !important;
+  }
 }
 </style>

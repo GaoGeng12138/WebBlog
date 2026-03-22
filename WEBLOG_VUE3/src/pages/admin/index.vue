@@ -1,5 +1,5 @@
 <template>
-    <div class="p-4">
+    <div class="admin-dashboard-page p-4">
         <!-- 页面标题 -->
         <div class="mb-6">
             <h1 class="text-2xl font-bold text-gray-900">仪表盘</h1>
@@ -254,19 +254,14 @@ const activityTimeRange = ref('day')
 const loadStats = () => {
     // 使用 getDashboardStats API 获取所有统计数据
     getDashboardStats().then(res => {
-        console.log('getDashboardStats response:', res); // 调试信息
         if (res.success && res.data) {
-            console.log('getDashboardStats data:', res.data); // 调试信息
             // 根据实际API返回的数据结构设置值
             stats.value.articlesCount = res.data.articleTotal !== undefined ? res.data.articleTotal : 0
             stats.value.categoriesCount = res.data.categoryTotal !== undefined ? res.data.categoryTotal : 0
             stats.value.tagsCount = res.data.tagTotal !== undefined ? res.data.tagTotal : 0
             stats.value.totalViews = res.data.pvTotal !== undefined ? res.data.pvTotal : 0
-        } else {
-            console.log('getDashboardStats response not successful or no data'); // 调试信息
         }
     }).catch(error => {
-        console.error('getDashboardStats error:', error); // 错误信息
         // 如果获取失败，使用原来的备选方案
         // 获取文章总数
         getArticlePageList({ current: 1, size: 1000 }).then(res => {
@@ -323,10 +318,7 @@ const initArticleChart = () => {
 
         // 获取文章发布趋势数据
         getArticleStats().then(res => {
-            console.log('getArticleStats response:', res); // 调试信息
             if (res.success) {
-                console.log('getArticleStats data:', res.data); // 调试信息
-
                 // 处理API返回的数据结构，x 轴显示为 年-月-日
                 const dates = res.data.map(item => {
                     // 支持多种后端返回字段：date / day / createDate / dayOfWeek / dayOfMonth
@@ -385,7 +377,6 @@ const initArticleChart = () => {
                 }
                 chartInstance.setOption(option)
             } else {
-                console.log('getArticleStats response not successful'); // 调试信息
                 // 如果获取数据失败，使用默认数据
                     const defaultDates = Array.from({length:7}).map((_,i)=> moment().subtract(6-i,'days').format('YYYY-MM-DD'))
                     const defaultCounts = [12, 23, 18, 25, 15, 19, 22]
@@ -421,8 +412,7 @@ const initArticleChart = () => {
                 }
                 chartInstance.setOption(option)
             }
-        }).catch(error => {
-            console.error('getArticleStats error:', error); // 错误信息
+        }).catch(() => {
             // 如果请求失败，使用默认数据
                 const defaultDates = Array.from({length:7}).map((_,i)=> moment().subtract(6-i,'days').format('YYYY-MM-DD'))
                 const defaultCounts = [12, 23, 18, 25, 15, 19, 22]
@@ -468,10 +458,7 @@ const initViewsChart = () => {
 
         // 获取浏览量趋势数据
         getPvTrend().then(res => {
-            console.log('getPvTrend response:', res); // 调试信息
             if (res.success) {
-                console.log('getPvTrend data:', res.data); // 调试信息
-
                 // 处理API返回的数据结构（假设与getArticleStats相似）
                 const dates = res.data.map(item => {
                     const raw = item.date
@@ -559,8 +546,7 @@ const initViewsChart = () => {
                 }
                 viewsChartInstance.setOption(option)
             }
-        }).catch(error => {
-            console.error('getPvTrend error:', error); // 错误信息
+        }).catch(() => {
             // 如果请求失败，使用默认数据
                 const defaultDates = Array.from({length:7}).map((_,i)=> moment().subtract(6-i,'days').format('YYYY-MM-DD'))
                 const defaultCounts = [12, 23, 18, 25, 15, 19, 22]
@@ -855,5 +841,62 @@ onBeforeUnmount(() => {
 
 .quick-access-item:hover {
     transform: translateY(-2px);
+}
+
+@media (max-width: 768px) {
+    .admin-dashboard-page {
+        padding: 0.75rem !important;
+    }
+
+    .admin-dashboard-page .mb-6 h1 {
+        font-size: 1.5rem;
+        line-height: 2rem;
+    }
+
+    .admin-dashboard-page .stat-card {
+        height: auto;
+    }
+
+    .admin-dashboard-page .stat-content {
+        gap: 12px;
+    }
+
+    .admin-dashboard-page .stat-number {
+        font-size: 22px;
+    }
+
+    .admin-dashboard-page :deep(.el-row) {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .admin-dashboard-page :deep(.el-col) {
+        max-width: 100%;
+        width: 100%;
+        flex: 0 0 100%;
+    }
+
+    .admin-dashboard-page .grid.grid-cols-2 {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-dashboard-page .chart-container {
+        height: 220px;
+    }
+
+    .admin-dashboard-page .chart-container > div {
+        height: 220px !important;
+    }
+
+    .admin-dashboard-page .articles-list .article-card .flex {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .admin-dashboard-page .articles-list .article-card img {
+        width: 100%;
+        height: 180px;
+    }
 }
 </style>

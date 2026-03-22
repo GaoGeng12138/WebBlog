@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-transparent p-6">
+  <div class="admin-list-page admin-comment-list-page min-h-screen bg-transparent p-6">
     <div class="mb-8">
       <h1 class="flex items-center gap-2 text-3xl font-bold text-slate-900">
         <el-icon class="text-[var(--theme-primary)]"><ChatLineRound /></el-icon>
@@ -365,5 +365,73 @@ onActivated(() => {
 
 .comment-table :deep(.el-table__row:hover > td) {
   background: rgba(244, 248, 252, 0.72) !important;
+}
+
+@media (max-width: 768px) {
+  .admin-comment-list-page {
+    padding: 1rem !important;
+  }
+
+  .admin-comment-list-page .mb-8 h1 {
+    font-size: 1.5rem;
+    line-height: 2rem;
+  }
+
+  .admin-comment-list-page .admin-card {
+    padding: 1rem !important;
+  }
+
+  .admin-comment-list-page .grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .admin-comment-list-page .flex.gap-2 {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .admin-comment-list-page .flex.gap-2 .el-button {
+    width: 100%;
+  }
+
+  .comment-table :deep(.el-table__header th),
+  .comment-table :deep(.el-table__body td) {
+    font-size: 12px;
+  }
+
+  .comment-table :deep(.el-table__header th:nth-child(1)),
+  .comment-table :deep(.el-table__body td:nth-child(1)),
+  .comment-table :deep(.el-table__header th:nth-child(3)),
+  .comment-table :deep(.el-table__body td:nth-child(3)),
+  .comment-table :deep(.el-table__header th:nth-child(4)),
+  .comment-table :deep(.el-table__body td:nth-child(4)),
+  .comment-table :deep(.el-table__header th:nth-child(7)),
+  .comment-table :deep(.el-table__body td:nth-child(7)),
+  .comment-table :deep(.el-table__header th:nth-child(8)),
+  .comment-table :deep(.el-table__body td:nth-child(8)),
+  .comment-table :deep(.el-table__header th:nth-child(9)),
+  .comment-table :deep(.el-table__body td:nth-child(9)) {
+    display: none !important;
+  }
+
+  .comment-table :deep(.el-table__body td:nth-child(5)) {
+    white-space: normal;
+  }
+
+  .comment-table :deep(.el-button) {
+    min-width: 0;
+    padding-inline: 0.75rem;
+  }
+
+  .admin-comment-list-page .el-pagination {
+    flex-wrap: wrap;
+    gap: 0.35rem;
+  }
+
+  .admin-comment-list-page .flex.items-center.justify-between {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
 }
 </style>

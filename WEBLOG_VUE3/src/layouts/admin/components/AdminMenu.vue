@@ -1,5 +1,5 @@
 <template>
-    <div class="h-screen text-[var(--cosmic-text-light)] menu-container transition-all bg-[linear-gradient(180deg,rgba(247,250,255,0.95),rgba(238,245,253,0.92))] border-r border-[rgba(149,171,210,0.16)]"
+    <div class="h-full min-h-screen text-[var(--cosmic-text-light)] menu-container transition-all bg-[linear-gradient(180deg,rgba(247,250,255,0.95),rgba(238,245,253,0.92))] border-r border-[rgba(149,171,210,0.16)]"
         :style="{ width: menuStore.menuWidth, height: '100%' }">
         <!-- 顶部 Logo, 指定高度为 64px, 和右边的 Header 头保持一样高 -->
         <div class="flex h-[64px] items-center justify-center bg-[linear-gradient(180deg,rgba(242,247,254,0.96),rgba(235,243,252,0.88))]">
@@ -65,6 +65,7 @@ const router = useRouter()
 // 菜单选择事件
 const handleSelect = (path) => {
     router.push(path)
+    menuStore.closeMobileMenu()
 }
 
 // 是否折叠
@@ -152,5 +153,17 @@ const defaultActive = computed(() => route.path)
 
 :deep(.el-menu--collapse .el-sub-menu__title) {
     text-align: center;
+}
+
+@media (max-width: 768px) {
+    .menu-container {
+        width: 100% !important;
+    }
+
+    :deep(.el-menu-item),
+    :deep(.el-sub-menu__title) {
+        height: 46px !important;
+        line-height: 46px !important;
+    }
 }
 </style>

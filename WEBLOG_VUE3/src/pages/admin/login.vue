@@ -215,7 +215,6 @@ const form = reactive({
 
 // 按回车键后，执行登录事件
 function onKeyUp(e) {
-    // console.log(e)
     if (e.key == 'Enter') {
         onSubmit()
     }
@@ -223,7 +222,6 @@ function onKeyUp(e) {
 
 // 添加键盘监听
 onMounted(() => {
-    console.log('添加键盘监听')
     document.addEventListener('keyup', onKeyUp)
 })
 
@@ -262,7 +260,6 @@ const onSubmit = () => {
     //验证form表单字段
     formRef.value.validate((valid) => {
         if (!valid) {
-            console.log('表单验证失败');
             return false;
         }
         //开始加载
@@ -290,7 +287,6 @@ const onSubmit = () => {
                 router.replace('/admin/index')
 
                 userStore.ensureUserInfoReady(true).then((resolvedUserInfo) => {
-                    console.log('用户信息:', resolvedUserInfo || userInfo.value)
 
                     if (!hasAdminRole(resolvedUserInfo || userInfo.value)) {
                         router.replace('/')
@@ -637,6 +633,58 @@ const onSubmit = () => {
     100% {
         opacity: 0;
         filter: blur(0);
+    }
+}
+
+@media (max-width: 1024px) {
+    .login-float-card {
+        display: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .grid.min-h-screen {
+        min-height: 100svh;
+    }
+
+    .grid.min-h-screen > div:first-child {
+        padding: 1rem 1rem 2rem;
+    }
+
+    .grid.min-h-screen > div:last-child {
+        padding: 0;
+    }
+
+    .login-scene-card {
+        padding: 0.95rem 1rem;
+        border-radius: 20px;
+    }
+
+    .login-highlight-chip {
+        padding: 0.5rem 0.75rem;
+    }
+
+    .login-form :deep(.el-form-item) {
+        margin-bottom: 14px;
+    }
+
+    .login-form :deep(.el-input__wrapper) {
+        min-height: 46px;
+        border-radius: 16px;
+    }
+
+    .login-form :deep(.el-button) {
+        min-height: 46px;
+        border-radius: 16px;
+    }
+
+    .login-float-card {
+        display: none;
+    }
+
+    .login-orb {
+        filter: blur(8px);
+        opacity: 0.4;
     }
 }
 </style>

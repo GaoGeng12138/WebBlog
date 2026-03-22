@@ -1,12 +1,13 @@
 <template>
     <!-- 设置背景色为白色、高度为 64px，padding-right 为4，border-bootom 为slate 100通过 flex 指定水平布局 -->
-    <div class="h-[64px] flex pr-4 border-b border-[rgba(149,171,210,0.18)] shadow-[0_12px_24px_rgba(120,146,186,0.1)] bg-[linear-gradient(180deg,rgba(248,251,255,0.94),rgba(240,246,253,0.86))] backdrop-blur-xl">
+    <div class="h-[60px] sm:h-[64px] flex pr-3 sm:pr-4 border-b border-[rgba(149,171,210,0.18)] shadow-[0_12px_24px_rgba(120,146,186,0.1)] bg-[linear-gradient(180deg,rgba(248,251,255,0.94),rgba(240,246,253,0.86))] backdrop-blur-xl">
         <div class="w-[64px] h-[64px] cursor-pointer flex items-center justify-center text-[var(--cosmic-text-light)] transition-colors"
             @click="handleMenuCollapse">
             <!-- 左边栏收缩、展开 -->
             <div class="admin-header-icon-button admin-header-icon-button--menu">
                 <el-icon class="text-[18px]">
-                <Fold v-if="userMenu.menuWidth == '250px'" />
+                <Menu v-if="isMobile" />
+                <Fold v-else-if="userMenu.menuWidth == '250px'" />
                 <Expand v-else />
                 </el-icon>
             </div>
@@ -15,7 +16,7 @@
         <!-- 右边容器，通过 ml-auto 让其在父容器的右边 -->
         <div class="ml-auto flex items-center gap-2">
             <!-- 点击刷新页面 -->
-            <el-tooltip class="box-item" effect="dark" content="刷新" placement="bottom">
+            <el-tooltip class="box-item hidden sm:block" effect="dark" content="刷新" placement="bottom">
                 <div class="admin-header-action"
                     @click="handleRefresh">
                     <span class="admin-header-action__halo"></span>
@@ -26,7 +27,7 @@
             </el-tooltip>
 
             <!-- 点击全屏展示 -->
-            <el-tooltip class="box-item" effect="dark" content="全屏" placement="bottom">
+            <el-tooltip class="box-item hidden sm:block" effect="dark" content="全屏" placement="bottom">
                 <div class="admin-header-action"
                     @click="toggle">
                     <span class="admin-header-action__halo"></span>
@@ -38,7 +39,7 @@
             </el-tooltip>
 
             <!-- Go to Frontend Button -->
-            <el-tooltip class="box-item" effect="dark" content="回到前台" placement="bottom">
+            <el-tooltip class="box-item hidden sm:block" effect="dark" content="回到前台" placement="bottom">
                 <div class="admin-header-action"
                     @click="goToFrontend">
                     <span class="admin-header-action__halo"></span>
@@ -109,10 +110,10 @@ import { useMenuStore } from '@/stores/menu';
 import { showMessage, showModel } from '@/composables/util';
 import { useUserStore } from '@/stores/user.js';
 import { useFullscreen } from '@vueuse/core';
-import { computed, reactive, ref, watch, onBeforeUnmount, onMounted, } from 'vue';
+import { computed, reactive, ref, watch, onBeforeUnmount, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { updateAdminPassword } from '@/api/admin/user.js';
-import { RefreshRight, ScaleToOriginal, TopRight } from '@element-plus/icons-vue';
+import { Expand, Fold, Menu, RefreshRight, ScaleToOriginal, TopRight } from '@element-plus/icons-vue';
 
 // 引入了用户 Store
 const userStore = useUserStore()
@@ -144,9 +145,19 @@ const goToFrontend = () => {
 
 //引入菜单 store
 const userMenu = useMenuStore();
+const isMobile = ref(false)
+
+const updateViewport = () => {
+    isMobile.value = window.innerWidth < 768
+}
 
 //icon 点击事件
 const handleMenuCollapse = () => {
+    if (isMobile.value) {
+        userMenu.toggleMobileMenu()
+        return
+    }
+
     userMenu.handleMenuWidth();
 };
 
@@ -214,11 +225,12 @@ watch(() => userStore.userInfo.username, (newValue, oldValue) => {
 
 // 页面卸载前清除定时器
 onBeforeUnmount(() => {
-
+    window.removeEventListener('resize', updateViewport)
 })
 
 onMounted(() => {
-
+    updateViewport()
+    window.addEventListener('resize', updateViewport, { passive: true })
 })
 
 // 修改密码提交
@@ -334,5 +346,19 @@ const logout = () => {
 .admin-header-action:hover .admin-header-action__halo {
     opacity: 1;
     transform: translate3d(2px, -2px, 0);
+}
+
+@media (max-width: 768px) {
+    .admin-header-icon-button {
+        width: 38px;
+        height: 38px;
+        border-radius: 14px;
+    }
+
+    .admin-header-action {
+        width: 38px;
+        height: 38px;
+        border-radius: 14px;
+    }
 }
 </style>
