@@ -133,14 +133,14 @@
                                     @click="openEditDialog">
                                     编辑个人资料
                                 </el-button>
-                                <el-button v-if="hasRole('ROLE_ADMIN')" size="large" round
-                                    class="theme-btn-secondary profile-action-btn profile-action-btn--secondary !ml-0 !w-full !px-8 !font-semibold"
-                                    @click="goToAdminPanel">
-                                    <el-icon class="mr-1">
-                                        <Setting />
-                                    </el-icon>
-                                    后台管理系统
-                                </el-button>
+                                    <el-button v-if="canAccessAdminPanel" size="large" round
+                                        class="theme-btn-secondary profile-action-btn profile-action-btn--secondary !ml-0 !w-full !px-8 !font-semibold"
+                                        @click="goToAdminPanel">
+                                        <el-icon class="mr-1">
+                                            <Setting />
+                                        </el-icon>
+                                    进入后台管理
+                                    </el-button>
                             </div>
                             <div class="profile-quick-panel">
                                 <div class="profile-quick-panel__title">快捷操作</div>
@@ -767,6 +767,7 @@ const roleDisplayName = computed(() => {
 
     return '用户'
 })
+const canAccessAdminPanel = computed(() => hasRole('ROLE_ADMIN') || hasRole('ROLE_EDITOR'))
 const currentLocationText = computed(() => {
     const parts = [province.value, city.value].filter(Boolean)
     return parts.length ? parts.join(' · ') : (locationLabel.value || '未知位置')
@@ -1313,6 +1314,11 @@ const closeDeleteAccountDialog = (done) => {
 
 // Navigate to admin panel
 const goToAdminPanel = () => {
+    if (!canAccessAdminPanel.value) {
+        ElMessage.warning('当前账号没有访问后台的权限')
+        return
+    }
+
     router.push('/admin')
 }
 
