@@ -92,6 +92,16 @@ public class DatabaseInitializationConfig {
                     "ALTER TABLE `t_blog_settings` ADD COLUMN `frontend_article_page_size` int(11) DEFAULT '12' COMMENT '前台文章列表每页数量' AFTER `logo_url`"
             );
             ensureColumnExists(
+                    "t_blog_settings",
+                    "activity_level_rules",
+                    "ALTER TABLE `t_blog_settings` ADD COLUMN `activity_level_rules` text COMMENT '活跃度等级规则JSON' AFTER `frontend_article_page_size`"
+            );
+            ensureColumnExists(
+                    "t_blog_settings",
+                    "activity_score_rules",
+                    "ALTER TABLE `t_blog_settings` ADD COLUMN `activity_score_rules` text COMMENT '活跃度加分规则JSON' AFTER `activity_level_rules`"
+            );
+            ensureColumnExists(
                     "t_article",
                     "article_source",
                     "ALTER TABLE `t_article` ADD COLUMN `article_source` tinyint(1) NOT NULL DEFAULT '1' COMMENT '文章来源：1-后台发布，2-前台发布' AFTER `author`"
