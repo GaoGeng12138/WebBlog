@@ -35,6 +35,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAdjusters;
 import java.util.Collections;
@@ -186,7 +187,7 @@ public class UserActivityScoreServiceImpl implements UserActivityScoreService {
             int articleCount = activityScores.stream().mapToInt(UserActivityScoreDO::getArticleCount).sum();
             int commentCount = activityScores.stream().mapToInt(UserActivityScoreDO::getCommentCount).sum();
             int favoriteCount = activityScores.stream().mapToInt(UserActivityScoreDO::getFavoriteCount).sum();
-            int likeCount = activityScores.stream().mapToInt(score -> score.getLikeCount() == null ? 0 : score.getLikeCount()).sum();
+            int likeCount = countUserCommentLikesInDateRange(userId, startDate, endDate);
             int loginCount = activityScores.stream().mapToInt(UserActivityScoreDO::getLoginCount).sum();
 
             Map<String, Integer> activityCountMap = new HashMap<>();
@@ -430,7 +431,6 @@ public class UserActivityScoreServiceImpl implements UserActivityScoreService {
                         .articleCount(articleCount)
                         .commentCount(commentCount)
                         .favoriteCount(favoriteCount)
-                        .likeCount(likeCount)
                         .loginCount(loginCount)
                         .createTime(java.time.LocalDateTime.now())
                         .updateTime(java.time.LocalDateTime.now())
@@ -442,7 +442,6 @@ public class UserActivityScoreServiceImpl implements UserActivityScoreService {
                 existingScore.setArticleCount(articleCount);
                 existingScore.setCommentCount(commentCount);
                 existingScore.setFavoriteCount(favoriteCount);
-                existingScore.setLikeCount(likeCount);
                 existingScore.setLoginCount(loginCount);
                 existingScore.setUpdateTime(java.time.LocalDateTime.now());
                 userActivityScoreMapper.updateById(existingScore);
@@ -494,7 +493,20 @@ public class UserActivityScoreServiceImpl implements UserActivityScoreService {
     private int countUserCommentLikesOnDate(Long userId, LocalDate date) {
         LambdaQueryWrapper<UserLikeCommentDO> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(UserLikeCommentDO::getUserId, userId)
-                .apply("DATE(create_time) = '" + date.toString() + "'");
+                .ge(UserLikeCommentDO::getCreateTime, date.atStartOfDay())
+                .le(UserLikeCommentDO::getCreateTime, date.atTime(LocalTime.MAX));
+
+        return Math.toIntExact(userLikeCommentMapper.selectCount(wrapper));
+    }
+
+    /**
+     * Count comment likes made by user within a date range
+     */
+    private int countUserCommentLikesInDateRange(Long userId, LocalDate startDate, LocalDate endDate) {
+        LambdaQueryWrapper<UserLikeCommentDO> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(UserLikeCommentDO::getUserId, userId)
+                .ge(UserLikeCommentDO::getCreateTime, startDate.atStartOfDay())
+                .le(UserLikeCommentDO::getCreateTime, endDate.atTime(LocalTime.MAX));
 
         return Math.toIntExact(userLikeCommentMapper.selectCount(wrapper));
     }

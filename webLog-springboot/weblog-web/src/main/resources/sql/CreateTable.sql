@@ -236,7 +236,6 @@ CREATE TABLE `t_user_activity_score`
     `article_count`  int(11) NOT NULL DEFAULT '0' COMMENT '当日发布文章数',
     `comment_count`  int(11) NOT NULL DEFAULT '0' COMMENT '当日评论数',
     `favorite_count` int(11) NOT NULL DEFAULT '0' COMMENT '当日收藏数',
-    `like_count`     int(11) NOT NULL DEFAULT '0' COMMENT '当日点赞评论数',
     `login_count`    int(11) NOT NULL DEFAULT '0' COMMENT '当日登录次数',
     `create_time`    datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `update_time`    datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
