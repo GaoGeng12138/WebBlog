@@ -107,21 +107,21 @@
                                     <div class="profile-stat-card group cursor-pointer">
                                         <div class="profile-stat-accent"></div>
                                         <div
-                                            class="text-[30px] font-bold leading-none text-slate-900 transition-colors group-hover:text-[var(--theme-primary)]">
+                                            class="profile-stat-value text-[30px] font-bold leading-none text-slate-900 transition-colors group-hover:text-[var(--theme-primary)]">
                                             {{ articleCount }}</div>
                                         <div class="mt-2 text-[11px] font-semibold tracking-[0.18em] text-slate-500">文章</div>
                                     </div>
                                     <div class="profile-stat-card group cursor-pointer">
                                         <div class="profile-stat-accent"></div>
                                         <div
-                                            class="text-[30px] font-bold leading-none text-slate-900 transition-colors group-hover:text-[var(--theme-primary-deep)]">
+                                            class="profile-stat-value text-[30px] font-bold leading-none text-slate-900 transition-colors group-hover:text-[var(--theme-primary-deep)]">
                                             {{ favoriteCount }}</div>
                                         <div class="mt-2 text-[11px] font-semibold tracking-[0.18em] text-slate-500">收藏</div>
                                     </div>
                                     <div class="profile-stat-card group cursor-pointer">
                                         <div class="profile-stat-accent"></div>
                                         <div
-                                            class="text-[30px] font-bold leading-none text-slate-900 transition-colors group-hover:text-[var(--theme-primary-soft)]">
+                                            class="profile-stat-value text-[30px] font-bold leading-none text-slate-900 transition-colors group-hover:text-[var(--theme-primary-soft)]">
                                             {{ commentCount }}</div>
                                         <div class="mt-2 text-[11px] font-semibold tracking-[0.18em] text-slate-500">评论</div>
                                     </div>
@@ -2160,17 +2160,17 @@ onMounted(() => {
     }
 
     .user-center-cover {
-        height: 13rem;
+        height: 10.5rem;
     }
 
     .user-center-hero {
-        margin-top: -4.5rem;
-        padding: 1rem;
+        margin-top: -3.75rem;
+        padding: 0.95rem;
         border-radius: 22px;
     }
 
     .user-center-hero__grid {
-        gap: 1rem;
+        gap: 0.85rem;
     }
 
     .user-center-hero__profile {
@@ -2192,7 +2192,7 @@ onMounted(() => {
     }
 
     .profile-stat-card {
-        min-height: 88px;
+        min-height: 82px;
     }
 
     .user-center-layout {
@@ -2219,6 +2219,23 @@ onMounted(() => {
         flex: 0 0 auto;
     }
 
+    .user-center-actions .profile-panel-shell .grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .user-center-actions .profile-stat-card {
+        padding: 0.85rem 0.6rem;
+    }
+
+    .user-center-actions .profile-stat-value {
+        font-size: 1.4rem;
+    }
+
+    .user-center-actions .profile-stat-card .mt-2 {
+        margin-top: 0.4rem;
+        letter-spacing: 0.12em;
+    }
+
     .user-center-main :deep(.activity-section),
     .user-center-main :deep(.activity-summary),
     .user-center-main :deep(.activity-item) {
@@ -2232,6 +2249,10 @@ onMounted(() => {
     }
 
     .user-center-main :deep(.activity-breakdown) {
+        grid-template-columns: 1fr;
+    }
+
+    .user-center-main :deep(.activity-stats .grid) {
         grid-template-columns: 1fr;
     }
 

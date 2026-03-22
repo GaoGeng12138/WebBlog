@@ -66,7 +66,7 @@
                 stripe 
                 style="width: 100%" 
                 v-loading="tableLoading"
-                class="tag-table"
+                class="tag-table hidden md:block"
                 header-cell-class-name="bg-gradient-to-r from-blue-50 to-blue-100 font-semibold text-gray-800 border-b-2 border-blue-200"
             >
                 <el-table-column label="标签名称" min-width="220">
@@ -99,6 +99,57 @@
                     </template>
                 </el-table-column>
             </el-table>
+
+            <div class="md:hidden px-4 pb-3 pt-1">
+                <div class="rounded-2xl border border-[rgba(149,171,210,0.16)] bg-gradient-to-r from-[#f7fbff] to-[#eef4ff] p-4 shadow-[0_10px_24px_rgba(15,23,42,0.05)]">
+                    <el-button
+                        v-if="can('admin:tag:add')"
+                        type="primary"
+                        @click="addCategoryBtnClick"
+                        class="admin-btn-primary w-full"
+                    >
+                        <el-icon class="mr-1"><Plus /></el-icon>
+                        新增标签
+                    </el-button>
+                    <div class="mt-3 flex items-center justify-center gap-2 text-sm font-semibold text-slate-700">
+                        <el-icon class="text-blue-500"><DocumentCopy /></el-icon>
+                        共 <span class="text-lg text-blue-600">{{ pagination.total }}</span> 条记录
+                    </div>
+                </div>
+            </div>
+
+            <div class="md:hidden px-4 pb-4 space-y-3">
+                <article
+                    v-for="row in tableData"
+                    :key="row.id"
+                    class="rounded-2xl border border-[rgba(149,171,210,0.16)] bg-white p-4 shadow-[0_10px_24px_rgba(15,23,42,0.05)]"
+                >
+                    <div class="flex items-center justify-between gap-3">
+                        <div class="flex items-center gap-3">
+                            <el-tag class="tag-pill" size="small" effect="plain" type="success">{{ row.name }}</el-tag>
+                            <span class="text-sm text-slate-500">文章：{{ row.articleCount ?? row.count ?? 0 }}</span>
+                        </div>
+                        <el-button
+                            v-if="can('admin:tag:delete')"
+                            type="danger"
+                            size="small"
+                            circle
+                            @click="deleteCategorySubmit(row)"
+                            class="action-btn"
+                        >
+                            <el-icon>
+                                <Delete />
+                            </el-icon>
+                        </el-button>
+                    </div>
+                    <div class="mt-3 text-xs text-slate-500">
+                        {{ formatDate(row.createTime) }}
+                    </div>
+                </article>
+                <div v-if="tableData.length === 0" class="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
+                    暂无标签数据
+                </div>
+            </div>
 
             <!-- 分页组件 -->
             <div class="px-6 py-4 border-t border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100">

@@ -121,13 +121,18 @@
           >
             <div
               key="grid"
-              class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4"
+              class="grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 2xl:grid-cols-4"
               v-loading="loading"
             >
               <div
                 v-for="(article, index) in gridArticles"
                 :key="article.id || article._id"
-                class="reveal-item"
+                class="reveal-item mobile-masonry-item"
+                :class="[
+                  index % 2 === 1 ? 'mobile-masonry-item--offset' : 'mobile-masonry-item--base',
+                  index % 4 === 1 ? 'mobile-masonry-item--lift' : '',
+                  index % 4 === 3 ? 'mobile-masonry-item--drop' : ''
+                ]"
                 :style="{ animationDelay: `${Math.min(index * 80, 480)}ms` }"
               >
                 <ArticleCard :article="article" :compact="true" :image-index="index" />
@@ -559,6 +564,10 @@ watch(() => siteConfigStore.siteInfo.frontendArticlePageSize, (newVal) => {
   animation: revealUp 0.7s ease both;
 }
 
+.mobile-masonry-item {
+  min-width: 0;
+}
+
 .fade-up-enter-active,
 .fade-up-leave-active {
   transition: all 0.35s ease;
@@ -599,6 +608,18 @@ watch(() => siteConfigStore.siteInfo.frontendArticlePageSize, (newVal) => {
   .section-sort-panel {
     width: 100%;
     border-radius: 18px;
+  }
+
+  .mobile-masonry-item--offset {
+    margin-top: 1.2rem;
+  }
+
+  .mobile-masonry-item--lift {
+    margin-top: -0.2rem;
+  }
+
+  .mobile-masonry-item--drop {
+    margin-top: 1.9rem;
   }
 }
 

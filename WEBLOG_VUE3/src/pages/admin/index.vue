@@ -77,7 +77,7 @@
                     <span class="font-medium">快速访问</span>
                 </div>
             </template>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
                 <div class="quick-access-item" @click="goToArticles">
                     <div class="flex flex-col items-center p-4 rounded-lg bg-blue-50 hover:bg-blue-100 cursor-pointer transition-colors">
                         <el-icon class="text-2xl text-blue-600 mb-2">
@@ -116,7 +116,7 @@
         <!-- 图表和最新文章 -->
         <el-row :gutter="20" class="mb-6">
             <!-- 文章趋势图 -->
-            <el-col :span="16">
+            <el-col :xs="24" :sm="24" :md="16">
                 <el-card shadow="hover" class="admin-card">
                     <template #header>
                         <div class="flex items-center">
@@ -130,7 +130,7 @@
             </el-col>
 
             <!-- 浏览量趋势图 -->
-            <el-col :span="8">
+            <el-col :xs="24" :sm="24" :md="8">
                 <el-card shadow="hover" class="admin-card">
                     <template #header>
                         <div class="flex items-center">
@@ -146,7 +146,7 @@
 
         <!-- 用户活动趋势图 -->
         <el-row :gutter="20" class="mb-6">
-            <el-col :span="24">
+            <el-col :xs="24">
                 <el-card shadow="hover" class="admin-card">
                     <template #header>
                         <div class="flex items-center justify-between">
@@ -863,22 +863,6 @@ onBeforeUnmount(() => {
 
     .admin-dashboard-page .stat-number {
         font-size: 22px;
-    }
-
-    .admin-dashboard-page :deep(.el-row) {
-        display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
-    }
-
-    .admin-dashboard-page :deep(.el-col) {
-        max-width: 100%;
-        width: 100%;
-        flex: 0 0 100%;
-    }
-
-    .admin-dashboard-page .grid.grid-cols-2 {
-        grid-template-columns: 1fr;
     }
 
     .admin-dashboard-page .chart-container {

@@ -69,21 +69,29 @@
               <p class="mt-1 text-sm text-gray-500">该分类下还没有发布任何文章。</p>
             </div>
 
-            <div v-else>
-              <div class="mb-7 flex flex-col gap-3.5">
-                <ArticleCard 
-                  v-for="(article, index) in articles" 
-                  :key="article.id" 
-                  :article="article"
-                  variant="list"
-                  :category-id="categoryId"
-                  :show-category-tag="false"
-                  :image-index="index"
-                />
-              </div>
+              <div v-else>
+                <div class="mb-7 grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  <div
+                    v-for="(article, index) in articles"
+                    :key="article.id"
+                    :class="[
+                      index % 2 === 1 ? 'mt-4 sm:mt-0' : 'mt-0',
+                      index % 4 === 1 ? 'sm:translate-y-0' : '',
+                      index % 4 === 3 ? 'mt-7 sm:mt-0' : ''
+                    ]"
+                  >
+                    <ArticleCard
+                      :article="article"
+                      :category-id="categoryId"
+                      :show-category-tag="false"
+                      :image-index="index"
+                      :compact="true"
+                    />
+                  </div>
+                </div>
 
-              <Pagination 
-                v-model:current-page="page" 
+                <Pagination 
+                  v-model:current-page="page" 
                 v-model:page-size="size" 
                 :total="total"
                 :simple-mode="true"
@@ -96,7 +104,7 @@
       </section>
 
       <!-- Sidebar -->
-      <aside class="w-full lg:w-[320px] 2xl:w-[320px] 2xl:shrink-0">
+      <aside class="hidden xl:block w-full lg:w-[320px] 2xl:w-[320px] 2xl:shrink-0">
         <HomeSidebar />
       </aside>
     </main>
@@ -107,9 +115,8 @@
 </template>
 
 <script setup>
-import { computed, ref, onMounted } from 'vue'
-import { watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { computed, ref, onMounted, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import ArticleCard from '@/pages/frontend/articleCard.vue'
 import HomeSidebar from '@/pages/frontend/HomeSidebar.vue'
 import DailyNoteSidebar from '@/pages/frontend/DailyNoteSidebar.vue'
@@ -120,7 +127,6 @@ import { getArticlePageListByCategory } from '@/api/frontend/article'
 import { getAllCategoryList } from '@/api/frontend/category'
 
 const route = useRoute()
-const router = useRouter()
 
 const articles = ref([])
 const page = ref(1)

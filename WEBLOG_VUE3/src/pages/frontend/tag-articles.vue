@@ -70,14 +70,22 @@
 
               <div v-else>
                 <!-- Articles Grid -->
-                <div class="mb-7 flex flex-col gap-3.5">
-                  <ArticleCard 
-                    v-for="(article, index) in articles" 
-                    :key="article.id" 
-                    :article="article"
-                    variant="list"
-                    :image-index="index"
-                  />
+                <div class="mb-7 grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  <div
+                    v-for="(article, index) in articles"
+                    :key="article.id"
+                    :class="[
+                      index % 2 === 1 ? 'mt-4 sm:mt-0' : 'mt-0',
+                      index % 4 === 1 ? 'sm:translate-y-0' : '',
+                      index % 4 === 3 ? 'mt-7 sm:mt-0' : ''
+                    ]"
+                  >
+                    <ArticleCard
+                      :article="article"
+                      :image-index="index"
+                      :compact="true"
+                    />
+                  </div>
                 </div>
 
                 <!-- Pagination -->
@@ -95,7 +103,7 @@
         </section>
 
         <!-- Sidebar -->
-        <aside class="w-full lg:w-[24%]">
+        <aside class="hidden xl:block w-full lg:w-[24%]">
           <HomeSidebar />
         </aside>
       </main>
@@ -107,7 +115,7 @@
 
 <script setup>
 import { computed, ref, onMounted, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 import ArticleCard from '@/pages/frontend/articleCard.vue'
 import HomeSidebar from '@/pages/frontend/HomeSidebar.vue'
 import AppHeader from '@/components/frontend/AppHeader.vue'
@@ -117,7 +125,6 @@ import { getArticlePageListByTag } from '@/api/frontend/article'
 import { getAllTagList } from '@/api/frontend/tag'
 
 const route = useRoute()
-const router = useRouter()
 
 const articles = ref([])
 const page = ref(1)

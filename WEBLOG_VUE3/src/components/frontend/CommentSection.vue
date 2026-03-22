@@ -185,10 +185,8 @@ async function loadComments() {
       // API returns data as array directly, with total/size/current/pages at root
       comments.value = res.data || []
       totalComments.value = res.total || 0
-      console.log('评论加载成功:', comments.value)
     }
   } catch (error) {
-    console.error('加载评论失败:', error)
     ElMessage.error('加载评论失败')
   } finally {
     loading.value = false
@@ -222,7 +220,6 @@ async function submitComment() {
       await loadComments()
     }
   } catch (error) {
-    console.error('发表评论失败:', error)
     if (error.response && error.response.data) {
       const errorMsg = error.response.data.message || error.response.data.errorMsg
       ElMessage.error(errorMsg || '发表评论失败')
@@ -265,7 +262,6 @@ async function submitReply() {
       await loadComments()
     }
   } catch (error) {
-    console.error('发表回复失败:', error)
     if (error.response && error.response.data) {
       const errorMsg = error.response.data.message || error.response.data.errorMsg
       ElMessage.error(errorMsg || '发表回复失败')
@@ -296,7 +292,6 @@ async function handleDelete(commentId) {
     }
   } catch (error) {
     if (error !== 'cancel') {
-      console.error('删除评论失败:', error)
       ElMessage.error('删除失败')
     }
   }
@@ -327,6 +322,34 @@ onMounted(() => {
   border-color: rgba(116, 149, 195, 0.45);
   box-shadow: 0 0 0 4px rgba(116, 149, 195, 0.12);
   background: white;
+}
+
+@media (max-width: 640px) {
+  .comment-section {
+    margin-top: 1.25rem;
+    padding: 1rem;
+    border-radius: 22px;
+  }
+
+  .comment-section :deep(.el-button) {
+    width: 100%;
+  }
+
+  .comment-section :deep(.el-dialog) {
+    width: calc(100vw - 1.5rem) !important;
+    max-width: calc(100vw - 1.5rem);
+  }
+
+  .comment-section :deep(.dialog-footer) {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .comment-section :deep(.dialog-footer .el-button) {
+    width: 100%;
+    margin-left: 0;
+  }
 }
 
 .comment-pagination :deep(.el-pagination) {

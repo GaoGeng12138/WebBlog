@@ -137,9 +137,9 @@
     v-else
     :to="articleLink"
     class="home-card group block overflow-hidden rounded-[16px] border border-white/80 bg-white shadow-[0_12px_26px_rgba(15,23,42,0.07)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_18px_32px_rgba(15,23,42,0.12)]"
-    :class="{ 'article-card-active': isCurrentArticle }"
+    :class="{ 'article-card-active': isCurrentArticle, 'home-card--compact': compact }"
   >
-    <div class="relative h-36 overflow-hidden bg-slate-100 sm:h-38">
+    <div class="relative h-36 overflow-hidden bg-slate-100 sm:h-38 home-card__media">
       <img
         v-if="article.cover"
         :src="coverImageUrl"
@@ -160,18 +160,18 @@
       <div class="absolute inset-0 bg-gradient-to-t from-slate-950/30 via-transparent to-transparent opacity-80"></div>
     </div>
 
-    <div class="px-3.5 py-3">
+    <div class="px-3.5 py-3 home-card__body">
       <div v-if="showCategoryTag && displayCategory" class="mb-2">
         <span class="category-chip" :class="categoryToneClass">
           <span class="category-chip__dot"></span>
           {{ displayCategory }}
         </span>
       </div>
-      <h3 v-if="hasTitle" class="line-clamp-2 min-h-[2.7rem] text-[15px] font-bold leading-5 text-slate-900">
+      <h3 v-if="hasTitle" class="line-clamp-2 min-h-[2.7rem] text-[15px] font-bold leading-5 text-slate-900 home-card__title">
         {{ displayTitle }}
       </h3>
       <p
-        class="line-clamp-2 text-[13px] leading-5 text-slate-600/95"
+        class="line-clamp-2 text-[13px] leading-5 text-slate-600/95 home-card__summary"
         :class="[
           hasTitle ? 'mt-1.5 min-h-[2.8rem]' : 'mt-0 min-h-[3.4rem]'
         ]"
@@ -336,6 +336,31 @@ function formatDate(ts) {
   box-shadow: 0 0 0 1px rgba(251, 191, 36, 0.2), 0 18px 36px rgba(245, 158, 11, 0.14) !important;
 }
 
+.home-card--compact {
+  border-radius: 18px;
+}
+
+.home-card--compact .home-card__media {
+  height: 8.4rem;
+}
+
+.home-card--compact .home-card__body {
+  padding: 0.8rem 0.8rem 0.85rem;
+}
+
+.home-card--compact .home-card__title {
+  min-height: 2.5rem;
+  font-size: 0.94rem;
+  line-height: 1.4rem;
+}
+
+.home-card--compact .home-card__summary {
+  -webkit-line-clamp: 2;
+  min-height: 2.55rem;
+  font-size: 0.8rem;
+  line-height: 1.35rem;
+}
+
 .featured-fallback,
 .card-fallback {
   position: relative;
@@ -455,6 +480,31 @@ function formatDate(ts) {
 
 .line-clamp-4 {
   -webkit-line-clamp: 4;
+}
+
+@media (max-width: 640px) {
+  .home-card {
+    border-radius: 18px;
+  }
+
+  .home-card__media {
+    height: 8.6rem;
+  }
+
+  .home-card__body {
+    padding: 0.84rem 0.84rem 0.9rem;
+  }
+
+  .home-card__title {
+    min-height: 2.45rem;
+    font-size: 0.95rem;
+    line-height: 1.45rem;
+  }
+
+  .home-card__summary {
+    font-size: 0.8rem;
+    line-height: 1.35rem;
+  }
 }
 
 </style>

@@ -1,6 +1,7 @@
 <template>
-    <div class="grid min-h-screen grid-cols-1 bg-[linear-gradient(180deg,#f7fbff_0%,#eef4fb_100%)] lg:grid-cols-[minmax(0,1.05fr)_minmax(420px,0.95fr)]">
-        <div class="relative order-2 overflow-hidden border-t border-[rgba(149,171,210,0.16)] bg-[radial-gradient(circle_at_top_left,rgba(173,202,243,0.32),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(255,255,255,0.56),transparent_24%),linear-gradient(160deg,#edf4fb_0%,#e5eef9_48%,#f7fbff_100%)] px-8 py-12 lg:order-1 lg:border-r lg:border-t-0 lg:px-14 lg:py-16">
+    <div class="min-h-screen bg-[linear-gradient(180deg,#f7fbff_0%,#eef4fb_100%)]">
+        <div class="grid min-h-screen grid-cols-1 lg:grid-cols-[minmax(0,1.05fr)_minmax(420px,0.95fr)]">
+        <div class="relative hidden overflow-hidden border-t border-[rgba(149,171,210,0.16)] bg-[radial-gradient(circle_at_top_left,rgba(173,202,243,0.32),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(255,255,255,0.56),transparent_24%),linear-gradient(160deg,#edf4fb_0%,#e5eef9_48%,#f7fbff_100%)] px-8 py-12 lg:block lg:border-r lg:border-t-0 lg:px-14 lg:py-16">
             <div class="absolute inset-0 pointer-events-none">
                 <span class="absolute left-[12%] top-[18%] h-32 w-32 rounded-full bg-[rgba(148,176,231,0.24)] blur-3xl"></span>
                 <span class="absolute right-[10%] top-[12%] h-40 w-40 rounded-full bg-[rgba(197,218,248,0.24)] blur-3xl"></span>
@@ -72,21 +73,36 @@
             </div>
         </div>
 
-        <div class="order-1 bg-[rgba(248,252,255,0.92)] lg:order-2">
-            <div class="flex h-full items-center justify-center px-6 py-12 lg:px-12">
+        <div class="relative bg-[rgba(248,252,255,0.92)]">
+            <div class="flex h-full items-center justify-center px-4 py-6 sm:px-6 sm:py-10 lg:px-12 lg:py-12">
                 <div class="w-full max-w-[460px] animate__animated animate__fadeInRight animate__fast">
-                    <div class="rounded-[32px] border border-[rgba(149,171,210,0.16)] bg-[rgba(255,255,255,0.8)] px-8 py-10 shadow-[0_26px_60px_rgba(120,146,186,0.1)] backdrop-blur-xl sm:px-10">
-                        <h1 class="brand-wordmark text-[2.15rem] text-[var(--cosmic-text-light)]">欢迎回来</h1>
+                    <div class="mobile-login-hero md:hidden">
+                        <div class="mobile-login-hero__badge">
+                            <span class="h-2 w-2 rounded-full bg-[var(--cosmic-blue)]"></span>
+                            Unified Access
+                        </div>
+                        <h1 class="brand-wordmark mobile-login-hero__title">ThoughtFlow</h1>
+                        <p class="mobile-login-hero__subtitle">记录灵感，继续写下去</p>
+                        <p class="mobile-login-hero__lead">今天先登录，再把想法慢慢写成作品。</p>
+                        <div class="mobile-login-hero__chips">
+                            <span v-for="item in loginHighlights.slice(0, 3)" :key="item" class="mobile-login-hero__chip">
+                                {{ item }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="login-card rounded-[28px] border border-[rgba(149,171,210,0.16)] bg-[rgba(255,255,255,0.84)] px-5 py-6 shadow-[0_26px_60px_rgba(120,146,186,0.1)] backdrop-blur-xl sm:px-8 sm:py-9 md:rounded-[32px] md:px-8 md:py-10">
+                        <h1 class="brand-wordmark text-[2rem] leading-none text-[var(--cosmic-text-light)] sm:text-[2.15rem]">欢迎回来</h1>
                         <p class="mt-2 text-[14px] leading-6 text-[var(--cosmic-text-light-muted)]">登录你的 ThoughtFlow 账号</p>
 
-                        <div v-if="siteConfig.isFeatureEnabled('userRegisterEnabled')" class="mt-7 flex items-center justify-center gap-2 text-[13px] text-[var(--cosmic-muted)]">
-                            <span class="h-px w-12 bg-[rgba(149,171,210,0.22)]"></span>
+                        <div v-if="siteConfig.isFeatureEnabled('userRegisterEnabled')" class="mt-5 flex items-center justify-center gap-2 text-[13px] text-[var(--cosmic-muted)] sm:mt-7">
+                            <span class="hidden h-px w-12 bg-[rgba(149,171,210,0.22)] sm:block"></span>
                             <span>还没有账号？</span>
                             <router-link to="/register" class="font-medium text-[var(--cosmic-blue-deep)] transition-colors hover:text-[var(--cosmic-blue)]">注册一个账号</router-link>
-                            <span class="h-px w-12 bg-[rgba(149,171,210,0.22)]"></span>
+                            <span class="hidden h-px w-12 bg-[rgba(149,171,210,0.22)] sm:block"></span>
                         </div>
 
-                        <el-form class="login-form mt-8" ref="formRef" :rules="rules" :model="form">
+                        <el-form class="login-form mt-6 sm:mt-8" ref="formRef" :rules="rules" :model="form">
                             <el-form-item prop="username">
                                 <div class="login-cyber-input" :class="{ 'is-typing': typingField === 'username' }">
                                     <span class="login-cyber-input__pixel login-cyber-input__pixel--a"></span>
@@ -108,12 +124,12 @@
                                 </div>
                             </el-form-item>
                             <el-form-item class="mb-0">
-                                <el-button class="theme-btn-primary w-full !h-[46px] !rounded-2xl !border-0 text-[14px] font-medium tracking-[0.02em] transition-all duration-300"
+                                <el-button class="theme-btn-primary w-full !h-[48px] !rounded-2xl !border-0 text-[14px] font-medium tracking-[0.02em] transition-all duration-300"
                                     :loading="loading" type="primary" @click="onSubmit">登录</el-button>
                             </el-form-item>
                         </el-form>
 
-                        <div class="mt-6 flex items-center justify-between rounded-2xl border border-[rgba(149,171,210,0.14)] bg-[rgba(244,248,252,0.72)] px-4 py-3 text-[12px] text-[var(--cosmic-muted)]">
+                        <div class="login-footnote mt-5 flex items-center justify-between rounded-2xl border border-[rgba(149,171,210,0.14)] bg-[rgba(244,248,252,0.72)] px-4 py-3 text-[12px] text-[var(--cosmic-muted)]">
                             <span>今天也适合写下一点什么</span>
                             <span class="inline-flex items-center gap-1.5 text-[var(--cosmic-blue-deep)]">
                                 <span class="h-2 w-2 rounded-full bg-[var(--cosmic-blue)] animate-pulse"></span>
@@ -124,6 +140,7 @@
                 </div>
             </div>
         </div>
+    </div>
     </div>
 </template>
 
@@ -292,7 +309,6 @@ const onSubmit = () => {
                         router.replace('/')
                     }
                 }).catch((error) => {
-                    console.error('加载后台用户信息失败:', error)
                     showMessage('已登录，但加载后台用户信息较慢，请稍候重试', 'warning')
                 })
 
@@ -301,7 +317,6 @@ const onSubmit = () => {
                 showMessage(response.message || '登录失败，请重试。', 'error');
             }
         }).catch(error => {
-            console.error('登录失败:', error);
             const message = error?.response?.data?.message || error?.message || '登录请求未成功发出，请检查接口地址或网络配置。'
             showMessage(message, 'error');
         }).finally(() => {
@@ -647,44 +662,141 @@ const onSubmit = () => {
         min-height: 100svh;
     }
 
-    .grid.min-h-screen > div:first-child {
-        padding: 1rem 1rem 2rem;
+    .mobile-login-hero {
+        margin-bottom: 1rem;
+        border: 1px solid rgba(149, 171, 210, 0.16);
+        border-radius: 26px;
+        background:
+            radial-gradient(circle at top left, rgba(173, 202, 243, 0.24), transparent 36%),
+            linear-gradient(145deg, rgba(255, 255, 255, 0.92), rgba(236, 244, 252, 0.9));
+        padding: 1rem 1rem 1.1rem;
+        box-shadow: 0 16px 36px rgba(120, 146, 186, 0.08);
+        backdrop-filter: blur(18px);
     }
 
-    .grid.min-h-screen > div:last-child {
-        padding: 0;
+    .mobile-login-hero__badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.55rem;
+        border-radius: 9999px;
+        border: 1px solid rgba(149, 171, 210, 0.16);
+        background: rgba(255, 255, 255, 0.82);
+        padding: 0.45rem 0.8rem;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--cosmic-muted);
     }
 
-    .login-scene-card {
-        padding: 0.95rem 1rem;
-        border-radius: 20px;
+    .mobile-login-hero__title {
+        margin-top: 0.85rem;
+        font-size: 1.7rem;
+        line-height: 1.02;
+        color: var(--cosmic-text-light);
     }
 
-    .login-highlight-chip {
-        padding: 0.5rem 0.75rem;
+    .mobile-login-hero__subtitle {
+        margin-top: 0.4rem;
+        font-size: 0.9rem;
+        color: var(--cosmic-text-light-muted);
+    }
+
+    .mobile-login-hero__lead {
+        margin-top: 0.8rem;
+        font-size: 0.9rem;
+        line-height: 1.7;
+        color: #5f718a;
+    }
+
+    .mobile-login-hero__chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 0.95rem;
+    }
+
+    .mobile-login-hero__chip {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 2rem;
+        padding: 0.25rem 0.7rem;
+        border-radius: 9999px;
+        border: 1px solid rgba(149, 171, 210, 0.16);
+        background: rgba(255, 255, 255, 0.8);
+        font-size: 12px;
+        color: var(--cosmic-text-light-muted);
+    }
+
+    .login-card {
+        position: relative;
+        overflow: hidden;
+    }
+
+    .login-card::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background:
+            radial-gradient(circle at top left, rgba(173, 202, 243, 0.14), transparent 28%),
+            radial-gradient(circle at bottom right, rgba(255, 255, 255, 0.28), transparent 24%);
+        opacity: 0.6;
+    }
+
+    .login-card > * {
+        position: relative;
+        z-index: 1;
     }
 
     .login-form :deep(.el-form-item) {
-        margin-bottom: 14px;
+        margin-bottom: 12px;
     }
 
     .login-form :deep(.el-input__wrapper) {
-        min-height: 46px;
+        min-height: 50px;
         border-radius: 16px;
+    }
+
+    .login-form :deep(.el-input__inner) {
+        font-size: 15px;
     }
 
     .login-form :deep(.el-button) {
-        min-height: 46px;
+        min-height: 48px;
         border-radius: 16px;
     }
 
-    .login-float-card {
-        display: none;
+    .login-footnote {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.35rem;
+    }
+
+    .login-card {
+        padding: 1rem 0.95rem 1rem;
+        border-radius: 24px;
+        box-shadow: 0 20px 42px rgba(120, 146, 186, 0.08);
     }
 
     .login-orb {
         filter: blur(8px);
-        opacity: 0.4;
+        opacity: 0.28;
+    }
+
+    .mobile-login-hero__chip:nth-child(3) {
+        flex-basis: 100%;
+        justify-content: flex-start;
+    }
+
+    .login-scene-card {
+        padding: 0.9rem;
+        border-radius: 18px;
+    }
+
+    .login-highlight-chip {
+        padding: 0.48rem 0.72rem;
     }
 }
 </style>

@@ -59,7 +59,7 @@
                 stripe
                 style="width: 100%"
                 v-loading="tableLoading"
-                class="category-table"
+                class="category-table hidden md:block"
                 header-cell-class-name="bg-gradient-to-r from-blue-50 to-blue-100 font-semibold text-gray-800 border-b-2 border-blue-200"
             >
                 <el-table-column prop="name" label="分类名称" width="180">
@@ -115,6 +115,80 @@
                     </template>
                 </el-table-column>
             </el-table>
+
+            <div class="md:hidden px-4 pb-3 pt-1">
+                <div class="rounded-2xl border border-[rgba(149,171,210,0.16)] bg-gradient-to-r from-[#f7fbff] to-[#eef4ff] p-4 shadow-[0_10px_24px_rgba(15,23,42,0.05)]">
+                    <el-button
+                        v-if="can('admin:category:add')"
+                        type="primary"
+                        @click="addCategoryBtnClick"
+                        class="admin-btn-primary w-full"
+                    >
+                        <el-icon class="mr-1"><Plus /></el-icon>
+                        新增分类
+                    </el-button>
+                    <div class="mt-3 flex items-center justify-center gap-2 text-sm font-semibold text-slate-700">
+                        <el-icon class="text-blue-500"><DocumentCopy /></el-icon>
+                        共 <span class="text-lg text-blue-600">{{ pagination.total }}</span> 条记录
+                    </div>
+                </div>
+            </div>
+
+            <div class="md:hidden px-4 pb-4 space-y-3">
+                <article
+                    v-for="row in tableData"
+                    :key="row.id"
+                    class="rounded-2xl border border-[rgba(149,171,210,0.16)] bg-white p-4 shadow-[0_10px_24px_rgba(15,23,42,0.05)]"
+                >
+                    <div class="flex items-start justify-between gap-3">
+                        <div class="min-w-0 flex-1">
+                            <el-tag type="success" size="small" class="max-w-full truncate">{{ row.name }}</el-tag>
+                            <p class="mt-2 text-sm leading-6 text-slate-600">
+                                {{ row.illustrate || '暂无描述' }}
+                            </p>
+                        </div>
+                        <el-switch
+                            :model-value="row.showOnFront"
+                            inline-prompt
+                            active-text="显示"
+                            inactive-text="隐藏"
+                            :disabled="!can('admin:category:update-front')"
+                            @change="(value) => handleShowOnFrontChange(row, value)"
+                        />
+                    </div>
+
+                    <div class="mt-3 flex flex-wrap gap-2 text-xs">
+                        <el-tag :type="row.visibilityScope === 2 ? 'warning' : 'success'" size="small">
+                            {{ row.visibilityScope === 2 ? '指定用户' : '公开' }}
+                        </el-tag>
+                        <el-tag type="info" size="small">{{ row.createTime }}</el-tag>
+                    </div>
+
+                    <div class="mt-4 flex gap-2">
+                        <el-button
+                            v-if="canConfigureVisibility()"
+                            type="primary"
+                            size="small"
+                            @click="openVisibilityDialog(row)"
+                            class="admin-btn-primary flex-1"
+                        >
+                            权限
+                        </el-button>
+                        <el-button
+                            v-if="can('admin:category:delete')"
+                            type="danger"
+                            size="small"
+                            @click="deleteCategorySubmit(row)"
+                            class="admin-btn-secondary flex-1"
+                        >
+                            删除
+                        </el-button>
+                    </div>
+                </article>
+                <div v-if="tableData.length === 0" class="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
+                    暂无分类数据
+                </div>
+            </div>
 
             <div class="px-6 py-4 border-t border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100">
                 <AdminPagination
