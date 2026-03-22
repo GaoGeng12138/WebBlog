@@ -68,35 +68,17 @@
                             </div>
                         </el-form-item>
 
-                        <el-form-item label="活跃度等级" prop="activityLevelRules">
-                            <div class="flex w-full flex-col gap-3">
-                                <el-input
-                                    v-model="form.activityLevelRules"
-                                    type="textarea"
-                                    :rows="8"
-                                    class="admin-input"
-                                    placeholder="请输入活跃度等级规则 JSON"
-                                />
-                                <el-text type="info" size="small">
-                                    这里控制前台用户中心显示的 Lv 等级，保存后会同步到前台读取。
-                                </el-text>
+                        <div class="mb-6 rounded-2xl border border-[rgba(148,176,231,0.18)] bg-[linear-gradient(180deg,rgba(248,251,255,0.95),rgba(241,247,254,0.88))] p-5">
+                            <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                                <div>
+                                    <div class="text-base font-semibold text-slate-800">活跃度规则已独立管理</div>
+                                    <div class="mt-1 text-sm text-slate-500">
+                                        等级和积分规则已移动到「活跃度规则」标签页，可在表格中直接新增、编辑、删除。
+                                    </div>
+                                </div>
+                                <el-button type="primary" plain @click="activeTab = 'activity'">去管理规则</el-button>
                             </div>
-                        </el-form-item>
-
-                        <el-form-item label="活跃度加分" prop="activityScoreRules">
-                            <div class="flex w-full flex-col gap-3">
-                                <el-input
-                                    v-model="form.activityScoreRules"
-                                    type="textarea"
-                                    :rows="8"
-                                    class="admin-input"
-                                    placeholder="请输入活跃度加分规则 JSON"
-                                />
-                                <el-text type="info" size="small">
-                                    这里控制发文章、评论、收藏、点赞、登录各自的整数积分，保存后会同步到前台活跃度统计。
-                                </el-text>
-                            </div>
-                        </el-form-item>
+                        </div>
                         <!-- 网站图标上传 -->
                         <el-form-item label="网站Logo" prop="logoUrl">
                             <div class="flex items-center gap-6">
@@ -190,8 +172,8 @@
                             <el-button 
                                 v-if="can('admin:setting:update')"
                                 type="primary" 
-                                @click="onSubmit" 
-                                :loading="btnLoading"
+                                @click="onSubmitBasic"
+                                :loading="basicBtnLoading"
                                 size="large"
                             >
                                 保存设置
@@ -199,6 +181,126 @@
                             <el-button @click="resetForm" size="large">重置</el-button>
                         </el-form-item>
                     </el-form>
+                </div>
+            </el-tab-pane>
+
+            <!-- 活跃度规则 -->
+            <el-tab-pane label="活跃度规则" name="activity">
+                <div class="p-6">
+                    <div class="mb-6 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+                        <div>
+                            <h3 class="flex items-center gap-2 text-lg font-bold text-slate-900">
+                                <el-icon class="text-[var(--theme-primary)]"><Link /></el-icon>
+                                前台活跃度配置
+                            </h3>
+                            <p class="mt-2 text-sm text-slate-500">通过表格直接维护等级和积分规则，不再编辑 JSON 文本。</p>
+                        </div>
+                        <div class="flex gap-2">
+                            <el-button @click="resetActivityRules" size="large">恢复默认</el-button>
+                            <el-button
+                                v-if="can('admin:setting:update')"
+                                type="primary"
+                                @click="onSubmitActivityRules"
+                                :loading="activityBtnLoading"
+                                size="large"
+                                class="admin-btn-primary"
+                            >
+                                保存活跃度规则
+                            </el-button>
+                        </div>
+                    </div>
+
+                    <div class="grid gap-6 xl:grid-cols-2">
+                        <div class="activity-panel">
+                            <div class="activity-panel__head">
+                                <div>
+                                    <h4 class="activity-panel__title">活跃度等级</h4>
+                                    <p class="activity-panel__desc">控制前台用户中心显示的 Lv 等级。</p>
+                                </div>
+                                <el-button type="primary" plain @click="addActivityLevelRule">新增等级</el-button>
+                            </div>
+
+                            <div class="activity-panel__body">
+                                <el-table :data="activityLevelRules" border class="activity-table">
+                                    <el-table-column label="等级" width="120" align="center">
+                                        <template #default="{ row }">
+                                            <el-input-number v-model="row.level" :min="1" :max="99" controls-position="right" />
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column label="最低积分" width="160" align="center">
+                                        <template #default="{ row }">
+                                            <el-input-number v-model="row.minScore" :min="0" :step="10" controls-position="right" />
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column label="等级名称" min-width="180">
+                                        <template #default="{ row }">
+                                            <el-input v-model="row.name" placeholder="例如：新手" />
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column label="操作" width="100" align="center">
+                                        <template #default="{ $index }">
+                                            <el-button
+                                                type="danger"
+                                                link
+                                                :disabled="activityLevelRules.length <= 1"
+                                                @click="removeActivityLevelRule($index)"
+                                            >
+                                                删除
+                                            </el-button>
+                                        </template>
+                                    </el-table-column>
+                                </el-table>
+                            </div>
+                        </div>
+
+                        <div class="activity-panel">
+                            <div class="activity-panel__head">
+                                <div>
+                                    <h4 class="activity-panel__title">活跃度加分</h4>
+                                    <p class="activity-panel__desc">控制发文章、评论、收藏、点赞、登录等行为积分。</p>
+                                </div>
+                                <el-button type="primary" plain @click="addActivityScoreRule">新增积分项</el-button>
+                            </div>
+
+                            <div class="activity-panel__body">
+                                <el-table :data="activityScoreRules" border class="activity-table">
+                                    <el-table-column label="行为类型" width="140" align="center">
+                                        <template #default="{ row }">
+                                            <el-select v-model="row.type" placeholder="选择类型">
+                                                <el-option label="发布文章" value="article" />
+                                                <el-option label="发表评论" value="comment" />
+                                                <el-option label="收藏文章" value="favorite" />
+                                                <el-option label="点赞评论" value="like" />
+                                                <el-option label="每日登录" value="login" />
+                                            </el-select>
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column label="展示名称" min-width="180">
+                                        <template #default="{ row }">
+                                            <el-input v-model="row.name" placeholder="例如：发表评论" />
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column label="积分" width="140" align="center">
+                                        <template #default="{ row }">
+                                            <el-input-number v-model="row.score" :min="0" :max="9999" controls-position="right" />
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column label="操作" width="100" align="center">
+                                        <template #default="{ $index }">
+                                            <el-button
+                                                type="danger"
+                                                link
+                                                :disabled="activityScoreRules.length <= 1"
+                                                @click="removeActivityScoreRule($index)"
+                                            >
+                                                删除
+                                            </el-button>
+                                        </template>
+                                    </el-table-column>
+                                </el-table>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </el-tab-pane>
 
@@ -357,12 +459,55 @@
 <script setup>
 import { getBlogSettings, updateBlogSettings } from '@/api/admin/blog'
 import { uploadFile } from '@/api/admin/file'
-import { DEFAULT_ACTIVITY_LEVEL_RULES_TEXT, DEFAULT_ACTIVITY_SCORE_RULES_TEXT } from '@/composables/activityLevel'
+import {
+    DEFAULT_ACTIVITY_LEVEL_RULES,
+    DEFAULT_ACTIVITY_SCORE_RULES
+} from '@/composables/activityLevel'
 import { hasAccess } from '@/composables/permission'
 import { useUserStore } from '@/stores/user'
 import { showMessage } from '@/composables/util'
 import { Link, Plus, Setting, Lock } from '@element-plus/icons-vue'
 import { onMounted, reactive, ref } from 'vue'
+
+function cloneRules(rules) {
+    return rules.map((item) => ({ ...item }))
+}
+
+function parseRuleArray(rawValue, fallbackRules) {
+    if (rawValue === null || rawValue === undefined || rawValue === '') {
+        return cloneRules(fallbackRules)
+    }
+
+    try {
+        const parsed = typeof rawValue === 'string' ? JSON.parse(rawValue) : rawValue
+        if (!Array.isArray(parsed) || parsed.length === 0) {
+            return cloneRules(fallbackRules)
+        }
+        return parsed.map((item) => ({ ...item }))
+    } catch (error) {
+        return cloneRules(fallbackRules)
+    }
+}
+
+function normalizeLevelRules(rules) {
+    return rules
+        .map((item, index) => ({
+            level: Number(item.level) || index + 1,
+            minScore: Number(item.minScore) || 0,
+            name: String(item.name || '').trim() || `Lv.${index + 1}`
+        }))
+        .sort((a, b) => a.minScore - b.minScore)
+}
+
+function normalizeScoreRules(rules) {
+    return rules
+        .map((item) => ({
+            type: String(item.type || '').trim(),
+            name: String(item.name || '').trim(),
+            score: Number(item.score) || 0
+        }))
+        .filter((item) => item.type)
+}
 
 const userStore = useUserStore()
 const can = (permission) => hasAccess(userStore.userInfo, permission)
@@ -370,13 +515,14 @@ const can = (permission) => hasAccess(userStore.userInfo, permission)
 // 当前激活的标签页
 const activeTab = ref('basic')
 
+const activityLevelRules = ref(cloneRules(DEFAULT_ACTIVITY_LEVEL_RULES))
+const activityScoreRules = ref(cloneRules(DEFAULT_ACTIVITY_SCORE_RULES))
+
 // 基本设置表单数据
 const form = reactive({
     title: '',
     description: '',
     logoUrl: '',
-    activityLevelRules: DEFAULT_ACTIVITY_LEVEL_RULES_TEXT,
-    activityScoreRules: DEFAULT_ACTIVITY_SCORE_RULES_TEXT,
     githubEnabled: false,
     githubShowFront: false,
     githubShowRegister: false,
@@ -418,8 +564,9 @@ const rules = {
 // 表单引用
 const formRef = ref(null)
 const permissionFormRef = ref(null)
-const btnLoading = ref(false)
+const basicBtnLoading = ref(false)
 const permissionBtnLoading = ref(false)
+const activityBtnLoading = ref(false)
 const logoUploading = ref(false)
 
 // 上传文件前校验
@@ -498,67 +645,74 @@ const handleWeiboEnabledChange = (value) => {
     }
 }
 
-// 提交表单
-const onSubmit = () => {
+const buildSubmitData = () => ({
+    title: form.title,
+    description: form.description,
+    logoUrl: form.logoUrl,
+    frontendArticlePageSize: form.frontendArticlePageSize,
+    activityLevelRules: JSON.stringify(normalizeLevelRules(activityLevelRules.value)),
+    activityScoreRules: JSON.stringify(normalizeScoreRules(activityScoreRules.value)),
+    githubEnabled: form.githubEnabled,
+    githubShowFront: form.githubShowFront,
+    githubShowRegister: form.githubShowRegister,
+    twitterEnabled: form.twitterEnabled,
+    twitterShowFront: form.twitterShowFront,
+    twitterShowRegister: form.twitterShowRegister,
+    weiboEnabled: form.weiboEnabled,
+    weiboShowFront: form.weiboShowFront,
+    weiboShowRegister: form.weiboShowRegister,
+    commentEnabled: permissionForm.enableComment === 1,
+    likeEnabled: permissionForm.enableLike === 1,
+    favoriteEnabled: permissionForm.enableCollect === 1,
+    userRegisterEnabled: permissionForm.enableRegister === 1,
+    userPublishEnabled: permissionForm.enableUserPublish === 1,
+    articleReviewRequired: permissionForm.requireArticleApproval === 1,
+    commentReviewRequired: permissionForm.requireCommentApproval === 1,
+    anonymousCommentEnabled: permissionForm.enableAnonymousComment === 1
+})
+
+const saveSettings = (successMessage) => {
     if (logoUploading.value) {
         showMessage('Logo 上传中，请等待上传完成后再保存', 'warning')
-        return
+        return Promise.resolve(false)
     }
+
+    return updateBlogSettings(buildSubmitData()).then((res) => {
+        if (res.success) {
+            showMessage(successMessage)
+            return true
+        }
+        showMessage(res.message || '保存失败', 'error')
+        return false
+    })
+}
+
+// 保存基本设置
+const onSubmitBasic = () => {
+    if (!formRef.value) return
 
     formRef.value.validate((valid) => {
         if (!valid) {
             return false
         }
 
-        btnLoading.value = true
-        
-        // 准备提交数据，合并基本设置和权限设置
-        const submitData = {
-            // 网站基本信息
-            title: form.title,
-            description: form.description,
-            logoUrl: form.logoUrl,
-            frontendArticlePageSize: form.frontendArticlePageSize,
-            activityLevelRules: form.activityLevelRules,
-            activityScoreRules: form.activityScoreRules,
-            // 社交链接功能开关
-            githubEnabled: form.githubEnabled,
-            githubShowFront: form.githubShowFront,
-            githubShowRegister: form.githubShowRegister,
-            twitterEnabled: form.twitterEnabled,
-            twitterShowFront: form.twitterShowFront,
-            twitterShowRegister: form.twitterShowRegister,
-            weiboEnabled: form.weiboEnabled,
-            weiboShowFront: form.weiboShowFront,
-            weiboShowRegister: form.weiboShowRegister,
-            // 权限配置
-            commentEnabled: permissionForm.enableComment === 1,
-            likeEnabled: permissionForm.enableLike === 1,
-            favoriteEnabled: permissionForm.enableCollect === 1,
-            userRegisterEnabled: permissionForm.enableRegister === 1,
-            userPublishEnabled: permissionForm.enableUserPublish === 1,
-            articleReviewRequired: permissionForm.requireArticleApproval === 1,
-            commentReviewRequired: permissionForm.requireCommentApproval === 1,
-            anonymousCommentEnabled: permissionForm.enableAnonymousComment === 1
-        }
-        
-        updateBlogSettings(submitData).then((res) => {
-            if (res.success) {
-                showMessage('保存成功')
-            } else {
-                showMessage(res.message || '保存失败', 'error')
-            }
-        }).finally(() => {
-            btnLoading.value = false
+        basicBtnLoading.value = true
+        saveSettings('保存成功').finally(() => {
+            basicBtnLoading.value = false
         })
     })
 }
 
-// 重置表单
+// 保存活跃度规则
+const onSubmitActivityRules = () => {
+    activityBtnLoading.value = true
+    saveSettings('活跃度规则保存成功').finally(() => {
+        activityBtnLoading.value = false
+    })
+}
+
+// 重置基本设置
 const resetForm = () => {
-    formRef.value.resetFields()
-    form.activityLevelRules = DEFAULT_ACTIVITY_LEVEL_RULES_TEXT
-    form.activityScoreRules = DEFAULT_ACTIVITY_SCORE_RULES_TEXT
     loadSettings()
 }
 
@@ -572,8 +726,6 @@ const loadSettings = () => {
                 description: res.data.description || '',
                 logoUrl: res.data.logoUrl || '',
                 frontendArticlePageSize: res.data.frontendArticlePageSize || 12,
-                activityLevelRules: res.data.activityLevelRules || DEFAULT_ACTIVITY_LEVEL_RULES_TEXT,
-                activityScoreRules: res.data.activityScoreRules || DEFAULT_ACTIVITY_SCORE_RULES_TEXT,
                 githubShowFront: res.data.githubShowFront || false,
                 githubShowRegister: res.data.githubShowRegister || false,
                 twitterShowFront: res.data.twitterShowFront || false,
@@ -581,6 +733,13 @@ const loadSettings = () => {
                 weiboShowFront: res.data.weiboShowFront || false,
                 weiboShowRegister: res.data.weiboShowRegister || false
             })
+
+            activityLevelRules.value = normalizeLevelRules(
+                parseRuleArray(res.data.activityLevelRules, DEFAULT_ACTIVITY_LEVEL_RULES)
+            )
+            activityScoreRules.value = normalizeScoreRules(
+                parseRuleArray(res.data.activityScoreRules, DEFAULT_ACTIVITY_SCORE_RULES)
+            )
             
             // 设置 Enabled 状态：优先使用后端返回的值，否则根据 ShowFront 或 ShowRegister 判断
             form.githubEnabled = res.data.githubEnabled !== undefined 
@@ -610,50 +769,51 @@ const loadSettings = () => {
 
 // 提交权限设置
 const onSubmitPermissions = () => {
-    if (logoUploading.value) {
-        showMessage('Logo 上传中，请等待上传完成后再保存', 'warning')
-        return
-    }
-
     permissionBtnLoading.value = true
-    
-    // 准备提交数据，合并基本设置和权限设置
-    const submitData = {
-        // 网站基本信息
-        title: form.title,
-        description: form.description,
-        logoUrl: form.logoUrl,
-        frontendArticlePageSize: form.frontendArticlePageSize,
-        // 社交链接功能开关
-        githubEnabled: form.githubEnabled,
-        githubShowFront: form.githubShowFront,
-        githubShowRegister: form.githubShowRegister,
-        twitterEnabled: form.twitterEnabled,
-        twitterShowFront: form.twitterShowFront,
-        twitterShowRegister: form.twitterShowRegister,
-        weiboEnabled: form.weiboEnabled,
-        weiboShowFront: form.weiboShowFront,
-        weiboShowRegister: form.weiboShowRegister,
-        // 权限配置
-        commentEnabled: permissionForm.enableComment === 1,
-        likeEnabled: permissionForm.enableLike === 1,
-        favoriteEnabled: permissionForm.enableCollect === 1,
-        userRegisterEnabled: permissionForm.enableRegister === 1,
-        userPublishEnabled: permissionForm.enableUserPublish === 1,
-        articleReviewRequired: permissionForm.requireArticleApproval === 1,
-        commentReviewRequired: permissionForm.requireCommentApproval === 1,
-        anonymousCommentEnabled: permissionForm.enableAnonymousComment === 1
-    }
-    
-    updateBlogSettings(submitData).then((res) => {
-        if (res.success) {
-            showMessage('权限设置保存成功')
-        } else {
-            showMessage(res.message || '保存失败', 'error')
-        }
-    }).finally(() => {
+    saveSettings('权限设置保存成功').finally(() => {
         permissionBtnLoading.value = false
     })
+}
+
+const addActivityLevelRule = () => {
+    const nextLevel = activityLevelRules.value.length > 0
+        ? Math.max(...activityLevelRules.value.map((item) => Number(item.level) || 0)) + 1
+        : 1
+
+    activityLevelRules.value.push({
+        level: nextLevel,
+        minScore: 0,
+        name: `Lv.${nextLevel}`
+    })
+}
+
+const removeActivityLevelRule = (index) => {
+    if (activityLevelRules.value.length <= 1) {
+        showMessage('至少保留一条等级规则', 'warning')
+        return
+    }
+    activityLevelRules.value.splice(index, 1)
+}
+
+const addActivityScoreRule = () => {
+    activityScoreRules.value.push({
+        type: 'article',
+        name: '发布文章',
+        score: 0
+    })
+}
+
+const removeActivityScoreRule = (index) => {
+    if (activityScoreRules.value.length <= 1) {
+        showMessage('至少保留一条积分规则', 'warning')
+        return
+    }
+    activityScoreRules.value.splice(index, 1)
+}
+
+const resetActivityRules = () => {
+    activityLevelRules.value = cloneRules(DEFAULT_ACTIVITY_LEVEL_RULES)
+    activityScoreRules.value = cloneRules(DEFAULT_ACTIVITY_SCORE_RULES)
 }
 
 // 重置权限表单
@@ -763,6 +923,101 @@ onMounted(() => {
 :deep(.el-divider__text) {
   font-weight: 600;
   font-size: 14px;
+}
+
+/* 活跃度规则配置区 */
+.activity-panel {
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    border-radius: 18px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(247, 250, 255, 0.96));
+    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.06);
+    overflow: hidden;
+}
+
+.activity-panel__head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 18px 20px 16px;
+    border-bottom: 1px solid rgba(226, 232, 240, 0.9);
+    background: linear-gradient(180deg, rgba(248, 250, 252, 0.92), rgba(255, 255, 255, 0.92));
+}
+
+.activity-panel__title {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.activity-panel__desc {
+    margin: 6px 0 0;
+    font-size: 12px;
+    line-height: 1.6;
+    color: #64748b;
+}
+
+.activity-panel__body {
+    padding: 16px;
+}
+
+.activity-panel :deep(.activity-table) {
+    width: 100%;
+    border-radius: 14px;
+    overflow: hidden;
+}
+
+.activity-panel :deep(.el-table) {
+    --el-table-border-color: rgba(226, 232, 240, 0.95);
+    --el-table-header-bg-color: #f8fafc;
+    --el-table-tr-bg-color: #ffffff;
+    --el-table-row-hover-bg-color: #f8fbff;
+}
+
+.activity-panel :deep(.el-table th.el-table__cell) {
+    background: linear-gradient(180deg, #f8fafc, #f1f5f9);
+    color: #334155;
+    font-weight: 700;
+}
+
+.activity-panel :deep(.el-table .cell) {
+    padding-left: 12px;
+    padding-right: 12px;
+}
+
+.activity-panel :deep(.el-input),
+.activity-panel :deep(.el-input-number),
+.activity-panel :deep(.el-select) {
+    width: 100%;
+}
+
+.activity-panel :deep(.el-input-number .el-input__wrapper) {
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+.activity-panel :deep(.el-button.is-link) {
+    padding-left: 0;
+    padding-right: 0;
+    box-shadow: none;
+    transform: none;
+}
+
+.activity-panel :deep(.el-button.is-link:hover) {
+    box-shadow: none;
+    transform: none;
+}
+
+.admin-btn-primary {
+    box-shadow: 0 12px 24px rgba(37, 99, 235, 0.18);
+}
+
+.admin-btn-primary:hover {
+    box-shadow: 0 16px 32px rgba(37, 99, 235, 0.22);
 }
 
 /* Logo 上传样式 */
