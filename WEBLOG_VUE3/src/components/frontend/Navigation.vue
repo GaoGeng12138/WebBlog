@@ -9,7 +9,7 @@
         :class="isActive(item.key)
           ? 'text-[var(--cosmic-blue-deep)] bg-[rgba(148,176,231,0.18)] shadow-[0_10px_22px_rgba(110,146,216,0.12)] border-[rgba(148,176,231,0.26)]'
           : 'text-[var(--cosmic-muted)] bg-[rgba(255,255,255,0.54)] border-[rgba(149,171,210,0.14)] hover:text-[var(--cosmic-blue-deep)] hover:bg-[rgba(255,255,255,0.84)] hover:border-[rgba(148,176,231,0.2)] hover:shadow-[0_10px_22px_rgba(108,137,184,0.08)]'"
-        @click="handleNavigate(item.path)"
+        @click="handleNavigate(item)"
       >
         <span class="truncate">{{ item.label }}</span>
       </button>
@@ -20,11 +20,11 @@
         <button
           v-for="item in navItems"
           :key="item.key"
-          type="button"
-          class="nav-link group relative overflow-hidden"
-          :class="isActive(item.key) ? 'nav-link-active' : 'nav-link-idle'"
-          @click="handleNavigate(item.path)"
-        >
+        type="button"
+        class="nav-link group relative overflow-hidden"
+        :class="isActive(item.key) ? 'nav-link-active' : 'nav-link-idle'"
+        @click="handleNavigate(item)"
+      >
           <div class="relative z-10 flex items-center transition-transform duration-300 group-hover:-translate-y-0.5">
             <span class="truncate whitespace-nowrap">{{ item.label }}</span>
           </div>
@@ -74,7 +74,10 @@ onMounted(async () => {
         .map(category => ({
           key: `category-${category.id}`,
           label: category.name,
-          path: `/category/${category.id}`
+          path: `/category/${category.id}`,
+          query: {
+            name: category.name
+          }
         }))
       navItems.value = [...defaultNavs, ...categoryNavs]
     }
@@ -100,9 +103,12 @@ function isActive(key) {
   return currentKey.value === key
 }
 
-function handleNavigate(path) {
-  router.push(path)
-  emit('navigate', path)
+function handleNavigate(item) {
+  router.push({
+    path: item.path,
+    query: item.query || {}
+  })
+  emit('navigate', item.path)
 }
 </script>
 

@@ -40,7 +40,7 @@
                   v-for="(category, index) in categories" 
                   :key="category.id" 
                   class="group bg-white rounded-3xl p-6 border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden relative"
-                  @click="goToCategoryArticles(category.id)"
+                  @click="goToCategoryArticles(category)"
                 >
                   <div class="absolute inset-0 bg-gradient-to-br from-gray-50 to-white opacity-0 group-hover:opacity-100 transition-opacity z-0"></div>
                   
@@ -162,8 +162,13 @@ function handlePageChange(newPage) {
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
-function goToCategoryArticles(id) {
-  router.push({ path: `/category/${id}` })
+function goToCategoryArticles(category) {
+  router.push({
+    path: `/category/${category.id}`,
+    query: {
+      name: category.name
+    }
+  })
 }
 
 </script>

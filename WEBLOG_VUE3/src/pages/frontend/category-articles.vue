@@ -108,6 +108,7 @@
 
 <script setup>
 import { computed, ref, onMounted } from 'vue'
+import { watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import ArticleCard from '@/pages/frontend/articleCard.vue'
 import HomeSidebar from '@/pages/frontend/HomeSidebar.vue'
@@ -116,7 +117,7 @@ import AppHeader from '@/components/frontend/AppHeader.vue'
 import AppFooter from '@/components/frontend/AppFooter.vue'
 import Pagination from '@/components/frontend/Pagination.vue'
 import { getArticlePageListByCategory } from '@/api/frontend/article'
-import { getCategoryList } from '@/api/frontend/category'
+import { getAllCategoryList } from '@/api/frontend/category'
 
 const route = useRoute()
 const router = useRouter()
@@ -129,7 +130,7 @@ const loading = ref(false)
 const keyword = ref('')
 const categoryName = ref('')
 
-const categoryId = route.params.id
+const categoryId = computed(() => Number(route.params.id))
 
 const categoryDescription = computed(() => {
   if (keyword.value) {
@@ -140,23 +141,60 @@ const categoryDescription = computed(() => {
 })
 
 onMounted(() => {
-  if (categoryId) {
-    loadCategoryInfo()
-    loadArticles()
-  }
+  syncFromRoute()
 })
+
+watch(
+  () => route.params.id,
+  () => {
+    syncFromRoute()
+  }
+)
+
+function syncFromRoute() {
+  page.value = 1
+  keyword.value = ''
+  articles.value = []
+  total.value = 0
+  loadCategoryPage()
+}
+
+async function loadCategoryPage() {
+  if (!categoryId.value) {
+    categoryName.value = '当前分类'
+    return
+  }
+
+  try {
+    await Promise.all([
+      loadCategoryInfo(),
+      loadArticles()
+    ])
+  } catch (error) {
+    console.error('Failed to load category page:', error)
+    categoryName.value = `分类 ${categoryId.value}`
+  }
+}
 
 async function loadCategoryInfo() {
   try {
-    const res = await getCategoryList({ current: 1, size: 1, id: categoryId })
-    if (res && res.success && res.data && res.data.length > 0) {
-      categoryName.value = res.data[0].name || `分类 ${categoryId}`
+    const queryName = typeof route.query.name === 'string' ? route.query.name.trim() : ''
+    if (queryName) {
+      categoryName.value = queryName
+      return
+    }
+
+    const res = await getAllCategoryList()
+    if (res && res.success) {
+      const list = Array.isArray(res.data) ? res.data : []
+      const currentCategory = list.find(item => String(item.id) === String(categoryId.value))
+      categoryName.value = currentCategory?.name || `分类 ${categoryId.value}`
     } else {
-      categoryName.value = `分类 ${categoryId}`
+      categoryName.value = `分类 ${categoryId.value}`
     }
   } catch (error) {
     console.error('Failed to load category info:', error)
-    categoryName.value = `分类 ${categoryId}`
+    categoryName.value = `分类 ${categoryId.value}`
   }
 }
 
@@ -167,7 +205,7 @@ async function loadArticles() {
       current: page.value,
       size: size.value,
       name: keyword.value,
-      categoryId: Number(categoryId)
+      categoryId: categoryId.value
     }
 
     const res = await getArticlePageListByCategory(params)

@@ -35,7 +35,7 @@
                   v-for="(tag, index) in tags" 
                   :key="tag.id" 
                   class="group relative bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden flex flex-col items-center justify-center text-center h-32"
-                  @click="goToTagArticles(tag.id)"
+                  @click="goToTagArticles(tag)"
                 >
                   <!-- 悬浮时的背景高亮 -->
                   <div class="absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-10 transition-opacity duration-300"
@@ -182,9 +182,14 @@ function handlePageChange(newPage) {
   loadTags()
 }
 
-function goToTagArticles(tagId) {
+function goToTagArticles(tag) {
   // Navigate to articles filtered by tag
-  router.push(`/tag/${tagId}`)
+  router.push({
+    path: `/tag/${tag.id}`,
+    query: {
+      name: tag.name
+    }
+  })
 }
 
 function getTagClass(articleCount) {
