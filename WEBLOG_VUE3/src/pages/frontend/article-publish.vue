@@ -941,8 +941,54 @@ onBeforeUnmount(() => {
     border-radius: 22px;
   }
 
+  .workspace-stat {
+    min-width: 0;
+  }
+
+  .article-publish-page .hidden.xl\:flex {
+    display: none !important;
+  }
+
+  .article-publish-page > .sticky .mx-auto {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .article-publish-page > .sticky .flex.items-center.gap-4 {
+    gap: 0.85rem;
+  }
+
+  .article-publish-page .editor-action-bar {
+    padding: 1rem;
+  }
+
+  .article-publish-page .editor-action-bar .flex {
+    width: 100%;
+  }
+
+  .article-publish-page .editor-action-bar .el-button {
+    width: 100%;
+  }
+
+  .article-publish-page .editor-mode-button {
+    padding: 0.72rem 0.6rem;
+    font-size: 0.86rem;
+  }
+
+  .article-publish-page .editor-title-input {
+    font-size: clamp(1.4rem, 7vw, 2rem);
+  }
+
   .rich-editor-shell__content {
     height: 620px;
+  }
+
+  .article-publish-page .rich-editor-shell__meta {
+    flex-direction: column;
+  }
+
+  .article-publish-page .workspace-stat {
+    width: 100%;
   }
 }
 </style>

@@ -8,15 +8,15 @@
     ]"
   >
     <div class="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex items-center justify-between h-[78px] lg:h-[96px]">
+      <div class="flex items-center justify-between h-[68px] sm:h-[76px] lg:h-[96px]">
         
         <!-- Left: Logo -->
         <div class="flex-shrink-0 flex items-center cursor-pointer group" @click="$router.push('/')">
-          <div class="relative flex items-center justify-center overflow-hidden rounded-xl p-1.5 transition-all duration-300 group-hover:bg-[rgba(148,176,231,0.12)]">
+          <div class="relative flex items-center justify-center overflow-hidden rounded-xl p-1 transition-all duration-300 group-hover:bg-[rgba(148,176,231,0.12)]">
             <img 
               :src="displayLogo"
               @error="handleLogoError"
-              class="h-11 lg:h-15 w-auto max-w-[240px] object-contain transition-transform duration-500 group-hover:scale-105" 
+              class="h-9 sm:h-10 lg:h-15 w-auto max-w-[200px] sm:max-w-[240px] object-contain transition-transform duration-500 group-hover:scale-105" 
               :alt="siteConfig.siteInfo.title || 'logo'" 
             />
           </div>
@@ -28,14 +28,18 @@
         </div>
 
         <!-- Right: Actions -->
-        <div class="flex items-center gap-4 lg:gap-6">
+        <div class="flex items-center gap-2 sm:gap-4 lg:gap-6">
           <!-- User Badge -->
-          <UserBadge />
+          <div class="hidden sm:block">
+            <UserBadge />
+          </div>
 
           <!-- Mobile Menu Button -->
           <button 
             @click="isMobileMenuOpen = !isMobileMenuOpen"
-            class="md:hidden p-2 rounded-xl text-[var(--cosmic-muted)] hover:text-[var(--cosmic-blue-deep)] hover:bg-[rgba(148,176,231,0.12)] transition-colors focus:outline-none"
+            class="md:hidden inline-flex items-center justify-center p-2.5 rounded-xl text-[var(--cosmic-muted)] hover:text-[var(--cosmic-blue-deep)] hover:bg-[rgba(148,176,231,0.12)] transition-colors focus:outline-none"
+            :aria-expanded="isMobileMenuOpen"
+            aria-label="打开导航菜单"
           >
             <svg v-if="!isMobileMenuOpen" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
@@ -57,8 +61,11 @@
       leave-from-class="scale-y-100 opacity-100"
       leave-to-class="scale-y-0 opacity-0"
     >
-      <div v-if="isMobileMenuOpen" class="md:hidden absolute top-full left-0 w-full bg-[rgba(250,253,255,0.96)] backdrop-blur-xl border-b border-[rgba(149,171,210,0.18)] shadow-xl pb-6 pt-2">
-        <div class="px-4 space-y-6">
+      <div v-if="isMobileMenuOpen" class="md:hidden absolute top-full left-0 w-full bg-[rgba(250,253,255,0.98)] backdrop-blur-xl border-b border-[rgba(149,171,210,0.18)] shadow-xl pb-5 pt-3">
+        <div class="px-4 space-y-4">
+          <div class="sm:hidden rounded-2xl border border-[rgba(149,171,210,0.14)] bg-white/80 px-4 py-3 shadow-[0_12px_26px_rgba(120,146,186,0.08)]">
+            <UserBadge />
+          </div>
           <Navigation direction="vertical" @navigate="isMobileMenuOpen = false" /> 
         </div>
       </div>
@@ -76,22 +83,16 @@
 </template>
 
 <script setup>
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import Navigation from '@/components/frontend/Navigation.vue'
 import UserBadge from '@/components/frontend/UserBadge.vue'
-import { useUserStore } from '@/stores/user'
 import { useSiteConfigStore } from '@/stores/siteConfig'
 
 const fallbackLogo = `${import.meta.env.BASE_URL}thoughtflow_logo.png`
+const route = useRoute()
 
-const userStore = useUserStore()
 const siteConfig = useSiteConfigStore()
-const user = computed(() => userStore.frontendUserInfo)
-
-// 检查用户是否已登录
-const isLoggedIn = computed(() => {
-  return !!user.value && !!user.value.userId
-})
 
 const props = defineProps({
   keyword: {
@@ -123,6 +124,13 @@ const handleScroll = () => {
   const scrollHeight = document.documentElement.scrollHeight - window.innerHeight
   scrollProgress.value = scrollHeight > 0 ? Math.min(scrollTop / scrollHeight, 1) : 0
 }
+
+watch(
+  () => route.fullPath,
+  () => {
+    isMobileMenuOpen.value = false
+  }
+)
 
 onMounted(() => {
   window.addEventListener('scroll', handleScroll, { passive: true })

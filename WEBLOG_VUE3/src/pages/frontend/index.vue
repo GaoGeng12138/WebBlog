@@ -24,8 +24,8 @@
             </p>
 
             <div class="mt-3.5 max-w-[540px]">
-              <label class="hero-search relative flex items-center p-1.5 rounded-full border border-[rgba(149,171,210,0.16)] bg-[rgba(255,255,255,0.72)] shadow-[0_12px_28px_rgba(120,146,186,0.1)] backdrop-blur-xl transition-all duration-300 focus-within:-translate-y-0.5 focus-within:bg-[rgba(255,255,255,0.95)] focus-within:shadow-[0_16px_30px_rgba(110,146,216,0.12)] focus-within:border-[rgba(148,176,231,0.24)]">
-                <span class="pl-4 pr-3 flex items-center justify-center text-[var(--cosmic-muted)] group-focus-within:text-[var(--cosmic-blue)] transition-colors">
+              <label class="hero-search relative flex flex-col gap-2 rounded-[24px] border border-[rgba(149,171,210,0.16)] bg-[rgba(255,255,255,0.72)] p-2 shadow-[0_12px_28px_rgba(120,146,186,0.1)] backdrop-blur-xl transition-all duration-300 focus-within:-translate-y-0.5 focus-within:bg-[rgba(255,255,255,0.95)] focus-within:shadow-[0_16px_30px_rgba(110,146,216,0.12)] focus-within:border-[rgba(148,176,231,0.24)] sm:flex-row sm:items-center sm:gap-0 sm:rounded-full sm:p-1.5">
+                <span class="pl-3 sm:pl-4 pr-2 sm:pr-3 flex items-center justify-center text-[var(--cosmic-muted)] group-focus-within:text-[var(--cosmic-blue)] transition-colors">
                   <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M10.5 18a7.5 7.5 0 100-15 7.5 7.5 0 000 15z" />
                   </svg>
@@ -39,7 +39,7 @@
                 />
                 <button
                   type="button"
-                  class="hero-search-button ml-2 rounded-full bg-[linear-gradient(135deg,var(--cosmic-blue),var(--cosmic-blue-deep))] px-6 py-2.5 text-[13px] font-medium text-white transition-all duration-300 hover:shadow-lg hover:shadow-[rgba(110,146,216,0.22)] active:scale-95"
+                  class="hero-search-button w-full rounded-full bg-[linear-gradient(135deg,var(--cosmic-blue),var(--cosmic-blue-deep))] px-6 py-2.5 text-[13px] font-medium text-white transition-all duration-300 hover:shadow-lg hover:shadow-[rgba(110,146,216,0.22)] active:scale-95 sm:ml-2 sm:w-auto"
                   @click="handleSearch"
                 >
                   开始搜索
@@ -585,6 +585,10 @@ watch(() => siteConfigStore.siteInfo.frontendArticlePageSize, (newVal) => {
   .hero-search-button {
     padding-left: 1rem;
     padding-right: 1rem;
+  }
+
+  .hero-search {
+    border-radius: 22px;
   }
 
   .section-heading-shell {

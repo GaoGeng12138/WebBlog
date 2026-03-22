@@ -4,8 +4,8 @@
     <AppHeader :keyword="keyword" @update:keyword="keyword = $event" @search="searchArticles" />
     
     <!-- Main Content -->
-    <main class="flex-1 max-w-[1720px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
-      <div class="flex gap-5 lg:gap-6">
+    <main class="flex-1 max-w-[1720px] w-full mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12">
+      <div class="flex gap-4 lg:gap-6">
         <!-- 左侧导航栏（文章目录） -->
         <aside v-if="article" class="hidden xl:block w-60 shrink-0">
           <div class="sticky top-24">
@@ -51,7 +51,7 @@
               <p class="mt-4 text-sm text-gray-500 font-medium">全力加载中 ...</p>
             </div>
 
-            <div v-else-if="article" class="rounded-[34px] border border-[rgba(129,158,196,0.2)] bg-white/92 p-6 shadow-[0_24px_80px_rgba(120,146,184,0.14)] backdrop-blur-xl sm:p-10 lg:p-14">
+            <div v-else-if="article" class="rounded-[28px] border border-[rgba(129,158,196,0.2)] bg-white/92 p-4 shadow-[0_24px_80px_rgba(120,146,184,0.14)] backdrop-blur-xl sm:rounded-[34px] sm:p-10 lg:p-14">
               <!-- 封面图 -->
               <div v-if="article.cover" class="mb-8 rounded-[28px] overflow-hidden border border-slate-200/80 bg-slate-950 shadow-[0_24px_70px_rgba(15,23,42,0.12)]">
                 <img :src="article.cover" :alt="article.title || article.summary || '文章封面'" class="article-hero-image w-full h-auto max-h-[560px] object-contain">
@@ -65,6 +65,45 @@
                   <p v-if="article.summary" class="max-w-3xl text-base leading-8 text-slate-600">
                     {{ article.summary }}
                   </p>
+                </div>
+
+                <div v-if="headings.length > 0" class="mb-6 xl:hidden">
+                  <button
+                    type="button"
+                    class="flex w-full items-center justify-between rounded-2xl border border-[rgba(129,158,196,0.18)] bg-[rgba(244,248,252,0.9)] px-4 py-3 text-left text-sm font-semibold text-slate-700 shadow-[0_12px_28px_rgba(120,146,184,0.08)]"
+                    @click="mobileTocOpen = !mobileTocOpen"
+                  >
+                    <span class="inline-flex items-center gap-2">
+                      <el-icon class="text-[var(--theme-primary)]"><Menu /></el-icon>
+                      文章目录
+                    </span>
+                    <span class="text-xs font-medium text-slate-400">{{ mobileTocOpen ? '收起' : '展开' }}</span>
+                  </button>
+
+                  <transition name="toc-slide">
+                    <div
+                      v-show="mobileTocOpen"
+                      class="mt-3 rounded-2xl border border-[rgba(129,158,196,0.16)] bg-white/92 p-3 shadow-[0_14px_32px_rgba(120,146,184,0.1)]"
+                    >
+                      <nav class="max-h-72 space-y-1 overflow-y-auto pr-1 custom-scrollbar">
+                        <a
+                          v-for="(heading, index) in headings"
+                          :key="`mobile-${index}`"
+                          :href="`#${heading.id}`"
+                          @click.prevent="scrollToHeading(heading.id)"
+                          :class="[
+                            'block rounded-xl py-2 text-sm transition-all duration-300',
+                            heading.level === 1 ? 'pl-3' : heading.level === 2 ? 'pl-5' : heading.level === 3 ? 'pl-7' : 'pl-9',
+                            activeHeading === heading.id
+                              ? 'bg-[rgba(116,149,195,0.14)] text-[var(--theme-primary-deep)] font-semibold'
+                              : 'text-slate-500 hover:bg-[rgba(244,248,252,0.96)] hover:text-[var(--theme-primary)]'
+                          ]"
+                        >
+                          <span class="line-clamp-2 block">{{ heading.text }}</span>
+                        </a>
+                      </nav>
+                    </div>
+                  </transition>
                 </div>
 
                 <div class="flex flex-wrap items-center gap-3 text-sm text-slate-500 sm:gap-4">
@@ -209,6 +248,7 @@ const collectLoading = ref(false)
 const headings = ref([]) // 文章目录
 const activeHeading = ref('') // 当前激活的标题
 const categoryNeighbors = ref({ preArticle: null, nextArticle: null })
+const mobileTocOpen = ref(false)
 
 // 检查用户是否已登录
 const isLoggedIn = computed(() => {
@@ -512,6 +552,7 @@ async function loadArticle() {
     if (res && res.success) {
       article.value = res.data
       console.log('文章数据设置成功')
+      mobileTocOpen.value = false
       await resolveCategoryNeighbors()
       
       // 动态更新浏览器标签页标题
@@ -825,6 +866,7 @@ function handleCollectClickForGuest() {
 ::v-deep(pre) {
   margin: 1.7rem 0;
   position: relative;
+  overflow-x: auto;
 }
 
 ::v-deep(pre.code-block-shell) {
@@ -904,5 +946,77 @@ function handleCollectClickForGuest() {
 ::v-deep(.code-copy-button:hover) {
   background: rgba(116, 149, 195, 0.85);
   transform: translateY(-1px);
+}
+
+.toc-slide-enter-active,
+.toc-slide-leave-active {
+  transition: all 0.22s ease;
+}
+
+.toc-slide-enter-from,
+.toc-slide-leave-to {
+  opacity: 0;
+  transform: translateY(-6px);
+}
+
+@media (max-width: 768px) {
+  ::v-deep(.article-content) {
+    font-size: 0.98rem;
+    line-height: 1.86;
+  }
+
+  ::v-deep(.article-content h2) {
+    margin-top: 2.3rem;
+    font-size: clamp(1.45rem, 7vw, 2rem);
+  }
+
+  ::v-deep(.article-content h3) {
+    margin-top: 1.8rem;
+    font-size: clamp(1.15rem, 5.2vw, 1.45rem);
+  }
+
+  ::v-deep(.article-content h4) {
+    margin-top: 1.4rem;
+    font-size: 1.02rem;
+  }
+
+  ::v-deep(.article-content blockquote) {
+    margin: 1.4rem 0;
+    padding: 0.95rem 1rem;
+  }
+
+  ::v-deep(.article-content img) {
+    border-radius: 16px;
+  }
+
+  ::v-deep(.article-content table) {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+    border-radius: 14px;
+  }
+
+  ::v-deep(.article-content th),
+  ::v-deep(.article-content td) {
+    padding: 0.78rem 0.85rem;
+  }
+
+  ::v-deep(pre.code-block-shell) {
+    border-radius: 16px;
+  }
+
+  ::v-deep(.code-block-toolbar) {
+    padding: 0.5rem 0.75rem 0.45rem;
+  }
+
+  ::v-deep(pre code.hljs) {
+    font-size: 0.86rem;
+    line-height: 1.7;
+    padding: 0.9rem 1rem 1rem;
+  }
+
+  ::v-deep(.code-copy-button) {
+    padding: 0.24rem 0.52rem;
+  }
 }
 </style>

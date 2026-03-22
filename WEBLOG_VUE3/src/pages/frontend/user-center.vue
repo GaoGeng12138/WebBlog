@@ -1,5 +1,5 @@
 <template>
-    <div class="min-h-screen bg-transparent pb-20">
+    <div class="user-center-page min-h-screen bg-transparent pb-20">
         <div class="sticky top-0 z-50 border-b border-[rgba(129,158,196,0.16)] bg-white/70 backdrop-blur-xl">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
                 <div class="flex items-center cursor-pointer group" @click="goHome">
@@ -20,7 +20,7 @@
             </div>
         </div>
 
-        <div class="relative h-64 w-full overflow-hidden group md:h-80">
+        <div class="user-center-cover relative h-64 w-full overflow-hidden group md:h-80">
             <img src="https://picsum.photos/1920/600?random=1"
                 class="w-full h-full object-cover transition duration-700 group-hover:scale-105" alt="Cover" />
             <div class="absolute inset-0 bg-[linear-gradient(180deg,rgba(238,245,252,0.1),rgba(57,92,145,0.2)),linear-gradient(0deg,rgba(15,23,42,0.22),rgba(15,23,42,0.04))]"></div>
@@ -32,9 +32,9 @@
         </div>
 
         <div class="max-w-7xl mx-auto px-4 sm:px-6 relative -mt-20 z-10">
-            <div class="relative mb-8 overflow-visible rounded-[30px] border border-[rgba(129,158,196,0.18)] bg-white/92 p-6 shadow-[0_28px_80px_rgba(120,146,184,0.16)] backdrop-blur-xl md:p-8">
-                <div class="flex flex-col md:flex-row items-start justify-between">
-                    <div class="flex flex-col md:flex-row items-center md:items-end w-full">
+            <div class="user-center-hero relative mb-8 overflow-visible rounded-[30px] border border-[rgba(129,158,196,0.18)] bg-white/92 p-6 shadow-[0_28px_80px_rgba(120,146,184,0.16)] backdrop-blur-xl md:p-8">
+                <div class="user-center-hero__grid flex flex-col md:flex-row items-start justify-between">
+                    <div class="user-center-hero__profile flex flex-col md:flex-row items-center md:items-end w-full">
                         <div class="relative -mt-20 md:-mt-24 mb-4 md:mb-0 md:mr-6 flex-shrink-0">
                             <div
                                 class="relative h-32 w-32 cursor-pointer overflow-hidden rounded-full border-[6px] border-white bg-white shadow-[0_18px_40px_rgba(120,146,184,0.18)] group md:h-40 md:w-40"
@@ -100,7 +100,7 @@
                             </p>
                         </div>
 
-                        <div class="mt-6 flex w-full flex-col items-stretch gap-4 md:mt-0 md:w-auto md:min-w-[390px] md:items-end">
+                        <div class="user-center-actions mt-6 flex w-full flex-col items-stretch gap-4 md:mt-0 md:w-auto md:min-w-[390px] md:items-end">
                             <div class="profile-panel-shell">
                                 <div class="profile-panel-heading">个人数据</div>
                                 <div class="grid w-full grid-cols-3 gap-3">
@@ -163,9 +163,9 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <div class="user-center-layout grid grid-cols-1 lg:grid-cols-12 gap-8">
 
-                <div class="lg:col-span-3">
+                <div class="user-center-sidebar lg:col-span-3">
                     <div class="sticky top-24 rounded-[26px] border border-[rgba(129,158,196,0.18)] bg-white/88 p-4 shadow-[0_20px_50px_rgba(120,146,184,0.12)] backdrop-blur-xl">
                         <el-menu :default-active="activeTab" class="!border-none custom-menu" @select="handleTabSelect">
                             <el-menu-item index="overview">
@@ -209,7 +209,7 @@
                     </div>
                 </div>
 
-                <div class="lg:col-span-9">
+                <div class="user-center-main lg:col-span-9">
                     <div class="min-h-[600px] rounded-[30px] border border-[rgba(129,158,196,0.18)] bg-white/90 p-6 shadow-[0_24px_70px_rgba(120,146,184,0.12)] backdrop-blur-xl md:p-8">
 
                         <div v-if="activeTab === 'overview'" class="animate-fade-in space-y-8">
@@ -2133,6 +2133,115 @@ onMounted(() => {
 
     .profile-quick-link {
         min-height: 64px;
+    }
+}
+
+@media (max-width: 1024px) {
+    .user-center-hero__grid {
+        gap: 1rem;
+    }
+
+    .user-center-actions {
+        min-width: 0;
+    }
+
+    .user-center-sidebar {
+        position: static;
+    }
+
+    .user-center-main {
+        min-width: 0;
+    }
+}
+
+@media (max-width: 768px) {
+    .user-center-page {
+        padding-bottom: 4rem;
+    }
+
+    .user-center-cover {
+        height: 13rem;
+    }
+
+    .user-center-hero {
+        margin-top: -4.5rem;
+        padding: 1rem;
+        border-radius: 22px;
+    }
+
+    .user-center-hero__grid {
+        gap: 1rem;
+    }
+
+    .user-center-hero__profile {
+        align-items: stretch;
+    }
+
+    .user-center-actions {
+        gap: 0.75rem;
+    }
+
+    .user-center-actions .grid {
+        grid-template-columns: 1fr;
+    }
+
+    .profile-panel-shell,
+    .profile-quick-panel {
+        padding: 12px;
+        border-radius: 20px;
+    }
+
+    .profile-stat-card {
+        min-height: 88px;
+    }
+
+    .user-center-layout {
+        gap: 1rem;
+    }
+
+    .user-center-sidebar {
+        order: 2;
+    }
+
+    .user-center-main {
+        order: 1;
+    }
+
+    .user-center-sidebar .custom-menu {
+        display: flex;
+        gap: 0.5rem;
+        overflow-x: auto;
+        padding-bottom: 0.25rem;
+    }
+
+    .user-center-sidebar :deep(.el-menu-item) {
+        min-width: 120px;
+        flex: 0 0 auto;
+    }
+
+    .user-center-main :deep(.activity-section),
+    .user-center-main :deep(.activity-summary),
+    .user-center-main :deep(.activity-item) {
+        border-radius: 18px;
+    }
+
+    .user-center-main :deep(.activity-summary) {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.85rem;
+    }
+
+    .user-center-main :deep(.activity-breakdown) {
+        grid-template-columns: 1fr;
+    }
+
+    .user-center-main :deep(.el-button) {
+        width: 100%;
+    }
+
+    .user-center-main :deep(.el-pagination) {
+        flex-wrap: wrap;
+        gap: 0.35rem;
     }
 }
 

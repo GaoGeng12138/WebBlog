@@ -1,8 +1,8 @@
 <template>
-  <div class="comment-section mt-8 rounded-[30px] border border-[rgba(129,158,196,0.18)] bg-white/92 p-6 shadow-[0_24px_70px_rgba(120,146,184,0.12)] backdrop-blur-xl sm:p-8">
+  <div class="comment-section mt-8 rounded-[26px] border border-[rgba(129,158,196,0.18)] bg-white/92 p-4 shadow-[0_24px_70px_rgba(120,146,184,0.12)] backdrop-blur-xl sm:rounded-[30px] sm:p-6 sm:px-8">
     <!-- Comment Header -->
-    <div class="flex items-center justify-between mb-6">
-      <h2 class="text-2xl font-bold text-slate-900">
+    <div class="mb-5 flex items-center justify-between gap-3 sm:mb-6">
+      <h2 class="text-xl font-bold text-slate-900 sm:text-2xl">
         评论 <span class="text-sm text-slate-500">({{ totalComments }})</span>
       </h2>
     </div>
@@ -10,7 +10,7 @@
     <!-- Comment Input - Only show if comments are enabled -->
     <div v-if="isCommentEnabled" class="mb-8">
       <!-- Anonymous or Logged-in User Info -->
-      <div class="flex items-start space-x-3 mb-4">
+      <div class="mb-4 flex items-start gap-3">
         <div class="flex-shrink-0">
           <div v-if="isLoggedIn" class="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-[var(--theme-primary)] to-[var(--theme-primary-soft)] text-sm font-bold text-white shadow-[0_12px_26px_rgba(116,149,195,0.22)]">
             {{ userStore.frontendUserInfo?.nickname?.charAt(0) || 'U' }}
@@ -39,7 +39,7 @@
             show-word-limit
             class="comment-input"
           />
-          <div class="flex justify-end mt-3">
+          <div class="mt-3 flex justify-end">
             <el-button 
               type="primary" 
               @click="submitComment"
@@ -351,5 +351,33 @@ onMounted(() => {
 
 .comment-dialog :deep(.el-dialog__footer) {
   padding: 12px 24px 24px;
+}
+
+@media (max-width: 640px) {
+  .comment-section {
+    border-radius: 22px;
+  }
+
+  .comment-section :deep(.el-button) {
+    width: 100%;
+  }
+
+  .comment-section :deep(.el-pagination) {
+    flex-wrap: wrap;
+    gap: 0.35rem;
+  }
+
+  .comment-dialog :deep(.el-dialog) {
+    width: calc(100vw - 1.5rem) !important;
+    margin: 0.75rem auto !important;
+    border-radius: 20px;
+  }
+
+  .comment-dialog :deep(.el-dialog__header),
+  .comment-dialog :deep(.el-dialog__body),
+  .comment-dialog :deep(.el-dialog__footer) {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
 }
 </style>
