@@ -22,6 +22,7 @@ const AdminArticleList = () => import('@/pages/admin/article-list.vue')
 const AdminArticleDetail = () => import('@/pages/admin/article-detail.vue')
 const AdminCategoryList = () => import('@/pages/admin/category-list.vue')
 const AdminTagList = () => import('@/pages/admin/tag-list.vue')
+const AdminCommentList = () => import('@/pages/admin/comment-list.vue')
 const AdminBlogSetting = () => import('@/pages/admin/blog-setting.vue')
 
 const frontendFavicon = `${import.meta.env.BASE_URL}thoughtflow-frontend.svg`
@@ -166,6 +167,14 @@ const routes = [
                 meta: {
                     title: '标签管理',
                     permission: 'admin:tag:list'
+                }
+            },
+            {
+                path: "/admin/comment/list",
+                component: AdminCommentList,
+                meta: {
+                    title: '评论管理',
+                    permission: 'admin:comment:list'
                 }
             },
             {

@@ -33,6 +33,12 @@ export const useMenuStore = defineStore('menu', () => {
       'permission': 'admin:tag:list'
     },
     {
+      'name': '评论管理',
+      'icon': 'ChatLineRound',
+      'path': '/admin/comment/list',
+      'permission': 'admin:comment:list'
+    },
+    {
       'name': '用户管理',
       'icon': 'User',
       'path': '/admin/user/list',

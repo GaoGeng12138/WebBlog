@@ -36,10 +36,10 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useMenuStore } from '@/stores/menu'
-import { Monitor, Document, FolderOpened, PriceTag, User, Setting, Lock, Position } from '@element-plus/icons-vue'
+import { Monitor, Document, FolderOpened, PriceTag, User, Setting, Lock, Position, ChatLineRound } from '@element-plus/icons-vue'
 
 // 图标映射对象
 const iconMap = {
@@ -50,7 +50,8 @@ const iconMap = {
   User,
   Setting,
   Lock,
-  Position
+  Position,
+  ChatLineRound
 }
 
 // 引入 useMenuStore
@@ -70,7 +71,7 @@ const handleSelect = (path) => {
 const isCollapse = computed(() => !(menuStore.menuWidth == '250px'))
 
 // 根据路由地址判断哪个菜单被选中
-const defaultActive = ref(route.path)
+const defaultActive = computed(() => route.path)
 </script>
 
 <style scoped>
