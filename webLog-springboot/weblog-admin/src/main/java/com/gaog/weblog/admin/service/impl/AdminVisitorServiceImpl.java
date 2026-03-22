@@ -40,7 +40,9 @@ public class AdminVisitorServiceImpl implements AdminVisitorService {
         wrapper.like(StringUtils.isNotBlank(reqVO.getIpAddress()), VisitorLogDO::getIpAddress, reqVO.getIpAddress())
                 .ge(Objects.nonNull(reqVO.getStartDate()), VisitorLogDO::getVisitDate, reqVO.getStartDate())
                 .le(Objects.nonNull(reqVO.getEndDate()), VisitorLogDO::getVisitDate, reqVO.getEndDate())
-                .orderByDesc(VisitorLogDO::getCreateTime);
+                // 先按记录时间倒序，再按主键倒序，保证同一时间段内的展示顺序稳定
+                .orderByDesc(VisitorLogDO::getCreateTime)
+                .orderByDesc(VisitorLogDO::getId);
 
         if ("member".equalsIgnoreCase(reqVO.getVisitorType())) {
             wrapper.isNotNull(VisitorLogDO::getUserId);

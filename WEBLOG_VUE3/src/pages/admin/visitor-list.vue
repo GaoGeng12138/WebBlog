@@ -46,6 +46,11 @@
         class="visitor-table"
         header-cell-class-name="visitor-table__header"
       >
+        <el-table-column label="序号" width="90" align="center">
+          <template #default="{ $index }">
+            {{ (pagination.currentPage - 1) * pagination.pageSize + $index + 1 }}
+          </template>
+        </el-table-column>
         <el-table-column prop="id" label="ID" width="90" />
         <el-table-column prop="ipAddress" label="IP 地址" min-width="160">
           <template #default="{ row }">
