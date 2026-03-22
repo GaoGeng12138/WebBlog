@@ -255,7 +255,8 @@ router.beforeEach(async (to, from, next) => {
         }
 
         try {
-            await userStore.ensureUserInfoReady()
+            // 后台权限和菜单依赖当前角色的最新权限，进入后台时强制刷新一次，避免本地持久化的旧权限导致入口不显示
+            await userStore.ensureUserInfoReady(true)
         } catch (error) {
             next('/login')
             return
