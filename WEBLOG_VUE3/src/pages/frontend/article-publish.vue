@@ -79,7 +79,7 @@
             </div>
           </section>
 
-          <section v-show="mobilePublishStep === 'info'" class="editor-panel space-y-5">
+          <section v-show="mobilePublishStep === 'info'" class="editor-panel mobile-section-shell mobile-section-shell--info space-y-5">
             <div class="editor-panel__header">
               <div>
                 <p class="editor-panel__eyebrow">基础信息</p>
@@ -183,7 +183,7 @@
             </div>
           </section>
 
-          <section v-show="mobilePublishStep === 'content'" class="editor-panel space-y-5">
+          <section v-show="mobilePublishStep === 'content'" class="editor-panel mobile-section-shell mobile-section-shell--content space-y-5">
             <div class="editor-panel__header">
               <div>
                 <p class="editor-panel__eyebrow">正文创作</p>
@@ -213,6 +213,7 @@
                   editor-id="frontend-article-editor-mobile"
                   height="560px"
                   placeholder="从问题、方案、步骤和结果开始写。手机端建议先写结构，再补图和代码。"
+                  :compact-mode="isMobileLayout"
                   :upload-handler="onMdUploadImg"
                 />
 
@@ -250,7 +251,7 @@
             </div>
           </section>
 
-          <section v-show="mobilePublishStep === 'publish'" class="editor-panel space-y-5">
+          <section v-show="mobilePublishStep === 'publish'" class="editor-panel mobile-section-shell mobile-section-shell--publish space-y-5">
             <div class="editor-panel__header">
               <div>
                 <p class="editor-panel__eyebrow">发布确认</p>
@@ -1202,6 +1203,11 @@ onBeforeUnmount(() => {
   box-shadow: 0 18px 42px rgba(15, 23, 42, 0.06);
 }
 
+.mobile-section-shell {
+  border-radius: 26px;
+  padding: 1rem;
+}
+
 .mobile-workspace-shell__header {
   display: flex;
   align-items: flex-start;
@@ -1423,9 +1429,17 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 768px) {
+  .article-publish-page {
+    background:
+      radial-gradient(circle at top left, rgba(148, 176, 231, 0.12), transparent 28%),
+      radial-gradient(circle at bottom right, rgba(255, 255, 255, 0.72), transparent 26%),
+      linear-gradient(180deg, #f5f8fd 0%, #eef3fb 100%);
+  }
+
   .editor-panel {
-    padding: 1.1rem;
-    border-radius: 22px;
+    padding: 1rem;
+    border-radius: 24px;
+    box-shadow: 0 16px 36px rgba(15, 23, 42, 0.05);
   }
 
   .workspace-stat {
@@ -1442,7 +1456,7 @@ onBeforeUnmount(() => {
   }
 
   .rich-editor-shell__content {
-    height: 620px;
+    height: 66svh;
   }
 
   .article-publish-page .rich-editor-shell__meta {
@@ -1461,6 +1475,33 @@ onBeforeUnmount(() => {
     align-items: flex-start;
   }
 
+  .mobile-workspace-shell__title {
+    font-size: 1.15rem;
+  }
+
+  .mobile-workspace-shell__desc {
+    font-size: 0.84rem;
+  }
+
+  .mobile-stepper {
+    display: flex;
+    overflow-x: auto;
+    gap: 0.55rem;
+    padding-bottom: 0.25rem;
+    scroll-snap-type: x mandatory;
+  }
+
+  .mobile-stepper__item {
+    min-width: 160px;
+    flex: 0 0 auto;
+    scroll-snap-align: start;
+  }
+
+  .mobile-stepper__hint {
+    font-size: 0.72rem;
+    line-height: 1.35;
+  }
+
   .mobile-info-grid,
   .mobile-summary-grid {
     grid-template-columns: 1fr;
@@ -1475,21 +1516,21 @@ onBeforeUnmount(() => {
   }
 
   .article-publish-page .mobile-workspace-shell {
+    padding: 0.85rem;
+    border-radius: 24px;
+  }
+
+  .article-publish-page .mobile-section-shell {
     padding: 0.9rem;
-    border-radius: 22px;
+    border-radius: 24px;
   }
 
-  .article-publish-page .mobile-stepper {
-    gap: 0.6rem;
+  .article-publish-page .mobile-section-shell--content {
+    min-height: calc(100svh - 14rem);
   }
 
-  .article-publish-page .mobile-stepper__item {
-    padding: 0.75rem;
-  }
-
-  .article-publish-page .mobile-stepper__hint {
-    font-size: 0.72rem;
-    line-height: 1.35;
+  .article-publish-page .mobile-section-shell--content .editor-panel__header {
+    margin-bottom: 1rem;
   }
 
   .article-publish-page .mobile-publish-hint {
@@ -1499,20 +1540,23 @@ onBeforeUnmount(() => {
   .article-publish-page .mobile-step-actions :deep(.el-button) {
     min-height: 46px;
   }
+
+  .article-publish-page .mobile-step-actions--stack {
+    position: sticky;
+    bottom: 0.75rem;
+    z-index: 20;
+    padding: 0.9rem;
+    border-radius: 22px;
+    background: rgba(255, 255, 255, 0.94);
+    box-shadow: 0 16px 34px rgba(15, 23, 42, 0.08);
+    border: 1px solid rgba(148, 176, 231, 0.16);
+    backdrop-filter: blur(16px);
+  }
 }
 
 @media (max-width: 520px) {
-  .article-publish-page .mobile-stepper {
-    display: flex;
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    padding-bottom: 0.25rem;
-  }
-
   .article-publish-page .mobile-stepper__item {
-    min-width: 210px;
-    flex: 0 0 auto;
-    scroll-snap-align: start;
+    min-width: 148px;
   }
 
   .article-publish-page .mobile-summary-grid {
@@ -1528,7 +1572,11 @@ onBeforeUnmount(() => {
   }
 
   .article-publish-page .rich-editor-shell__content {
-    height: 520px;
+    height: 60svh;
+  }
+
+  .article-publish-page .mobile-stepper__hint {
+    display: none;
   }
 }
 </style>
