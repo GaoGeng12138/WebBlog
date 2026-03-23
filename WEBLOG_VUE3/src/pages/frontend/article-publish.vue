@@ -44,8 +44,271 @@
       </div>
     </div>
 
-    <div class="mx-auto max-w-[1600px] px-4 py-8 sm:px-6 lg:px-8">
-      <el-form ref="formRef" :model="form" :rules="rules" label-position="top" class="grid gap-8 xl:grid-cols-[380px_minmax(0,1fr)]">
+    <div class="mx-auto max-w-[1600px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+      <el-form ref="formRef" :model="form" :rules="rules" label-position="top">
+        <div v-if="isMobileLayout" class="space-y-4 md:hidden">
+          <section class="mobile-workspace-shell">
+            <div class="mobile-workspace-shell__header">
+              <div>
+                <p class="mobile-workspace-shell__eyebrow">手机写作台</p>
+                <h2 class="mobile-workspace-shell__title">{{ isEdit ? '编辑这篇文章' : '开始新文章' }}</h2>
+                <p class="mobile-workspace-shell__desc">把发布流程拆成三步，减少手机上来回滚动和误触。</p>
+              </div>
+
+              <div class="mobile-workspace-shell__progress">
+                <span class="mobile-workspace-shell__progress-label">进度</span>
+                <strong>{{ mobilePublishStepIndex + 1 }}/3</strong>
+              </div>
+            </div>
+
+            <div class="mobile-stepper">
+              <button
+                v-for="step in mobilePublishSteps"
+                :key="step.key"
+                type="button"
+                class="mobile-stepper__item"
+                :class="{ 'mobile-stepper__item--active': mobilePublishStep === step.key }"
+                @click="mobilePublishStep = step.key"
+              >
+                <span class="mobile-stepper__index">{{ step.index }}</span>
+                <span class="mobile-stepper__text">
+                  <span class="mobile-stepper__label">{{ step.label }}</span>
+                  <span class="mobile-stepper__hint">{{ step.hint }}</span>
+                </span>
+              </button>
+            </div>
+          </section>
+
+          <section v-show="mobilePublishStep === 'info'" class="editor-panel mobile-section-shell mobile-section-shell--info space-y-5">
+            <div class="editor-panel__header">
+              <div>
+                <p class="editor-panel__eyebrow">基础信息</p>
+                <h2 class="editor-panel__title">先把文章骨架搭好</h2>
+              </div>
+              <div class="editor-pill">{{ editorModeLabel }}</div>
+            </div>
+
+            <el-form-item label="文章标题" class="mb-0">
+              <input
+                v-model="form.title"
+                placeholder="给文章起一个清晰的标题"
+                class="editor-title-input"
+              />
+            </el-form-item>
+
+            <el-form-item label="文章分类" prop="categoryId" class="mb-0">
+              <el-select v-model="form.categoryId" placeholder="选择一个分类" class="w-full" size="large">
+                <el-option v-for="cat in categories" :key="cat.id" :label="cat.name" :value="cat.id" />
+              </el-select>
+            </el-form-item>
+
+            <el-form-item label="文章标签" prop="tags" class="mb-0">
+              <el-select
+                v-model="form.tags"
+                multiple
+                filterable
+                placeholder="可搜索并选择标签"
+                class="w-full"
+                size="large"
+              >
+                <el-option v-for="tag in tags" :key="tag.id" :label="tag.name" :value="tag.id" />
+              </el-select>
+            </el-form-item>
+
+            <div class="mobile-info-grid">
+              <div class="mobile-info-card">
+                <p class="mobile-info-card__label">文章来源</p>
+                <strong class="mobile-info-card__value">{{ isEdit ? (form.articleSourceLabel || '前台发布') : '前台发布' }}</strong>
+              </div>
+              <div class="mobile-info-card">
+                <p class="mobile-info-card__label">当前状态</p>
+                <strong class="mobile-info-card__value" :class="statusBadgeClass">{{ currentStatusLabel }}</strong>
+              </div>
+            </div>
+
+            <div class="mobile-mode-switch">
+              <button
+                v-for="type in ['markdown', 'richtext']"
+                :key="type"
+                type="button"
+                class="editor-mode-button"
+                :class="{ 'editor-mode-button--active': form.editorType === type }"
+                @click="handleManualTypeChange(type)"
+              >
+                {{ type === 'markdown' ? 'Markdown' : '富文本' }}
+              </button>
+            </div>
+
+            <el-form-item label="文章摘要" prop="summary" class="mb-0">
+              <el-input
+                v-model="form.summary"
+                type="textarea"
+                :rows="5"
+                resize="none"
+                maxlength="200"
+                show-word-limit
+                placeholder="用 2 到 4 句话总结文章亮点、场景和结论"
+              />
+            </el-form-item>
+
+            <el-form-item label="文章封面" prop="cover" class="mb-0">
+              <el-upload
+                class="w-full"
+                :show-file-list="false"
+                :on-change="handleCoverChange"
+                :auto-upload="false"
+                :before-upload="beforeUpload"
+                accept="image/*"
+              >
+                <div v-if="form.cover" class="cover-uploader cover-uploader--filled mobile-cover-uploader">
+                  <img :src="form.cover" class="h-full w-full object-cover" />
+                  <div class="cover-uploader__overlay">
+                    <el-icon class="mb-2 text-2xl"><Picture /></el-icon>
+                    <span>点击更换封面</span>
+                  </div>
+                </div>
+
+                <div v-else class="cover-uploader mobile-cover-uploader">
+                  <div class="cover-uploader__icon">
+                    <el-icon><Picture /></el-icon>
+                  </div>
+                  <h3 class="text-lg font-bold text-slate-800">上传封面图</h3>
+                  <p class="mt-2 text-sm leading-6 text-slate-500">建议比例 16:9，支持 JPG / PNG / WEBP，大小不超过 2MB。</p>
+                </div>
+              </el-upload>
+            </el-form-item>
+
+            <div class="mobile-step-actions">
+              <el-button class="w-full" size="large" round @click="mobilePublishStep = 'content'">下一步，去写正文</el-button>
+            </div>
+          </section>
+
+          <section v-show="mobilePublishStep === 'content'" class="editor-panel mobile-section-shell mobile-section-shell--content space-y-5">
+            <div class="editor-panel__header">
+              <div>
+                <p class="editor-panel__eyebrow">正文创作</p>
+                <h2 class="editor-panel__title">把内容写完整</h2>
+              </div>
+              <span class="editor-outline-chip">{{ contentWordCount }} 字</span>
+            </div>
+
+            <div class="mobile-mode-switch">
+              <button
+                v-for="type in ['markdown', 'richtext']"
+                :key="`content-${type}`"
+                type="button"
+                class="editor-mode-button"
+                :class="{ 'editor-mode-button--active': form.editorType === type }"
+                @click="handleManualTypeChange(type)"
+              >
+                {{ type === 'markdown' ? 'Markdown' : '富文本' }}
+              </button>
+            </div>
+
+            <el-form-item label="正文内容" prop="content" class="mb-0">
+              <div class="w-full">
+                <MarkdownEditorSurface
+                  v-if="form.editorType === 'markdown'"
+                  v-model="form.content"
+                  editor-id="frontend-article-editor-mobile"
+                  height="560px"
+                  placeholder="从问题、方案、步骤和结果开始写。手机端建议先写结构，再补图和代码。"
+                  :compact-mode="isMobileLayout"
+                  :upload-handler="onMdUploadImg"
+                />
+
+                <div v-else class="rich-editor-shell mobile-rich-editor-shell">
+                  <div class="rich-editor-shell__meta">
+                    <div>
+                      <p class="editor-panel__eyebrow">可视化排版</p>
+                      <h3 class="text-lg font-bold text-slate-900">富文本编辑器</h3>
+                    </div>
+                    <span class="editor-pill editor-pill--soft">适合轻量图文</span>
+                  </div>
+
+                  <Toolbar
+                    :editor="editorRef"
+                    :defaultConfig="toolbarConfig"
+                    mode="default"
+                    class="rich-editor-shell__toolbar"
+                  />
+                  <div class="rich-editor-shell__content">
+                    <Editor
+                      v-model="form.content"
+                      :defaultConfig="editorConfig"
+                      mode="default"
+                      style="height: 100%; overflow-y: hidden;"
+                      @onCreated="handleCreated"
+                    />
+                  </div>
+                </div>
+              </div>
+            </el-form-item>
+
+            <div class="mobile-step-actions mobile-step-actions--split">
+              <el-button size="large" round @click="mobilePublishStep = 'info'">上一步</el-button>
+              <el-button size="large" round type="primary" @click="mobilePublishStep = 'publish'">去发布</el-button>
+            </div>
+          </section>
+
+          <section v-show="mobilePublishStep === 'publish'" class="editor-panel mobile-section-shell mobile-section-shell--publish space-y-5">
+            <div class="editor-panel__header">
+              <div>
+                <p class="editor-panel__eyebrow">发布确认</p>
+                <h2 class="editor-panel__title">发布前再看一眼</h2>
+              </div>
+              <span class="editor-outline-chip">{{ estimatedReadMinutes }} 分钟阅读</span>
+            </div>
+
+            <div class="mobile-summary-grid">
+              <div class="mobile-summary-card">
+                <span class="mobile-summary-card__label">标题</span>
+                <strong class="mobile-summary-card__value">{{ form.title?.trim() || '未命名文章' }}</strong>
+              </div>
+              <div class="mobile-summary-card">
+                <span class="mobile-summary-card__label">分类</span>
+                <strong class="mobile-summary-card__value">{{ categories.find((item) => item.id === form.categoryId)?.name || '未选择' }}</strong>
+              </div>
+              <div class="mobile-summary-card">
+                <span class="mobile-summary-card__label">摘要</span>
+                <strong class="mobile-summary-card__value">{{ form.summary?.trim() ? '已填写' : '待补充' }}</strong>
+              </div>
+              <div class="mobile-summary-card">
+                <span class="mobile-summary-card__label">封面</span>
+                <strong class="mobile-summary-card__value">{{ form.cover ? '已上传' : '未上传' }}</strong>
+              </div>
+            </div>
+
+            <div class="mobile-publish-hint">
+              {{ publishHint }}
+            </div>
+
+            <div class="mobile-step-actions mobile-step-actions--stack">
+              <el-button size="large" round @click="mobilePublishStep = 'content'">返回正文</el-button>
+              <el-button size="large" round @click="resetForm">重置草稿</el-button>
+              <el-button
+                size="large"
+                round
+                :loading="submitting && submitAction === 'draft'"
+                @click="onSubmit('draft')"
+              >
+                {{ isEdit ? '保存草稿' : '存为草稿' }}
+              </el-button>
+              <el-button
+                type="primary"
+                size="large"
+                round
+                :loading="submitting && submitAction === 'publish'"
+                class="!px-10 shadow-lg shadow-blue-500/20"
+                @click="onSubmit('publish')"
+              >
+                {{ publishPrimaryLabel }}
+              </el-button>
+            </div>
+          </section>
+        </div>
+
+        <div v-else class="hidden md:grid gap-8 xl:grid-cols-[380px_minmax(0,1fr)]">
         <aside class="space-y-6">
           <section class="editor-panel">
             <div class="editor-panel__header">
@@ -287,6 +550,7 @@
             </div>
           </div>
         </section>
+        </div>
       </el-form>
     </div>
   </div>
@@ -319,6 +583,15 @@ const formRef = ref()
 const isEdit = ref(false)
 const submitting = ref(false)
 const submitAction = ref('publish')
+const isMobileLayout = ref(false)
+const mobilePublishStep = ref('info')
+
+const mobilePublishSteps = [
+  { key: 'info', label: '基础信息', hint: '标题、分类、封面', index: '01' },
+  { key: 'content', label: '正文编辑', hint: '写作与排版', index: '02' },
+  { key: 'publish', label: '发布确认', hint: '草稿与发布', index: '03' }
+]
+let resizeHandler = null
 
 const categories = ref([])
 const tags = ref([])
@@ -362,6 +635,10 @@ const rules = {
 }
 
 const editorModeLabel = computed(() => (form.editorType === 'markdown' ? 'Markdown' : '富文本'))
+const mobilePublishStepIndex = computed(() => {
+  const index = mobilePublishSteps.findIndex((step) => step.key === mobilePublishStep.value)
+  return index >= 0 ? index : 0
+})
 const requiresReview = computed(() => siteConfig.permissions.articleReviewRequired === true)
 const publishPrimaryLabel = computed(() => {
   if (isEdit.value) {
@@ -418,6 +695,14 @@ const getStatusClass = (status) => {
 
 const handleCreated = (editor) => {
   editorRef.value = editor
+}
+
+const syncPublishLayout = () => {
+  if (typeof window === 'undefined') return
+  isMobileLayout.value = window.innerWidth < 768
+  if (!isMobileLayout.value) {
+    mobilePublishStep.value = 'info'
+  }
 }
 
 async function uploadSingleImage(file) {
@@ -601,6 +886,10 @@ const resetForm = () => {
 }
 
 onMounted(async () => {
+  resizeHandler = syncPublishLayout
+  syncPublishLayout()
+  window.addEventListener('resize', resizeHandler)
+
   await siteConfig.ensureConfigReady().catch((error) => {
     console.error('获取站点配置失败:', error)
   })
@@ -619,6 +908,9 @@ onMounted(async () => {
 })
 
 onBeforeUnmount(() => {
+  if (resizeHandler) {
+    window.removeEventListener('resize', resizeHandler)
+  }
   if (editorRef.value) {
     editorRef.value.destroy()
   }
@@ -901,6 +1193,207 @@ onBeforeUnmount(() => {
   box-shadow: 0 16px 36px rgba(15, 23, 42, 0.05);
 }
 
+.mobile-workspace-shell {
+  border: 1px solid rgba(226, 232, 240, 0.92);
+  border-radius: 26px;
+  background:
+    radial-gradient(circle at top left, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.98)),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.98));
+  padding: 1rem;
+  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.06);
+}
+
+.mobile-section-shell {
+  border-radius: 26px;
+  padding: 1rem;
+}
+
+.mobile-workspace-shell__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.mobile-workspace-shell__eyebrow {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.mobile-workspace-shell__title {
+  margin-top: 0.35rem;
+  font-size: 1.25rem;
+  font-weight: 900;
+  color: #0f172a;
+}
+
+.mobile-workspace-shell__desc {
+  margin-top: 0.35rem;
+  font-size: 0.88rem;
+  line-height: 1.6;
+  color: #64748b;
+}
+
+.mobile-workspace-shell__progress {
+  display: inline-flex;
+  min-width: 72px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  border-radius: 18px;
+  border: 1px solid rgba(226, 232, 240, 0.92);
+  background: white;
+  padding: 0.75rem 0.8rem;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
+}
+
+.mobile-workspace-shell__progress-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.mobile-stepper {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.mobile-stepper__item {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  width: 100%;
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.96);
+  padding: 0.85rem 0.95rem;
+  text-align: left;
+  transition: all 0.25s ease;
+}
+
+.mobile-stepper__item--active {
+  border-color: rgba(37, 99, 235, 0.22);
+  background: linear-gradient(135deg, rgba(239, 246, 255, 0.98), rgba(255, 255, 255, 0.98));
+  box-shadow: 0 12px 26px rgba(37, 99, 235, 0.08);
+}
+
+.mobile-stepper__index {
+  display: inline-flex;
+  min-width: 2.2rem;
+  min-height: 2.2rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #e2e8f0, #f8fafc);
+  color: #64748b;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+}
+
+.mobile-stepper__item--active .mobile-stepper__index {
+  background: linear-gradient(135deg, #2563eb, #0ea5e9);
+  color: white;
+}
+
+.mobile-stepper__text {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.mobile-stepper__label {
+  font-size: 0.96rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.mobile-stepper__hint {
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.mobile-mode-switch {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.35rem;
+  border: 1px solid rgba(226, 232, 240, 0.92);
+  border-radius: 18px;
+  background: rgba(248, 250, 252, 0.96);
+}
+
+.mobile-info-grid,
+.mobile-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.mobile-info-card,
+.mobile-summary-card {
+  border: 1px solid rgba(226, 232, 240, 0.92);
+  border-radius: 18px;
+  background: white;
+  padding: 0.85rem 0.95rem;
+}
+
+.mobile-info-card__label,
+.mobile-summary-card__label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.mobile-info-card__value,
+.mobile-summary-card__value {
+  display: block;
+  margin-top: 0.4rem;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.mobile-cover-uploader {
+  min-height: 200px;
+}
+
+.mobile-publish-hint {
+  border-radius: 18px;
+  border: 1px solid rgba(191, 219, 254, 0.8);
+  background: linear-gradient(135deg, rgba(239, 246, 255, 0.96), rgba(255, 255, 255, 0.96));
+  padding: 0.95rem 1rem;
+  color: #334155;
+  line-height: 1.7;
+}
+
+.mobile-step-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.mobile-step-actions--split {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.mobile-step-actions :deep(.el-button),
+.mobile-step-actions :deep(.el-button + .el-button) {
+  width: 100%;
+}
+
 :deep(.el-form-item__label) {
   font-weight: 700;
   color: #334155;
@@ -936,13 +1429,154 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 768px) {
+  .article-publish-page {
+    background:
+      radial-gradient(circle at top left, rgba(148, 176, 231, 0.12), transparent 28%),
+      radial-gradient(circle at bottom right, rgba(255, 255, 255, 0.72), transparent 26%),
+      linear-gradient(180deg, #f5f8fd 0%, #eef3fb 100%);
+  }
+
   .editor-panel {
-    padding: 1.1rem;
-    border-radius: 22px;
+    padding: 1rem;
+    border-radius: 24px;
+    box-shadow: 0 16px 36px rgba(15, 23, 42, 0.05);
+  }
+
+  .workspace-stat {
+    min-width: 0;
+  }
+
+  .article-publish-page .editor-mode-button {
+    padding: 0.72rem 0.6rem;
+    font-size: 0.86rem;
+  }
+
+  .article-publish-page .editor-title-input {
+    font-size: clamp(1.4rem, 7vw, 2rem);
   }
 
   .rich-editor-shell__content {
-    height: 620px;
+    height: 66svh;
+  }
+
+  .article-publish-page .rich-editor-shell__meta {
+    flex-direction: column;
+  }
+
+  .article-publish-page .workspace-stat {
+    width: 100%;
+  }
+
+  .mobile-workspace-shell__header {
+    flex-direction: column;
+  }
+
+  .mobile-workspace-shell__progress {
+    align-items: flex-start;
+  }
+
+  .mobile-workspace-shell__title {
+    font-size: 1.15rem;
+  }
+
+  .mobile-workspace-shell__desc {
+    font-size: 0.84rem;
+  }
+
+  .mobile-stepper {
+    display: flex;
+    overflow-x: auto;
+    gap: 0.55rem;
+    padding-bottom: 0.25rem;
+    scroll-snap-type: x mandatory;
+  }
+
+  .mobile-stepper__item {
+    min-width: 160px;
+    flex: 0 0 auto;
+    scroll-snap-align: start;
+  }
+
+  .mobile-stepper__hint {
+    font-size: 0.72rem;
+    line-height: 1.35;
+  }
+
+  .mobile-info-grid,
+  .mobile-summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .mobile-step-actions--split {
+    grid-template-columns: 1fr;
+  }
+
+  .mobile-step-actions--stack {
+    padding-top: 0.25rem;
+  }
+
+  .article-publish-page .mobile-workspace-shell {
+    padding: 0.85rem;
+    border-radius: 24px;
+  }
+
+  .article-publish-page .mobile-section-shell {
+    padding: 0.9rem;
+    border-radius: 24px;
+  }
+
+  .article-publish-page .mobile-section-shell--content {
+    min-height: calc(100svh - 14rem);
+  }
+
+  .article-publish-page .mobile-section-shell--content .editor-panel__header {
+    margin-bottom: 1rem;
+  }
+
+  .article-publish-page .mobile-publish-hint {
+    font-size: 0.9rem;
+  }
+
+  .article-publish-page .mobile-step-actions :deep(.el-button) {
+    min-height: 46px;
+  }
+
+  .article-publish-page .mobile-step-actions--stack {
+    position: sticky;
+    bottom: 0.75rem;
+    z-index: 20;
+    padding: 0.9rem;
+    border-radius: 22px;
+    background: rgba(255, 255, 255, 0.94);
+    box-shadow: 0 16px 34px rgba(15, 23, 42, 0.08);
+    border: 1px solid rgba(148, 176, 231, 0.16);
+    backdrop-filter: blur(16px);
+  }
+}
+
+@media (max-width: 520px) {
+  .article-publish-page .mobile-stepper__item {
+    min-width: 148px;
+  }
+
+  .article-publish-page .mobile-summary-grid {
+    gap: 0.6rem;
+  }
+
+  .article-publish-page .mobile-summary-card {
+    padding: 0.8rem;
+  }
+
+  .article-publish-page .mobile-cover-uploader {
+    min-height: 180px;
+  }
+
+  .article-publish-page .rich-editor-shell__content {
+    height: 60svh;
+  }
+
+  .article-publish-page .mobile-stepper__hint {
+    display: none;
   }
 }
 </style>

@@ -2,15 +2,21 @@ package com.gaog.weblog.web.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.gaog.weblog.common.domain.dos.BlogSettingDO;
 import com.gaog.weblog.common.domain.dos.ArticleDO;
 import com.gaog.weblog.common.domain.dos.CommentDO;
 import com.gaog.weblog.common.domain.dos.UserActivityScoreDO;
 import com.gaog.weblog.common.domain.dos.UserDO;
+import com.gaog.weblog.common.domain.dos.UserLikeCommentDO;
 import com.gaog.weblog.common.domain.dos.UserFavoriteArticleDO;
 import com.gaog.weblog.common.domain.dos.VisitorLogDO;
 import com.gaog.weblog.common.domain.mapper.ArticleMapper;
 import com.gaog.weblog.common.domain.mapper.CommentMapper;
 import com.gaog.weblog.common.domain.mapper.UserActivityScoreMapper;
+import com.gaog.weblog.common.domain.mapper.SiteSettingMapper;
+import com.gaog.weblog.common.domain.mapper.UserLikeCommentMapper;
 import com.gaog.weblog.common.domain.mapper.UserFavoriteArticleMapper;
 import com.gaog.weblog.common.domain.mapper.UserMapper;
 import com.gaog.weblog.common.domain.mapper.VisitorLogMapper;
@@ -27,13 +33,13 @@ import com.gaog.weblog.web.service.UserActivityScoreService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAdjusters;
+import java.util.Collections;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -45,8 +51,13 @@ import java.util.stream.Collectors;
 @Slf4j
 public class UserActivityScoreServiceImpl implements UserActivityScoreService {
 
+    private static final String DEFAULT_ACTIVITY_SCORE_RULES = "[{\"type\":\"article\",\"name\":\"发布文章\",\"score\":10},{\"type\":\"comment\",\"name\":\"发表评论\",\"score\":2},{\"type\":\"favorite\",\"name\":\"收藏文章\",\"score\":1},{\"type\":\"like\",\"name\":\"点赞评论\",\"score\":1},{\"type\":\"login\",\"name\":\"每日登录\",\"score\":1}]";
+
     @Autowired
     private UserActivityScoreMapper userActivityScoreMapper;
+
+    @Autowired
+    private SiteSettingMapper siteSettingMapper;
 
     @Autowired
     private UserMapper userMapper;
@@ -61,66 +72,140 @@ public class UserActivityScoreServiceImpl implements UserActivityScoreService {
     private UserFavoriteArticleMapper userFavoriteArticleMapper;
 
     @Autowired
+    private UserLikeCommentMapper userLikeCommentMapper;
+
+    @Autowired
     private VisitorLogMapper visitorLogMapper;
 
-    // Scoring weights based on the provided rules
-    private static final int ARTICLE_SCORE = 10;     // Publish article: 10 points
-    private static final int COMMENT_SCORE = 2;      // Post comment: 2 points
-    private static final int FAVORITE_SCORE = 1;     // Favorite article: 1 point
-    private static final double LIKE_SCORE = 0.5;    // Like content: 0.5 points
-    private static final int LOGIN_SCORE = 1;        // Daily login: 1 point
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    public static class ActivityScoreRule {
+        private String type;
+        private String name;
+        private Integer score;
+
+        public String getType() {
+            return type;
+        }
+
+        public void setType(String type) {
+            this.type = type;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public Integer getScore() {
+            return score;
+        }
+
+        public void setScore(Integer score) {
+            this.score = score;
+        }
+    }
+
+    private List<ActivityScoreRule> resolveActivityScoreRules() {
+        BlogSettingDO setting = siteSettingMapper.findSingleton();
+        String rawRules = setting != null ? setting.getActivityScoreRules() : null;
+
+        try {
+            String source = (rawRules == null || rawRules.trim().isEmpty()) ? DEFAULT_ACTIVITY_SCORE_RULES : rawRules;
+            List<ActivityScoreRule> rules = objectMapper.readValue(source, new TypeReference<List<ActivityScoreRule>>() {});
+            List<ActivityScoreRule> normalizedRules = new ArrayList<>();
+            for (ActivityScoreRule rule : rules) {
+                if (rule == null || rule.getType() == null || rule.getType().trim().isEmpty()) {
+                    continue;
+                }
+                ActivityScoreRule normalizedRule = new ActivityScoreRule();
+                normalizedRule.setType(rule.getType().trim());
+                normalizedRule.setName(rule.getName() == null || rule.getName().trim().isEmpty() ? rule.getType().trim() : rule.getName().trim());
+                normalizedRule.setScore(rule.getScore() == null ? 0 : Math.max(rule.getScore(), 0));
+                normalizedRules.add(normalizedRule);
+            }
+            return normalizedRules.isEmpty() ? readDefaultActivityScoreRules() : normalizedRules;
+        } catch (Exception e) {
+            log.warn("Failed to parse activity score rules, fallback to default rules", e);
+            return readDefaultActivityScoreRules();
+        }
+    }
+
+    private List<ActivityScoreRule> readDefaultActivityScoreRules() {
+        try {
+            return objectMapper.readValue(DEFAULT_ACTIVITY_SCORE_RULES, new TypeReference<List<ActivityScoreRule>>() {});
+        } catch (Exception e) {
+            log.warn("Failed to load default activity score rules", e);
+            return Collections.emptyList();
+        }
+    }
+
+    private Map<String, ActivityScoreRule> toActivityScoreRuleMap(List<ActivityScoreRule> rules) {
+        Map<String, ActivityScoreRule> ruleMap = new LinkedHashMap<>();
+        for (ActivityScoreRule rule : rules) {
+            if (rule != null && rule.getType() != null) {
+                ruleMap.put(rule.getType(), rule);
+            }
+        }
+        return ruleMap;
+    }
+
+    public void recalculateActivityScores(Long userId, LocalDate startDate, LocalDate endDate) {
+        calculateAndSaveActivityScores(userId, startDate, endDate, toActivityScoreRuleMap(resolveActivityScoreRules()));
+    }
+
+    private int getRuleScore(Map<String, ActivityScoreRule> ruleMap, String type) {
+        ActivityScoreRule rule = ruleMap.get(type);
+        return rule != null && rule.getScore() != null ? rule.getScore() : 0;
+    }
 
     @Override
     public Response<UserActivityScoreRspVO> getActivityScore(UserActivityScoreReqVO reqVO) {
         try {
             // Get user ID (either from request or current user)
             Long userId = SecurityContextUtil.getCurrentUserId();
+            List<ActivityScoreRule> scoreRules = resolveActivityScoreRules();
+            Map<String, ActivityScoreRule> ruleMap = toActivityScoreRuleMap(scoreRules);
 
             // Calculate date range based on timeRange parameter
             LocalDate[] dateRange = calculateDateRange(reqVO.getTimeRange());
             LocalDate startDate = dateRange[0];
             LocalDate endDate = dateRange[1];
 
+            // Recalculate and persist the current range with the latest rule configuration
+            calculateAndSaveActivityScores(userId, startDate, endDate, ruleMap);
+
             // Get activity data for the user in the specified date range
             List<UserActivityScoreDO> activityScores = getActivityScoresForUser(userId, startDate, endDate);
-
-            // Always calculate and save missing activity scores for the date range
-            // This ensures we have data for the entire requested period
-            calculateAndSaveActivityScores(userId, startDate, endDate);
-
-            // Refresh the activity scores after calculation
-            activityScores = getActivityScoresForUser(userId, startDate, endDate);
 
             // Calculate totals
             int totalScore = activityScores.stream().mapToInt(UserActivityScoreDO::getDailyScore).sum();
             int articleCount = activityScores.stream().mapToInt(UserActivityScoreDO::getArticleCount).sum();
             int commentCount = activityScores.stream().mapToInt(UserActivityScoreDO::getCommentCount).sum();
             int favoriteCount = activityScores.stream().mapToInt(UserActivityScoreDO::getFavoriteCount).sum();
+            int likeCount = countUserCommentLikesInDateRange(userId, startDate, endDate);
             int loginCount = activityScores.stream().mapToInt(UserActivityScoreDO::getLoginCount).sum();
 
+            Map<String, Integer> activityCountMap = new HashMap<>();
+            activityCountMap.put("article", articleCount);
+            activityCountMap.put("comment", commentCount);
+            activityCountMap.put("favorite", favoriteCount);
+            activityCountMap.put("like", likeCount);
+            activityCountMap.put("login", loginCount);
+
             // Create activity details
-            List<UserActivityScoreRspVO.ActivityDetailVO> activities = Arrays.asList(
-                    UserActivityScoreRspVO.ActivityDetailVO.builder()
-                            .type("article")
-                            .count(articleCount)
-                            .score(articleCount * ARTICLE_SCORE)
-                            .build(),
-                    UserActivityScoreRspVO.ActivityDetailVO.builder()
-                            .type("comment")
-                            .count(commentCount)
-                            .score(commentCount * COMMENT_SCORE)
-                            .build(),
-                    UserActivityScoreRspVO.ActivityDetailVO.builder()
-                            .type("favorite")
-                            .count(favoriteCount)
-                            .score(favoriteCount * FAVORITE_SCORE)
-                            .build(),
-                    UserActivityScoreRspVO.ActivityDetailVO.builder()
-                            .type("login")
-                            .count(loginCount)
-                            .score(loginCount * LOGIN_SCORE)
-                            .build()
-            );
+            List<UserActivityScoreRspVO.ActivityDetailVO> activities = scoreRules.stream()
+                    .map(rule -> UserActivityScoreRspVO.ActivityDetailVO.builder()
+                            .type(rule.getType())
+                            .name(rule.getName())
+                            .count(activityCountMap.getOrDefault(rule.getType(), 0))
+                            .score(activityCountMap.getOrDefault(rule.getType(), 0) * getRuleScore(ruleMap, rule.getType()))
+                            .build())
+                    .collect(Collectors.toList());
 
             // Create trend data
             List<UserActivityScoreRspVO.ScoreTrendVO> trend = activityScores.stream()
@@ -227,20 +312,19 @@ public class UserActivityScoreServiceImpl implements UserActivityScoreService {
 
             Long userId = SecurityContextUtil.getCurrentUserId();
 
+            List<ActivityScoreRule> scoreRules = resolveActivityScoreRules();
+            Map<String, ActivityScoreRule> ruleMap = toActivityScoreRuleMap(scoreRules);
 
             // Calculate date range based on timeRange parameter
             LocalDate[] dateRange = calculateDateRange(timeRange);
             LocalDate startDate = dateRange[0];
             LocalDate endDate = dateRange[1];
 
+            // Recalculate and persist the current range with the latest rule configuration
+            calculateAndSaveActivityScores(userId, startDate, endDate, ruleMap);
+
             // Get activity data for the user in the specified date range
             List<UserActivityScoreDO> activityScores = getActivityScoresForUser(userId, startDate, endDate);
-
-            // If no activity data exists, calculate it now
-            if (CollectionUtils.isEmpty(activityScores)) {
-                calculateAndSaveActivityScores(userId, startDate, endDate);
-                activityScores = getActivityScoresForUser(userId, startDate, endDate);
-            }
 
             // Create trend data based on time range
             List<UserActivityTrendRspVO> trend;
@@ -315,7 +399,7 @@ public class UserActivityScoreServiceImpl implements UserActivityScoreService {
     /**
      * Calculate and save activity scores for a user within a date range
      */
-    public void calculateAndSaveActivityScores(Long userId, LocalDate startDate, LocalDate endDate) {
+    private void calculateAndSaveActivityScores(Long userId, LocalDate startDate, LocalDate endDate, Map<String, ActivityScoreRule> ruleMap) {
         // Iterate through each day in the date range
         LocalDate currentDate = startDate;
         while (!currentDate.isAfter(endDate)) {
@@ -326,27 +410,20 @@ public class UserActivityScoreServiceImpl implements UserActivityScoreService {
 
             UserActivityScoreDO existingScore = userActivityScoreMapper.selectOne(wrapper);
 
-            // If not exists, calculate and save
+            // Recalculate and upsert every time to keep data aligned with latest rules
+            int articleCount = countUserArticlesOnDate(userId, currentDate);
+            int commentCount = countUserCommentsOnDate(userId, currentDate);
+            int favoriteCount = countUserFavoritesOnDate(userId, currentDate);
+            int likeCount = countUserCommentLikesOnDate(userId, currentDate);
+            int loginCount = countUserLoginsOnDate(userId, currentDate);
+
+            int dailyScore = (articleCount * getRuleScore(ruleMap, "article")) +
+                    (commentCount * getRuleScore(ruleMap, "comment")) +
+                    (favoriteCount * getRuleScore(ruleMap, "favorite")) +
+                    (likeCount * getRuleScore(ruleMap, "like")) +
+                    (loginCount * getRuleScore(ruleMap, "login"));
+
             if (existingScore == null) {
-                // Count articles published on this date by the user
-                int articleCount = countUserArticlesOnDate(userId, currentDate);
-
-                // Count comments made on this date by the user
-                int commentCount = countUserCommentsOnDate(userId, currentDate);
-
-                // Count favorites made on this date by the user
-                int favoriteCount = countUserFavoritesOnDate(userId, currentDate);
-
-                // Check if user logged in on this date
-                int loginCount = countUserLoginsOnDate(userId, currentDate);
-
-                // Calculate total score
-                int dailyScore = (articleCount * ARTICLE_SCORE) +
-                        (commentCount * COMMENT_SCORE) +
-                        (favoriteCount * FAVORITE_SCORE) +
-                        (loginCount * LOGIN_SCORE);
-
-                // Save to database
                 UserActivityScoreDO activityScore = UserActivityScoreDO.builder()
                         .userId(userId)
                         .activityDate(currentDate)
@@ -360,6 +437,14 @@ public class UserActivityScoreServiceImpl implements UserActivityScoreService {
                         .build();
 
                 userActivityScoreMapper.insert(activityScore);
+            } else {
+                existingScore.setDailyScore(dailyScore);
+                existingScore.setArticleCount(articleCount);
+                existingScore.setCommentCount(commentCount);
+                existingScore.setFavoriteCount(favoriteCount);
+                existingScore.setLoginCount(loginCount);
+                existingScore.setUpdateTime(java.time.LocalDateTime.now());
+                userActivityScoreMapper.updateById(existingScore);
             }
 
             currentDate = currentDate.plusDays(1);
@@ -400,6 +485,30 @@ public class UserActivityScoreServiceImpl implements UserActivityScoreService {
                 .apply("DATE(create_time) = '" + date.toString() + "'");
 
         return Math.toIntExact(userFavoriteArticleMapper.selectCount(wrapper));
+    }
+
+    /**
+     * Count comment likes made by user on a specific date
+     */
+    private int countUserCommentLikesOnDate(Long userId, LocalDate date) {
+        LambdaQueryWrapper<UserLikeCommentDO> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(UserLikeCommentDO::getUserId, userId)
+                .ge(UserLikeCommentDO::getCreateTime, date.atStartOfDay())
+                .le(UserLikeCommentDO::getCreateTime, date.atTime(LocalTime.MAX));
+
+        return Math.toIntExact(userLikeCommentMapper.selectCount(wrapper));
+    }
+
+    /**
+     * Count comment likes made by user within a date range
+     */
+    private int countUserCommentLikesInDateRange(Long userId, LocalDate startDate, LocalDate endDate) {
+        LambdaQueryWrapper<UserLikeCommentDO> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(UserLikeCommentDO::getUserId, userId)
+                .ge(UserLikeCommentDO::getCreateTime, startDate.atStartOfDay())
+                .le(UserLikeCommentDO::getCreateTime, endDate.atTime(LocalTime.MAX));
+
+        return Math.toIntExact(userLikeCommentMapper.selectCount(wrapper));
     }
 
     /**

@@ -1,5 +1,5 @@
 <template>
-  <div class="markdown-editor-surface">
+  <div class="markdown-editor-surface" :class="{ 'markdown-editor-surface--compact': compactMode }">
     <div class="markdown-editor-surface__meta">
       <div class="markdown-editor-surface__label">
         <span class="markdown-editor-surface__dot"></span>
@@ -32,6 +32,7 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
 import { MdEditor } from 'md-editor-v3'
 import 'md-editor-v3/lib/style.css'
 
@@ -59,12 +60,16 @@ const props = defineProps({
   uploadHandler: {
     type: Function,
     default: null
+  },
+  compactMode: {
+    type: Boolean,
+    default: false
   }
 })
 
 defineEmits(['update:modelValue'])
 
-const footers = ['markdownTotal', 'scrollSwitch']
+const footers = computed(() => (props.compactMode ? [] : ['markdownTotal', 'scrollSwitch']))
 const toolbarsExclude = ['github', 'save', 'htmlPreview']
 
 function handleUploadImg(...args) {
@@ -191,6 +196,35 @@ function handleUploadImg(...args) {
 
   .markdown-editor-surface__chips {
     justify-content: flex-start;
+  }
+
+  .markdown-editor-surface--compact .markdown-editor-surface__chips {
+    display: none;
+  }
+
+  .markdown-editor-surface--compact :deep(.md-editor-preview-wrapper) {
+    display: none !important;
+  }
+
+  .markdown-editor-surface--compact :deep(.md-editor-input-wrapper) {
+    width: 100% !important;
+    flex: 1 1 auto !important;
+  }
+
+  .markdown-editor-surface--compact :deep(.md-editor-input) {
+    min-height: 52svh !important;
+    font-size: 0.98rem !important;
+    line-height: 1.85 !important;
+  }
+
+  .markdown-editor-surface--compact :deep(.md-editor-toolbar-wrapper) {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  .markdown-editor-surface--compact :deep(.md-editor-footer) {
+    display: none !important;
   }
 }
 </style>

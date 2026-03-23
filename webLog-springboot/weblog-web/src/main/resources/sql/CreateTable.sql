@@ -79,6 +79,8 @@ CREATE TABLE `t_blog_settings`
     `description`               text COMMENT '网站描述',
     `logo_url`                  varchar(512) DEFAULT NULL COMMENT 'Logo URL',
     `frontend_article_page_size` int(11) DEFAULT '12' COMMENT '前台文章列表每页数量',
+    `activity_level_rules`      text COMMENT '活跃度等级规则JSON',
+    `activity_score_rules`      text COMMENT '活跃度加分规则JSON',
     `comment_enabled`           tinyint(1) DEFAULT '1' COMMENT '是否启用评论功能',
     `create_time`               datetime     DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `update_time`               datetime     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',

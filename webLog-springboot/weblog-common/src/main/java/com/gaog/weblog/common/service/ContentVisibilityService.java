@@ -108,20 +108,19 @@ public class ContentVisibilityService {
             return true;
         }
 
-        Integer articleScope = normalizeScope(articleDO.getVisibilityScope());
-        boolean articleAllowed = VisibilityScopeEnum.PUBLIC.getCode().equals(articleScope);
-        if (!articleAllowed && currentUserId != null) {
-            articleAllowed = articleOrCategoryAssigned(true, articleDO.getId(), currentUserId);
-        }
-        if (!articleAllowed) {
-            return false;
+        if (categoryId != null) {
+            CategoryDO categoryDO = categoryMapper.selectById(categoryId);
+            if (!canAccessCategory(categoryDO)) {
+                return false;
+            }
         }
 
-        if (categoryId == null) {
+        Integer articleScope = normalizeScope(articleDO.getVisibilityScope());
+        if (VisibilityScopeEnum.PUBLIC.getCode().equals(articleScope)) {
             return true;
         }
 
-        return canAccessCategory(categoryMapper.selectById(categoryId));
+        return currentUserId != null && articleOrCategoryAssigned(true, articleDO.getId(), currentUserId);
     }
 
     public String buildCategoryAccessibleArticleSubQuery(Long currentUserId) {

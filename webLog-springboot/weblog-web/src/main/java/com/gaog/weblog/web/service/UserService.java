@@ -2,6 +2,7 @@ package com.gaog.weblog.web.service;
 
 import com.gaog.weblog.common.utils.PageResponse;
 import com.gaog.weblog.common.utils.Response;
+import com.gaog.weblog.web.model.vo.user.DeleteUserAccountReqVO;
 import com.gaog.weblog.web.model.vo.user.RegisterUserReqVO;
 import com.gaog.weblog.web.model.vo.user.UpdateUserProfileReqVO;
 import com.gaog.weblog.web.model.vo.user.UserCurrentLocationRspVO;
@@ -49,6 +50,14 @@ public interface UserService {
      * @return 响应
      */
     Response updateProfile(UpdateUserProfileReqVO updateUserProfileReqVO);
+
+    /**
+     * 注销当前登录账号
+     *
+     * @param deleteUserAccountReqVO 注销请求
+     * @return 响应
+     */
+    Response deleteAccount(DeleteUserAccountReqVO deleteUserAccountReqVO);
     
     /**
      * 获取用户评论历史

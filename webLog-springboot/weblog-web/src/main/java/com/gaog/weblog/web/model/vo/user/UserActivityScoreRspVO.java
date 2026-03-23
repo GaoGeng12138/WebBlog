@@ -47,6 +47,11 @@ public class UserActivityScoreRspVO {
          * Activity type: article, comment, favorite, login
          */
         private String type;
+
+        /**
+         * Activity display name
+         */
+        private String name;
         
         /**
          * Count of activities

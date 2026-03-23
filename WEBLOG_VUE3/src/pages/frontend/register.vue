@@ -1,23 +1,30 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-blue-50 flex flex-col">
-    <div class="flex-grow flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div class="w-full max-w-3xl">
-        <!-- 顶部标题区 -->
-        <div class="text-center mb-8">
-          <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
-            创建账户
-          </h2>
-          <p class="mt-2 text-sm text-slate-600">
-            已有账户？
-            <router-link to="/login" class="font-semibold text-blue-600 hover:text-blue-500">
-              立即登录
-            </router-link>
-          </p>
+  <div class="register-page min-h-screen bg-[#f6f8fc] flex flex-col">
+    <div class="register-shell flex-grow flex items-center justify-center py-8 px-4 sm:px-6 lg:px-8">
+      <div class="w-full max-w-4xl">
+        <div class="register-hero mb-6 overflow-hidden rounded-[28px] border border-[rgba(149,171,210,0.16)] bg-[rgba(255,255,255,0.78)] p-5 shadow-[0_18px_34px_rgba(120,146,186,0.08)] backdrop-blur-xl sm:p-6">
+          <p class="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--cosmic-muted)]">Create account</p>
+          <div class="mt-2 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h2 class="text-2xl font-black tracking-tight text-slate-900 sm:text-4xl">
+                创建账户
+              </h2>
+              <p class="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
+                把资料、头像、社交账号一次填完，注册完成后就能直接开始写作和收藏。
+              </p>
+            </div>
+            <p class="text-sm text-slate-600">
+              已有账户？
+              <router-link to="/login" class="font-semibold text-blue-600 hover:text-blue-500">
+                立即登录
+              </router-link>
+            </p>
+          </div>
         </div>
 
         <!-- 主卡片 -->
-        <div class="bg-white/90 backdrop-blur border border-slate-200 shadow-xl rounded-2xl overflow-hidden">
-          <div class="p-6 sm:p-10">
+        <div class="register-card bg-white/92 backdrop-blur border border-slate-200 shadow-xl rounded-[28px] overflow-hidden">
+          <div class="p-5 sm:p-10">
             <!-- 顶部错误汇总（可选但推荐） -->
             <div
               v-if="formErrorSummary.length"
@@ -32,7 +39,7 @@
 
             <form class="space-y-6" @submit.prevent="onSubmit" novalidate>
               <!-- 用户名 / 昵称：两列布局 -->
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <div class="register-two-col grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div>
                   <label for="username" class="block text-sm font-medium text-slate-700">
                     用户名 <span class="text-red-500">*</span>
@@ -106,7 +113,7 @@
                   头像
                 </label>
 
-                <div class="flex items-center gap-5">
+                <div class="register-avatar-row flex items-center gap-5">
                   <div class="relative shrink-0">
                     <div
                       v-if="avatarPreview"
@@ -723,5 +730,58 @@ async function onSubmit() {
 </script>
 
 <style scoped>
-/* 可选：让进度条更顺滑一些（已用 transition，通常不需要额外样式） */
+.register-page {
+  position: relative;
+}
+
+.register-shell {
+  background:
+    radial-gradient(circle at top left, rgba(148, 176, 231, 0.12), transparent 28%),
+    radial-gradient(circle at bottom right, rgba(255, 155, 227, 0.08), transparent 20%);
+}
+
+.register-hero {
+  position: relative;
+}
+
+.register-hero::after {
+  content: "";
+  position: absolute;
+  inset: auto -3rem -3rem auto;
+  width: 10rem;
+  height: 10rem;
+  border-radius: 9999px;
+  background: radial-gradient(circle, rgba(148, 176, 231, 0.16), transparent 72%);
+  pointer-events: none;
+}
+
+@media (max-width: 640px) {
+  .register-shell {
+    padding-inline: 0.75rem;
+  }
+
+  .register-card {
+    border-radius: 22px;
+  }
+
+  .register-two-col {
+    gap: 1rem;
+  }
+
+  .register-avatar-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .register-card :deep(input),
+  .register-card :deep(textarea),
+  .register-card :deep(.el-input__wrapper) {
+    border-radius: 14px;
+  }
+
+  .register-card :deep(button) {
+    width: 100%;
+  }
+}
 </style>

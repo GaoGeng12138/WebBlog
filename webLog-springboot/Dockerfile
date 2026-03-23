@@ -23,7 +23,7 @@ WORKDIR /app
 
 ENV TZ=Asia/Shanghai
 ENV SPRING_PROFILES_ACTIVE=prod
-ENV JAVA_OPTS=""
+ENV JAVA_OPTS="--add-opens=java.base/java.lang.invoke=ALL-UNNAMED"
 ENV LOG_PATH=/app/logs
 
 COPY --from=builder /app/weblog-web/target/weblog-web-*.jar /app/app.jar

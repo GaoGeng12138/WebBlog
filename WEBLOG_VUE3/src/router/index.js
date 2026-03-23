@@ -22,6 +22,7 @@ const AdminArticleList = () => import('@/pages/admin/article-list.vue')
 const AdminArticleDetail = () => import('@/pages/admin/article-detail.vue')
 const AdminCategoryList = () => import('@/pages/admin/category-list.vue')
 const AdminTagList = () => import('@/pages/admin/tag-list.vue')
+const AdminCommentList = () => import('@/pages/admin/comment-list.vue')
 const AdminBlogSetting = () => import('@/pages/admin/blog-setting.vue')
 
 const frontendFavicon = `${import.meta.env.BASE_URL}thoughtflow-frontend.svg`
@@ -169,6 +170,14 @@ const routes = [
                 }
             },
             {
+                path: "/admin/comment/list",
+                component: AdminCommentList,
+                meta: {
+                    title: '评论管理',
+                    permission: 'admin:comment:list'
+                }
+            },
+            {
                 path: "/admin/user/list",
                 component: () => import('@/pages/admin/user-list.vue'),
                 meta: {
@@ -246,7 +255,8 @@ router.beforeEach(async (to, from, next) => {
         }
 
         try {
-            await userStore.ensureUserInfoReady()
+            // 后台权限和菜单依赖当前角色的最新权限，进入后台时强制刷新一次，避免本地持久化的旧权限导致入口不显示
+            await userStore.ensureUserInfoReady(true)
         } catch (error) {
             next('/login')
             return

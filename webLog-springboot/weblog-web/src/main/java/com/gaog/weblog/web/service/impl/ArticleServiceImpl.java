@@ -161,19 +161,14 @@ public class ArticleServiceImpl implements ArticleService {
 
             // 根据文章 ID 批量查询所有关联记录
             List<ArticleCategoryRelDO> articleCategoryRelDOS = articleCategoryRelMapper.selectByArticleIds(articleIds);
+            Map<Long, ArticleCategoryRelDO> articleCategoryRelMap = articleCategoryRelDOS.stream()
+                    .collect(Collectors.toMap(ArticleCategoryRelDO::getArticleId, rel -> rel, (left, right) -> left));
 
             vos.forEach(vo -> {
-                Long currArticleId = vo.getId();
-                // 过滤出当前文章对应的关联数据
-                Optional<ArticleCategoryRelDO> optional = articleCategoryRelDOS.stream().filter(rel -> Objects.equals(rel.getArticleId(), currArticleId)).findAny();
-
-                // 获取文章阅读数
-                ArticleDO articleDO = articleMapper.selectById(currArticleId);
-                vo.setReadNum(articleDO.getReadNum());
+                ArticleCategoryRelDO articleCategoryRelDO = articleCategoryRelMap.get(vo.getId());
 
                 // 若不为空
-                if (optional.isPresent()) {
-                    ArticleCategoryRelDO articleCategoryRelDO = optional.get();
+                if (articleCategoryRelDO != null) {
                     Long categoryId = articleCategoryRelDO.getCategoryId();
                     // 通过分类 ID 从 map 中拿到对应的分类名称
                     String categoryName = categoryIdNameMap.get(categoryId);
@@ -195,10 +190,11 @@ public class ArticleServiceImpl implements ArticleService {
 
             // 拿到所有文章的标签关联记录
             List<ArticleTagRelDO> articleTagRelDOS = articleTagRelMapper.selectByArticleIds(articleIds);
+            Map<Long, List<ArticleTagRelDO>> articleTagRelMap = articleTagRelDOS.stream()
+                    .collect(Collectors.groupingBy(ArticleTagRelDO::getArticleId));
             vos.forEach(vo -> {
-                Long currArticleId = vo.getId();
                 // 过滤出当前文章的标签关联记录
-                List<ArticleTagRelDO> articleTagRelDOList = articleTagRelDOS.stream().filter(rel -> Objects.equals(rel.getArticleId(), currArticleId)).collect(Collectors.toList());
+                List<ArticleTagRelDO> articleTagRelDOList = articleTagRelMap.getOrDefault(vo.getId(), Lists.newArrayList());
 
                 List<FindTagListRspVO> findTagListRspVOS = Lists.newArrayList();
                 // 将关联记录 DO 转 VO, 并设置对应的标签名称
@@ -279,51 +275,26 @@ public class ArticleServiceImpl implements ArticleService {
                     .map(articleDO -> ArticleConvert.INSTANCE.convertDO2VO(articleDO))
                     .collect(Collectors.toList());
 
-            // 拿到所有文章的 ID 集合
-            List<Long> currentPageArticleIds = articleDOS.stream().map(ArticleDO::getId).collect(Collectors.toList());
+            // 当前接口已经明确按分类过滤，因此直接复用当前分类信息，避免再查一轮分类关联表
+            FindCategoryListRspVO categoryVO = FindCategoryListRspVO.builder()
+                    .id(currentCategory.getId())
+                    .name(currentCategory.getName())
+                    .build();
+            vos.forEach(vo -> vo.setCategory(categoryVO));
 
-            // 第二步：设置文章所属分类
-            // 查询所有分类
-            List<CategoryDO> categoryDOS = categoryMapper.selectList(Wrappers.emptyWrapper());
-            // 转 Map, 方便后续根据分类 ID 拿到对应的分类名称
-            Map<Long, String> categoryIdNameMap = categoryDOS.stream().collect(Collectors.toMap(CategoryDO::getId, CategoryDO::getName));
-
-            // 根据文章 ID 批量查询所有关联记录
-            List<ArticleCategoryRelDO> currentPageArticleCategoryRelDOS = articleCategoryRelMapper.selectByArticleIds(currentPageArticleIds);
-
-            vos.forEach(vo -> {
-                Long currArticleId = vo.getId();
-                // 过滤出当前文章对应的关联数据
-                Optional<ArticleCategoryRelDO> optional = currentPageArticleCategoryRelDOS.stream().filter(rel -> Objects.equals(rel.getArticleId(), currArticleId)).findAny();
-
-                // 若不为空
-                if (optional.isPresent()) {
-                    ArticleCategoryRelDO articleCategoryRelDO = optional.get();
-                    Long currCategoryId = articleCategoryRelDO.getCategoryId();
-                    // 通过分类 ID 从 map 中拿到对应的分类名称
-                    String categoryName = categoryIdNameMap.get(currCategoryId);
-
-                    FindCategoryListRspVO findCategoryListRspVO = FindCategoryListRspVO.builder()
-                            .id(currCategoryId)
-                            .name(categoryName)
-                            .build();
-                    // 设置到当前 vo 类中
-                    vo.setCategory(findCategoryListRspVO);
-                }
-            });
-
-            // 第三步：设置文章标签
+            // 文章标签仍然需要查询，但先按文章ID分组，避免每篇文章都反复过滤一遍
             // 查询所有标签
             List<TagDO> tagDOS = tagMapper.selectList(Wrappers.emptyWrapper());
             // 转 Map, 方便后续根据标签 ID 拿到对应的标签名称
             Map<Long, String> mapIdNameMap = tagDOS.stream().collect(Collectors.toMap(TagDO::getId, TagDO::getName));
 
             // 拿到所有文章的标签关联记录
-            List<ArticleTagRelDO> currentPageArticleTagRelDOS = articleTagRelMapper.selectByArticleIds(currentPageArticleIds);
+            List<Long> currentPageArticleIds = articleDOS.stream().map(ArticleDO::getId).collect(Collectors.toList());
+            Map<Long, List<ArticleTagRelDO>> currentPageArticleTagRelMap = articleTagRelMapper.selectByArticleIds(currentPageArticleIds)
+                    .stream()
+                    .collect(Collectors.groupingBy(ArticleTagRelDO::getArticleId));
             vos.forEach(vo -> {
-                Long currArticleId = vo.getId();
-                // 过滤出当前文章的标签关联记录
-                List<ArticleTagRelDO> articleTagRelDOList = currentPageArticleTagRelDOS.stream().filter(rel -> Objects.equals(rel.getArticleId(), currArticleId)).collect(Collectors.toList());
+                List<ArticleTagRelDO> articleTagRelDOList = currentPageArticleTagRelMap.getOrDefault(vo.getId(), Lists.newArrayList());
 
                 List<FindTagListRspVO> findTagListRspVOS = Lists.newArrayList();
                 // 将关联记录 DO 转 VO, 并设置对应的标签名称
@@ -529,17 +500,15 @@ public class ArticleServiceImpl implements ArticleService {
             // 转 Map, 方便后续根据分类 ID 拿到对应的分类名称
             Map<Long, String> categoryIdNameMap = categoryDOS.stream().collect(Collectors.toMap(CategoryDO::getId, CategoryDO::getName));
 
-            // 根据文章 ID 批量查询所有关联记录
+            // 根据文章 ID 批量查询所有关联记录，并按文章 ID 分组，避免每篇文章重复遍历
             List<ArticleCategoryRelDO> currentPageArticleCategoryRelDOS = articleCategoryRelMapper.selectByArticleIds(currentPageArticleIds);
+            Map<Long, ArticleCategoryRelDO> currentPageArticleCategoryRelMap = currentPageArticleCategoryRelDOS.stream()
+                    .collect(Collectors.toMap(ArticleCategoryRelDO::getArticleId, rel -> rel, (left, right) -> left));
 
             vos.forEach(vo -> {
-                Long currArticleId = vo.getId();
-                // 过滤出当前文章对应的关联数据
-                Optional<ArticleCategoryRelDO> optional = currentPageArticleCategoryRelDOS.stream().filter(rel -> Objects.equals(rel.getArticleId(), currArticleId)).findAny();
+                ArticleCategoryRelDO articleCategoryRelDO = currentPageArticleCategoryRelMap.get(vo.getId());
 
-                // 若不为空
-                if (optional.isPresent()) {
-                    ArticleCategoryRelDO articleCategoryRelDO = optional.get();
+                if (articleCategoryRelDO != null) {
                     Long currCategoryId = articleCategoryRelDO.getCategoryId();
                     // 通过分类 ID 从 map 中拿到对应的分类名称
                     String categoryName = categoryIdNameMap.get(currCategoryId);
@@ -559,12 +528,13 @@ public class ArticleServiceImpl implements ArticleService {
             // 转 Map, 方便后续根据标签 ID 拿到对应的标签名称
             Map<Long, String> mapIdNameMap = tagDOS.stream().collect(Collectors.toMap(TagDO::getId, TagDO::getName));
 
-            // 拿到所有文章的标签关联记录
+            // 拿到所有文章的标签关联记录，并按文章 ID 分组
             List<ArticleTagRelDO> currentPageArticleTagRelDOS = articleTagRelMapper.selectByArticleIds(currentPageArticleIds);
+            Map<Long, List<ArticleTagRelDO>> currentPageArticleTagRelMap = currentPageArticleTagRelDOS.stream()
+                    .collect(Collectors.groupingBy(ArticleTagRelDO::getArticleId));
             vos.forEach(vo -> {
-                Long currArticleId = vo.getId();
                 // 过滤出当前文章的标签关联记录
-                List<ArticleTagRelDO> articleTagRelDOList = currentPageArticleTagRelDOS.stream().filter(rel -> Objects.equals(rel.getArticleId(), currArticleId)).collect(Collectors.toList());
+                List<ArticleTagRelDO> articleTagRelDOList = currentPageArticleTagRelMap.getOrDefault(vo.getId(), Lists.newArrayList());
 
                 List<FindTagListRspVO> findTagListRspVOS = Lists.newArrayList();
                 // 将关联记录 DO 转 VO, 并设置对应的标签名称

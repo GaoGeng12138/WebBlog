@@ -1,5 +1,5 @@
 <template>
-    <div class="min-h-screen bg-transparent pb-20">
+    <div class="user-center-page min-h-screen bg-transparent pb-20">
         <div class="sticky top-0 z-50 border-b border-[rgba(129,158,196,0.16)] bg-white/70 backdrop-blur-xl">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
                 <div class="flex items-center cursor-pointer group" @click="goHome">
@@ -20,7 +20,7 @@
             </div>
         </div>
 
-        <div class="relative h-64 w-full overflow-hidden group md:h-80">
+        <div class="user-center-cover relative h-64 w-full overflow-hidden group md:h-80">
             <img src="https://picsum.photos/1920/600?random=1"
                 class="w-full h-full object-cover transition duration-700 group-hover:scale-105" alt="Cover" />
             <div class="absolute inset-0 bg-[linear-gradient(180deg,rgba(238,245,252,0.1),rgba(57,92,145,0.2)),linear-gradient(0deg,rgba(15,23,42,0.22),rgba(15,23,42,0.04))]"></div>
@@ -32,9 +32,9 @@
         </div>
 
         <div class="max-w-7xl mx-auto px-4 sm:px-6 relative -mt-20 z-10">
-            <div class="relative mb-8 overflow-visible rounded-[30px] border border-[rgba(129,158,196,0.18)] bg-white/92 p-6 shadow-[0_28px_80px_rgba(120,146,184,0.16)] backdrop-blur-xl md:p-8">
-                <div class="flex flex-col md:flex-row items-start justify-between">
-                    <div class="flex flex-col md:flex-row items-center md:items-end w-full">
+            <div class="user-center-hero relative mb-8 overflow-visible rounded-[30px] border border-[rgba(129,158,196,0.18)] bg-white/92 p-6 shadow-[0_28px_80px_rgba(120,146,184,0.16)] backdrop-blur-xl md:p-8">
+                <div class="user-center-hero__grid flex flex-col md:flex-row items-start justify-between">
+                    <div class="user-center-hero__profile flex flex-col md:flex-row items-center md:items-end w-full">
                         <div class="relative -mt-20 md:-mt-24 mb-4 md:mb-0 md:mr-6 flex-shrink-0">
                             <div
                                 class="relative h-32 w-32 cursor-pointer overflow-hidden rounded-full border-[6px] border-white bg-white shadow-[0_18px_40px_rgba(120,146,184,0.18)] group md:h-40 md:w-40"
@@ -69,7 +69,13 @@
                                         <span class="admin-identity-badge__text">管理员</span>
                                     </span>
                                     <el-tag v-else effect="light" type="primary" size="small" round
-                                        class="!border-[rgba(116,149,195,0.18)] !bg-[rgba(116,149,195,0.12)] !text-[var(--theme-primary-deep)]">Lv.3 作者</el-tag>
+                                        class="!border-[rgba(116,149,195,0.18)] !bg-[rgba(116,149,195,0.12)] !text-[var(--theme-primary-deep)]">
+                                        {{ roleDisplayName }}
+                                    </el-tag>
+                                    <el-tag effect="light" type="success" size="small" round
+                                        class="!border-[rgba(116,149,195,0.18)] !bg-[rgba(116,149,195,0.12)] !text-[var(--theme-primary-deep)]">
+                                        {{ activityLevelLabel }}
+                                    </el-tag>
                                     <span class="rounded-md bg-[rgba(240,245,251,0.95)] px-2 py-0.5 text-xs text-slate-400">ID:{{
                                         user.userId
                                         }}</span>
@@ -94,28 +100,28 @@
                             </p>
                         </div>
 
-                        <div class="mt-6 flex w-full flex-col items-stretch gap-4 md:mt-0 md:w-auto md:min-w-[390px] md:items-end">
+                        <div class="user-center-actions mt-6 flex w-full flex-col items-stretch gap-4 md:mt-0 md:w-auto md:min-w-[390px] md:items-end">
                             <div class="profile-panel-shell">
                                 <div class="profile-panel-heading">个人数据</div>
                                 <div class="grid w-full grid-cols-3 gap-3">
                                     <div class="profile-stat-card group cursor-pointer">
                                         <div class="profile-stat-accent"></div>
                                         <div
-                                            class="text-[30px] font-bold leading-none text-slate-900 transition-colors group-hover:text-[var(--theme-primary)]">
+                                            class="profile-stat-value text-[30px] font-bold leading-none text-slate-900 transition-colors group-hover:text-[var(--theme-primary)]">
                                             {{ articleCount }}</div>
                                         <div class="mt-2 text-[11px] font-semibold tracking-[0.18em] text-slate-500">文章</div>
                                     </div>
                                     <div class="profile-stat-card group cursor-pointer">
                                         <div class="profile-stat-accent"></div>
                                         <div
-                                            class="text-[30px] font-bold leading-none text-slate-900 transition-colors group-hover:text-[var(--theme-primary-deep)]">
+                                            class="profile-stat-value text-[30px] font-bold leading-none text-slate-900 transition-colors group-hover:text-[var(--theme-primary-deep)]">
                                             {{ favoriteCount }}</div>
                                         <div class="mt-2 text-[11px] font-semibold tracking-[0.18em] text-slate-500">收藏</div>
                                     </div>
                                     <div class="profile-stat-card group cursor-pointer">
                                         <div class="profile-stat-accent"></div>
                                         <div
-                                            class="text-[30px] font-bold leading-none text-slate-900 transition-colors group-hover:text-[var(--theme-primary-soft)]">
+                                            class="profile-stat-value text-[30px] font-bold leading-none text-slate-900 transition-colors group-hover:text-[var(--theme-primary-soft)]">
                                             {{ commentCount }}</div>
                                         <div class="mt-2 text-[11px] font-semibold tracking-[0.18em] text-slate-500">评论</div>
                                     </div>
@@ -127,23 +133,39 @@
                                     @click="openEditDialog">
                                     编辑个人资料
                                 </el-button>
-                                <el-button v-if="hasRole('ROLE_ADMIN')" size="large" round
-                                    class="theme-btn-secondary profile-action-btn profile-action-btn--secondary !ml-0 !w-full !px-8 !font-semibold"
-                                    @click="goToAdminPanel">
-                                    <el-icon class="mr-1">
-                                        <Setting />
-                                    </el-icon>
-                                    后台管理系统
-                                </el-button>
+                                    <el-button v-if="canAccessAdminPanel" size="large" round
+                                        class="theme-btn-secondary profile-action-btn profile-action-btn--secondary !ml-0 !w-full !px-8 !font-semibold"
+                                        @click="goToAdminPanel">
+                                        <el-icon class="mr-1">
+                                            <Setting />
+                                        </el-icon>
+                                    进入后台管理
+                                    </el-button>
                             </div>
+                            <div class="profile-quick-panel">
+                                <div class="profile-quick-panel__title">快捷操作</div>
+                                <div class="profile-quick-links">
+                                    <button v-for="item in quickActionItems" :key="item.label" type="button"
+                                        class="profile-quick-link"
+                                        :class="{ 'profile-quick-link--primary': item.type === 'primary' }"
+                                        @click="item.action">
+                                        <span class="profile-quick-link__title">{{ item.label }}</span>
+                                        <span class="profile-quick-link__desc">{{ item.desc }}</span>
+                                    </button>
+                                </div>
+                                <div v-if="!canUserPublish" class="mt-3 rounded-2xl border border-amber-100 bg-amber-50/70 px-3 py-2 text-xs text-amber-700">
+                                    前台投稿已关闭，写文章入口已隐藏
+                                </div>
+                            </div>
+                            <div class="profile-quick-note">近 {{ recentActiveDays }} 天有活跃记录</div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <div class="user-center-layout grid grid-cols-1 lg:grid-cols-12 gap-8">
 
-                <div class="lg:col-span-3">
+                <div class="user-center-sidebar lg:col-span-3">
                     <div class="sticky top-24 rounded-[26px] border border-[rgba(129,158,196,0.18)] bg-white/88 p-4 shadow-[0_20px_50px_rgba(120,146,184,0.12)] backdrop-blur-xl">
                         <el-menu :default-active="activeTab" class="!border-none custom-menu" @select="handleTabSelect">
                             <el-menu-item index="overview">
@@ -157,6 +179,12 @@
                                     <Document />
                                 </el-icon>
                                 <span>我的文章</span>
+                            </el-menu-item>
+                            <el-menu-item index="drafts">
+                                <el-icon>
+                                    <EditPen />
+                                </el-icon>
+                                <span>草稿箱</span>
                             </el-menu-item>
                             <el-menu-item index="collections">
                                 <el-icon>
@@ -181,7 +209,7 @@
                     </div>
                 </div>
 
-                <div class="lg:col-span-9">
+                <div class="user-center-main lg:col-span-9">
                     <div class="min-h-[600px] rounded-[30px] border border-[rgba(129,158,196,0.18)] bg-white/90 p-6 shadow-[0_24px_70px_rgba(120,146,184,0.12)] backdrop-blur-xl md:p-8">
 
                         <div v-if="activeTab === 'overview'" class="animate-fade-in space-y-8">
@@ -220,7 +248,7 @@
                                     <div class="activity-breakdown">
                                         <div v-for="activity in activityData.activities" :key="activity.type"
                                             class="activity-item">
-                                            <span class="activity-type">{{ getActivityTypeName(activity.type) }}</span>
+                                            <span class="activity-type">{{ activity.name || getActivityTypeName(activity.type) }}</span>
                                             <span class="activity-count">{{ activity.count }}次</span>
                                             <span class="activity-item-score">+{{ activity.score }}分</span>
                                         </div>
@@ -241,65 +269,59 @@
                                             </div>
                                         </div>
 
-                                        <div class="relative w-full h-48 border-b border-gray-100">
-                                            <div class="flex items-end h-full overflow-x-auto pb-2 custom-scrollbar"
+                                        <div class="relative w-full h-48 border-b border-gray-200">
+                                            <div class="flex items-end h-full overflow-x-auto pb-3 custom-scrollbar"
                                                 v-loading="activityLoading">
+                                                <div v-for="(item, index) in activityData.trend"
+                                                    :key="index"
+                                                    class="h-full flex flex-col justify-end items-center flex-shrink-0 px-2 min-w-[90px]">
+                                                    <!-- 柱子容器 -->
+                                                    <div class="relative w-full h-full flex items-end justify-center">
+                                                        <span v-if="item.score > 0" class="activity-score-badge">
+                                                            {{ item.score }}
+                                                        </span>
 
-                                                <div class="activity-chart mt-6 relative">
-                                                    <div class="relative w-full h-48 border-b border-gray-200">
-                                                        <div class="flex items-end h-full overflow-x-auto pb-3 custom-scrollbar"
-                                                            v-loading="activityLoading">
-                                                            <div v-for="(item, index) in activityData.trend"
-                                                                :key="index"
-                                                                class="h-full flex flex-col justify-end items-center flex-shrink-0 px-2 min-w-[90px]">
-                                                                <!-- 柱子容器 -->
-                                                                <div
-                                                                    class="relative w-full h-full flex items-end justify-center">
-
-                                                                    <!-- 实际柱子 -->
-                                                                    <div class="w-full max-w-[40px] rounded-t shadow-sm transition-all duration-300"
-                                                                        :class="item.score > 0
-                                                                            ? 'bg-gradient-to-t from-[var(--theme-primary-deep)] to-[var(--theme-primary)]'
-                                                                            : 'bg-gray-200'"
-                                                                        :style="{ height: calculateBarHeight(item.score) + '%' }">
-                                                                    </div>
-
-                                                                    <!-- 透明命中层（关键） -->
-                                                                    <div class="absolute inset-0 cursor-pointer"
-                                                                        @mouseenter="showTooltip($event, index, true)"
-                                                                        @mouseleave="showTooltip($event, index, false)"
-                                                                        @click="showTooltip($event, index, !tooltipVisible[index])">
-                                                                    </div>
-                                                                </div>
-
-                                                                <!-- X 轴 -->
-                                                                <div class="text-[11px] text-gray-500 mt-2 font-medium">
-                                                                    {{ formatDateByRange(item.date, selectedTimeRange)
-                                                                    }}
-                                                                </div>
-                                                            </div>
-
-                                                            <div v-if="!activityLoading && activityData.trend.length === 0"
-                                                                class="absolute inset-0 flex items-center justify-center text-gray-400 text-sm">
-                                                                暂无活跃度数据
-                                                            </div>
+                                                        <!-- 实际柱子 -->
+                                                        <div class="w-full max-w-[40px] rounded-t shadow-sm transition-all duration-300 activity-bar"
+                                                            :class="item.score > 0 ? 'activity-bar-positive' : 'activity-bar-negative'"
+                                                            :style="{
+                                                              height: calculateBarHeight(item.score) + '%',
+                                                              minHeight: item.score > 0 ? '18px' : '10px'
+                                                            }">
                                                         </div>
+
+                                                        <!-- 透明命中层（关键） -->
+                                                        <div class="absolute inset-0 cursor-pointer"
+                                                            @mouseenter="showTooltip($event, index, true)"
+                                                            @mouseleave="showTooltip($event, index, false)"
+                                                            @click="showTooltip($event, index, !tooltipVisible[index])">
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- X 轴 -->
+                                                    <div class="text-[11px] text-gray-500 mt-2 font-medium">
+                                                        {{ formatDateByRange(item.date, selectedTimeRange) }}
                                                     </div>
                                                 </div>
 
-                                                <Teleport to="body">
-                                                    <div v-if="activeTooltipIndex !== null"
-                                                        class="fixed z-[9999] bg-gray-800 text-white text-xs rounded px-2 py-1.5 shadow-lg pointer-events-none"
-                                                        :style="tooltipPosition">
-                                                        <div class="flex items-center gap-1 font-medium">
-                                                            <el-icon class="text-yellow-300">
-                                                                <Star />
-                                                            </el-icon>
-                                                            {{ activityData.trend[activeTooltipIndex]?.score }} 积分
-                                                        </div>
-                                                    </div>
-                                                </Teleport>
+                                                <div v-if="!activityLoading && activityData.trend.length === 0"
+                                                    class="absolute inset-0 flex items-center justify-center text-gray-400 text-sm">
+                                                    暂无活跃度数据
+                                                </div>
                                             </div>
+
+                                            <Teleport to="body">
+                                                <div v-if="activeTooltipIndex !== null"
+                                                    class="fixed z-[9999] bg-gray-800 text-white text-xs rounded px-2 py-1.5 shadow-lg pointer-events-none"
+                                                    :style="tooltipPosition">
+                                                    <div class="flex items-center gap-1 font-medium">
+                                                        <el-icon class="text-yellow-300">
+                                                            <Star />
+                                                        </el-icon>
+                                                        {{ activityData.trend[activeTooltipIndex]?.score }} 积分
+                                                    </div>
+                                                </div>
+                                            </Teleport>
                                         </div>
                                     </div>
 
@@ -386,26 +408,35 @@
                             </section>
                         </div>
 
-                        <div v-if="activeTab === 'articles'" class="animate-fade-in">
+                        <div v-if="activeTab === 'articles' || activeTab === 'drafts'" class="animate-fade-in">
                             <div class="flex justify-between items-center mb-6">
-                                <h3 class="text-lg font-bold text-gray-800">我的文章 <span
-                                        class="text-gray-400 font-normal text-sm ml-2">共 {{ articles.length }} 篇</span>
+                                <h3 class="text-lg font-bold text-gray-800">{{ activeTab === 'drafts' ? '草稿箱' : '我的文章' }} <span
+                                        class="text-gray-400 font-normal text-sm ml-2">共 {{ articlePagination.total || articles.length }} 篇</span>
                                 </h3>
-                                <div class="flex items-center gap-3">
+                                <div class="flex flex-wrap items-center justify-end gap-3">
                                     <span v-if="!siteConfig.isFeatureEnabled('userPublishEnabled')" class="text-xs text-amber-600 bg-amber-50 border border-amber-100 rounded-full px-3 py-1">
                                         当前已关闭前台投稿
                                     </span>
-                                    <el-button type="primary" icon="EditPen" round class="shadow-sm"
-                                        :disabled="!siteConfig.isFeatureEnabled('userPublishEnabled')"
+                                    <el-button v-if="canUserPublish" type="primary" icon="EditPen" round class="shadow-sm"
                                         @click="goToPublish">
                                         写文章
                                     </el-button>
                                 </div>
                             </div>
 
-                            <el-empty v-if="!articles.length" description="暂无文章" />
+                            <div class="mb-5 flex flex-wrap items-center gap-2">
+                                <button v-for="option in articleFilters" :key="option.key" type="button"
+                                    class="article-filter-chip"
+                                    :class="{ 'article-filter-chip--active': articleStatusFilter === option.key }"
+                                    @click="setArticleStatusFilter(option.key)">
+                                    {{ option.label }}
+                                    <span class="article-filter-chip__count">{{ articleStatusCounts[option.key] || 0 }}</span>
+                                </button>
+                            </div>
+
+                            <el-empty v-if="!filteredArticles.length" :description="articleEmptyDescription" />
                             <div v-else class="space-y-4">
-                                <div v-for="item in articles" :key="item.id"
+                                <div v-for="item in filteredArticles" :key="item.id"
                                     class="group flex flex-col md:flex-row justify-between items-start md:items-center p-5 rounded-xl border border-gray-100 hover:border-blue-200 hover:shadow-md hover:bg-blue-50/30 transition-all duration-300">
                                     <div class="flex-1">
                                         <div class="flex items-center gap-3 mb-2">
@@ -442,7 +473,7 @@
                                 </div>
                             </div>
 
-                            <div v-if="articles.length > 0" class="mt-8 flex justify-center">
+                            <div v-if="filteredArticles.length > 0" class="mt-8 flex justify-center">
                                 <Pagination v-model:current-page="articlePagination.current"
                                     v-model:page-size="articlePagination.size" :total="articlePagination.total"
                                     @page-change="loadArticles" @size-change="loadArticles" />
@@ -566,22 +597,17 @@
                                         </div>
                                         <el-button round size="small" @click="logout">退出</el-button>
                                     </div>
-                                    <div
-                                        class="border border-red-100 bg-red-50/30 rounded-xl p-4 flex items-center justify-between mt-3">
-                                        <div>
-                                            <div class="font-medium text-gray-800">注销账号</div>
-                                            <div class="text-xs text-gray-500 mt-1">账号注销后无法恢复，请谨慎操作</div>
-                                        </div>
-                                        <el-popconfirm title="确定要注销吗？此操作无法撤销。" confirm-button-text="确认注销"
-                                            cancel-button-text="取消" confirm-button-type="danger" @confirm="logout">
-                                            <template #reference>
-                                                <el-button type="danger" plain size="small">注销</el-button>
-                                            </template>
-                                        </el-popconfirm>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                                     <div
+                                         class="border border-red-100 bg-red-50/30 rounded-xl p-4 flex items-center justify-between mt-3">
+                                         <div>
+                                             <div class="font-medium text-gray-800">注销账号</div>
+                                             <div class="text-xs text-gray-500 mt-1">输入登录密码确认后，将注销账号并逻辑删除你的文章</div>
+                                         </div>
+                                         <el-button type="danger" plain size="small" @click="openDeleteAccountDialog">注销</el-button>
+                                     </div>
+                                 </div>
+                             </div>
+                         </div>
 
                         <div v-if="activeTab === 'comments'" class="animate-fade-in">
                             <h3 class="text-lg font-bold text-gray-800 mb-6">评论历史</h3>
@@ -635,7 +661,7 @@
                                     v-model:page-size="commentHistoryPagination.size"
                                     :total="commentHistoryPagination.total" @page-change="loadCommentHistory"
                                     @size-change="loadCommentHistory" />
-                            </div>·
+                            </div>
                         </div>
 
                     </div>
@@ -657,6 +683,25 @@
                     </span>
                 </template>
             </el-dialog>
+
+            <el-dialog v-model="showDeleteAccountDialog" title="注销账号" width="460px" align-center class="!rounded-2xl"
+                :before-close="closeDeleteAccountDialog">
+                <div class="mb-4 rounded-2xl border border-red-100 bg-red-50/40 px-4 py-3 text-sm text-red-700">
+                    该操作会逻辑删除当前账号及其文章，且无法恢复。请输入登录密码确认。
+                </div>
+                <el-form @submit.prevent="confirmDeleteAccount">
+                    <el-form-item label="登录密码">
+                        <el-input v-model="deleteAccountForm.password" type="password" show-password
+                            placeholder="请输入当前登录密码" autocomplete="current-password" />
+                    </el-form-item>
+                </el-form>
+                <template #footer>
+                    <span class="dialog-footer">
+                        <el-button @click="closeDeleteAccountDialog" round>取消</el-button>
+                        <el-button type="danger" :loading="deleteAccountSaving" @click="confirmDeleteAccount" round>确认注销</el-button>
+                    </span>
+                </template>
+            </el-dialog>
         </div>
     </div>
 </template>
@@ -670,12 +715,12 @@ import {
     Odometer, WarningFilled, Calendar, Setting
 } from '@element-plus/icons-vue'
 import moment from 'moment'
-import { removeToken } from "@/composables/cookie";
 import { useUserStore } from '@/stores/user'
 import { useSiteConfigStore } from '@/stores/siteConfig'
+import { getActivityLevelLabel } from '@/composables/activityLevel'
 import { getArticlePageList } from "@/api/frontend/article";
 import { getCollectedArticles, uncollectArticle } from "@/api/frontend/favorite";
-import { getUserCenterStatistics, getUserCenterComments, getUserCenterOverview, getActivityScore, getActivityStatistics, getActivityTrend, getCurrentUserLocation, updateUserProfile } from "@/api/frontend/user";
+import { getUserCenterStatistics, getUserCenterComments, getUserCenterOverview, getActivityScore, getActivityStatistics, getActivityTrend, getCurrentUserLocation, updateUserProfile, deleteUserAccount } from "@/api/frontend/user";
 import { deleteComment as deleteCommentApi } from "@/api/frontend/comment";
 import { uploadFile } from "@/api/frontend/file";
 import { useRouter } from 'vue-router'
@@ -702,6 +747,27 @@ const loadCurrentLocation = async () => {
 const userStore = useUserStore()
 const siteConfig = useSiteConfigStore()
 const user = computed(() => userStore.frontendUserInfo)
+const canUserPublish = computed(() => siteConfig.isFeatureEnabled('userPublishEnabled') === true)
+const roleDisplayName = computed(() => {
+    const roles = user.value?.roles || []
+
+    if (Array.isArray(roles)) {
+        if (roles.includes('ROLE_ADMIN')) {
+            return '管理员'
+        }
+
+        if (roles.includes('ROLE_EDITOR')) {
+            return '编辑'
+        }
+
+        if (roles.includes('ROLE_VISITOR')) {
+            return '访客'
+        }
+    }
+
+    return '用户'
+})
+const canAccessAdminPanel = computed(() => hasRole('ROLE_ADMIN') || hasRole('ROLE_EDITOR'))
 const currentLocationText = computed(() => {
     const parts = [province.value, city.value].filter(Boolean)
     return parts.length ? parts.join(' · ') : (locationLabel.value || '未知位置')
@@ -725,6 +791,56 @@ const collectedArticlesPagination = reactive({
 })
 const favoriteCount = ref(0)
 const commentCount = ref(0)
+const articleStatusFilter = ref('all')
+
+const articleFilters = computed(() => [
+    { key: 'all', label: '全部' },
+    { key: '3', label: '草稿' },
+    { key: '0', label: '待审核' },
+    { key: '1', label: '审核通过' },
+    { key: '4', label: '已发布' },
+    { key: '2', label: '未通过' }
+])
+
+const articleStatusCounts = computed(() => {
+    const counts = {
+        all: articles.value.length,
+        '0': 0,
+        '1': 0,
+        '2': 0,
+        '3': 0,
+        '4': 0
+    }
+
+    articles.value.forEach((article) => {
+        const key = String(article.status)
+        if (Object.prototype.hasOwnProperty.call(counts, key)) {
+            counts[key] += 1
+        }
+    })
+
+    return counts
+})
+
+const filteredArticles = computed(() => {
+    if (articleStatusFilter.value === 'all') {
+        return articles.value
+    }
+
+    return articles.value.filter((article) => String(article.status) === articleStatusFilter.value)
+})
+
+const articleEmptyDescription = computed(() => {
+    if (activeTab.value === 'drafts' && articleStatusFilter.value === '3') {
+        return '暂无草稿，先写一篇内容试试吧'
+    }
+
+    if (articleStatusFilter.value === 'all') {
+        return '暂无文章'
+    }
+
+    return `暂无${articleFilters.value.find((item) => item.key === articleStatusFilter.value)?.label || '该状态'}文章`
+})
 
 // 评论历史相关
 const commentHistory = ref([])
@@ -753,6 +869,9 @@ const activityData = ref({
     totalUsers: 0,
     activities: [],
     trend: []
+})
+const activityLevelLabel = computed(() => {
+    return getActivityLevelLabel(activityData.value.totalScore, siteConfig.siteInfo.activityLevelRules)
 })
 const activityStatistics = ref({
     dailyAverage: 0,
@@ -799,11 +918,12 @@ const getMaxScore = () => {
 
 const calculateBarHeight = (score) => {
     const maxScore = getMaxScore()
-    const minHeight = 12
-    const maxHeight = 90
+    const minHeight = 10
+    const positiveMinHeight = 18
+    const maxHeight = 88
 
     if (score <= 0) return minHeight
-    return Math.max(minHeight, (score / maxScore) * maxHeight)
+    return Math.max(positiveMinHeight, (score / maxScore) * maxHeight)
 }
 
 /* ======================= 其他 ======================= */
@@ -839,6 +959,7 @@ const activeTabName = computed(() => {
     const map = {
         overview: '总览',
         articles: '我的文章',
+        drafts: '草稿箱',
         collections: '我的收藏',
         comments: '评论历史',
         security: '安全设置'
@@ -847,13 +968,18 @@ const activeTabName = computed(() => {
 })
 
 const showEditProfile = ref(false)
+const showDeleteAccountDialog = ref(false)
 const profileSaving = ref(false)
+const deleteAccountSaving = ref(false)
 const avatarUploading = ref(false)
 const avatarInputRef = ref(null)
 const editForm = reactive({
     nickname: '',
     introduction: '',
     avatar: ''
+})
+const deleteAccountForm = reactive({
+    password: ''
 })
 
 const articles = ref([]) // 初始为空数组
@@ -875,23 +1001,6 @@ const getStatusInfo = (status) => {
 // 检查用户是否已登录
 const isLoggedIn = computed(() => {
     return !!userStore.frontendUserInfo && !!userStore.frontendUserInfo.userId
-})
-
-onMounted(() => {
-    loadCurrentLocation()
-    siteConfig.fetchPermissions().catch((error) => {
-        console.error('Failed to load publish permissions:', error)
-    })
-
-    // Load frontend user info first, then load articles
-    userStore.setFrontendUserInfo().then(() => {
-        loadStatistics()
-        loadArticles()
-    }).catch((error) => {
-        console.error('Failed to load user info:', error)
-        // Even if user info fails to load, we still try to load articles
-        loadArticles()
-    })
 })
 
 // 3. 增加 status 字段的映射
@@ -1188,8 +1297,28 @@ const logout = () => {
     router.push('/')
 }
 
+const openDeleteAccountDialog = () => {
+    deleteAccountForm.password = ''
+    showDeleteAccountDialog.value = true
+}
+
+const closeDeleteAccountDialog = (done) => {
+    if (deleteAccountSaving.value) {
+        return
+    }
+
+    showDeleteAccountDialog.value = false
+    deleteAccountForm.password = ''
+    done?.()
+}
+
 // Navigate to admin panel
 const goToAdminPanel = () => {
+    if (!canAccessAdminPanel.value) {
+        ElMessage.warning('当前账号没有访问后台的权限')
+        return
+    }
+
     router.push('/admin')
 }
 
@@ -1202,6 +1331,25 @@ const openEditDialog = () => {
         editForm.avatar = user.value.avatar || ''
     }
     showEditProfile.value = true
+}
+
+const setArticleStatusFilter = (status) => {
+    articleStatusFilter.value = status
+}
+
+const jumpToDrafts = () => {
+    articleStatusFilter.value = '3'
+    activeTab.value = 'drafts'
+}
+
+const refreshOverview = () => {
+    if (activeTab.value !== 'overview') {
+        activeTab.value = 'overview'
+        return
+    }
+
+    loadDynamics()
+    loadActivityScore()
 }
 
 const saveProfile = async () => {
@@ -1230,6 +1378,38 @@ const saveProfile = async () => {
         ElMessage.error(error?.response?.data?.message || '保存失败')
     } finally {
         profileSaving.value = false
+    }
+}
+
+const confirmDeleteAccount = async () => {
+    if (deleteAccountSaving.value) {
+        return
+    }
+
+    const password = deleteAccountForm.password?.trim()
+    if (!password) {
+        ElMessage.error('请输入登录密码')
+        return
+    }
+
+    deleteAccountSaving.value = true
+    try {
+        const res = await deleteUserAccount({ password })
+        if (!res?.success) {
+            ElMessage.error(res?.message || '账号注销失败')
+            return
+        }
+
+        userStore.logout()
+        showDeleteAccountDialog.value = false
+        deleteAccountForm.password = ''
+        ElMessage.success('账号已注销')
+        await router.push('/')
+    } catch (error) {
+        console.error('注销账号失败:', error)
+        ElMessage.error(error?.response?.data?.message || '账号注销失败')
+    } finally {
+        deleteAccountSaving.value = false
     }
 }
 
@@ -1291,6 +1471,12 @@ const handleAvatarChange = async (event) => {
 // 处理 tab 选择
 const handleTabSelect = (index) => {
     activeTab.value = index
+
+    if (index === 'articles') {
+        articleStatusFilter.value = 'all'
+    } else if (index === 'drafts') {
+        articleStatusFilter.value = '3'
+    }
 }
 
 // 获取动态类型名称
@@ -1309,6 +1495,7 @@ const getActivityTypeName = (type) => {
         'article': '发布文章',
         'comment': '发表评论',
         'favorite': '收藏文章',
+        'like': '点赞评论',
         'login': '每日登录'
     }
     return typeMap[type] || '其他活动'
@@ -1398,7 +1585,7 @@ const deleteComment = async (commentId) => {
 watch(activeTab, (newTab) => {
     if (newTab === 'collections') {
         loadCollectedArticles()
-    } else if (newTab === 'articles') {
+    } else if (newTab === 'articles' || newTab === 'drafts') {
         loadArticles()
     } else if (newTab === 'comments') {
         loadCommentHistory()
@@ -1408,14 +1595,35 @@ watch(activeTab, (newTab) => {
     }
 })
 
-// 初始化加载统计数据
+const recentActiveDays = computed(() => activityData.value.trend.filter((item) => item.score > 0).length)
+
+const quickActionItems = computed(() => [
+    { label: '刷新数据', desc: '重新加载概览', action: refreshOverview },
+    { label: '编辑资料', desc: '修改昵称和简介', action: openEditDialog },
+    ...(canUserPublish.value ? [{ label: '写文章', desc: '开始一篇新内容', action: goToPublish, type: 'primary' }] : [])
+])
+
+// 初始化加载统计数据和概览模块
 onMounted(() => {
-    loadStatistics()
-    // 如果默认 tab 是 overview，则加载动态数据和活跃度数据
-    if (activeTab.value === 'overview') {
-        loadDynamics()
-        loadActivityScore()
-    }
+    loadCurrentLocation()
+    siteConfig.fetchPermissions().catch((error) => {
+        console.error('Failed to load publish permissions:', error)
+    })
+
+    userStore.setFrontendUserInfo().then(() => {
+        loadStatistics()
+        if (activeTab.value === 'overview') {
+            loadDynamics()
+            loadActivityScore()
+        }
+    }).catch((error) => {
+        console.error('Failed to load user info:', error)
+        loadStatistics()
+        if (activeTab.value === 'overview') {
+            loadDynamics()
+            loadActivityScore()
+        }
+    })
 })
 
 </script>
@@ -1543,6 +1751,116 @@ onMounted(() => {
     border: 1px solid rgba(129, 158, 196, 0.28) !important;
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(246, 249, 253, 0.94)) !important;
     color: #35527a !important;
+}
+
+.profile-quick-links {
+    display: grid;
+    width: 100%;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.profile-quick-panel {
+    width: 100%;
+    border-radius: 24px;
+    border: 1px solid rgba(129, 158, 196, 0.16);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.66), rgba(247, 250, 255, 0.9));
+    padding: 14px;
+    box-shadow: 0 16px 34px rgba(120, 146, 184, 0.08);
+    backdrop-filter: blur(18px);
+}
+
+.profile-quick-panel__title {
+    margin-bottom: 12px;
+    padding-left: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    color: #64748b;
+}
+
+.profile-quick-link {
+    display: flex;
+    min-height: 72px;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+    border-radius: 16px;
+    border: 1px solid rgba(129, 158, 196, 0.18);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(246, 249, 253, 0.92));
+    padding: 12px 14px;
+    text-align: left;
+    box-shadow: 0 12px 26px rgba(120, 146, 184, 0.08);
+    transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+}
+
+.profile-quick-link:hover {
+    transform: translateY(-2px);
+    border-color: rgba(116, 149, 195, 0.28);
+    box-shadow: 0 18px 30px rgba(108, 137, 184, 0.12);
+}
+
+.profile-quick-link--primary {
+    background: linear-gradient(135deg, rgba(109, 145, 226, 0.98), rgba(83, 122, 206, 0.94));
+    color: #ffffff;
+}
+
+.profile-quick-link--primary .profile-quick-link__desc {
+    color: rgba(255, 255, 255, 0.84);
+}
+
+.profile-quick-link__title {
+    font-size: 14px;
+    font-weight: 700;
+    color: inherit;
+}
+
+.profile-quick-link__desc {
+    font-size: 12px;
+    color: #6b7d97;
+}
+
+.profile-quick-note {
+    font-size: 12px;
+    color: #8a97ab;
+    text-align: center;
+}
+
+.article-filter-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border-radius: 999px;
+    border: 1px solid rgba(129, 158, 196, 0.18);
+    background: rgba(255, 255, 255, 0.82);
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #58749c;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+.article-filter-chip:hover {
+    transform: translateY(-1px);
+    border-color: rgba(116, 149, 195, 0.28);
+    box-shadow: 0 10px 22px rgba(120, 146, 184, 0.1);
+}
+
+.article-filter-chip--active {
+    background: linear-gradient(135deg, rgba(111, 151, 231, 0.18), rgba(90, 130, 212, 0.18));
+    border-color: rgba(90, 130, 212, 0.3);
+    color: #35527a;
+}
+
+.article-filter-chip__count {
+    min-width: 20px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.72);
+    padding: 0 6px;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 18px;
+    color: #5e77a0;
 }
 
 @keyframes fadeIn {
@@ -1707,19 +2025,22 @@ onMounted(() => {
     /* 轨道颜色 */
 }
 
-activity-section {
-    padding: 1.5rem;
-    background: linear-gradient(180deg, rgba(248, 251, 255, 0.98), rgba(242, 247, 252, 0.96));
-    border-radius: 12px;
-    border: 1px solid rgba(129, 158, 196, 0.16);
-}
-
 .activity-summary {
     display: flex;
     justify-content: space-between;
-    background: rgba(255, 255, 255, 0.9);
+    align-items: center;
+    margin: 1.5rem 0;
     padding: 1rem;
-    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 0.9rem;
+    border: 1px solid rgba(129, 158, 196, 0.14);
+    box-shadow: 0 16px 40px rgba(120, 146, 184, 0.08);
+}
+
+.score-display {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
 }
 
 .score-number {
@@ -1728,12 +2049,234 @@ activity-section {
     color: #6584b1;
 }
 
-.custom-scrollbar::-webkit-scrollbar {
-    height: 6px;
+.score-label {
+    color: #64748b;
+    font-size: 0.875rem;
 }
 
-.custom-scrollbar::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
-    border-radius: 4px;
+.rank-info {
+    color: #64748b;
+    font-size: 0.875rem;
+}
+
+.activity-breakdown {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+    margin: 1.5rem 0;
+}
+
+.activity-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 0.9rem;
+    border: 1px solid rgba(129, 158, 196, 0.14);
+    box-shadow: 0 14px 36px rgba(120, 146, 184, 0.08);
+}
+
+.activity-type {
+    font-size: 0.875rem;
+    color: #334155;
+}
+
+.activity-count {
+    font-size: 0.875rem;
+    color: #64748b;
+}
+
+.activity-item-score {
+    font-weight: 600;
+    color: #6584b1;
+}
+
+.activity-score-badge {
+    position: absolute;
+    top: -28px;
+    left: 50%;
+    transform: translateX(-50%);
+    min-width: 28px;
+    border-radius: 999px;
+    background: #1f2937;
+    padding: 3px 9px;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 16px;
+    color: #ffffff;
+    box-shadow: 0 10px 18px rgba(31, 41, 55, 0.16);
+    pointer-events: none;
+}
+
+.activity-bar {
+    border-radius: 12px 12px 0 0;
+}
+
+.activity-bar-positive {
+    background: linear-gradient(180deg, #7da6ff 0%, #4f7cff 100%);
+    box-shadow: 0 10px 18px rgba(79, 124, 255, 0.18);
+}
+
+.activity-bar-negative {
+    background: #e5e7eb;
+}
+
+@media (max-width: 640px) {
+    .profile-quick-links {
+        grid-template-columns: 1fr;
+    }
+
+    .profile-quick-panel {
+        padding: 12px;
+    }
+
+    .profile-quick-link {
+        min-height: 64px;
+    }
+}
+
+@media (max-width: 1024px) {
+    .user-center-hero__grid {
+        gap: 1rem;
+    }
+
+    .user-center-actions {
+        min-width: 0;
+    }
+
+    .user-center-sidebar {
+        position: static;
+    }
+
+    .user-center-main {
+        min-width: 0;
+    }
+}
+
+@media (max-width: 768px) {
+    .user-center-page {
+        padding-bottom: 4rem;
+    }
+
+    .user-center-cover {
+        height: 10.5rem;
+    }
+
+    .user-center-hero {
+        margin-top: -3.75rem;
+        padding: 0.95rem;
+        border-radius: 22px;
+    }
+
+    .user-center-hero__grid {
+        gap: 0.85rem;
+    }
+
+    .user-center-hero__profile {
+        align-items: stretch;
+    }
+
+    .user-center-actions {
+        gap: 0.75rem;
+    }
+
+    .user-center-actions .grid {
+        grid-template-columns: 1fr;
+    }
+
+    .profile-panel-shell,
+    .profile-quick-panel {
+        padding: 12px;
+        border-radius: 20px;
+    }
+
+    .profile-stat-card {
+        min-height: 82px;
+    }
+
+    .user-center-layout {
+        gap: 1rem;
+    }
+
+    .user-center-sidebar {
+        order: 2;
+    }
+
+    .user-center-main {
+        order: 1;
+    }
+
+    .user-center-sidebar .custom-menu {
+        display: flex;
+        gap: 0.5rem;
+        overflow-x: auto;
+        padding-bottom: 0.25rem;
+    }
+
+    .user-center-sidebar :deep(.el-menu-item) {
+        min-width: 120px;
+        flex: 0 0 auto;
+    }
+
+    .user-center-actions .profile-panel-shell .grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .user-center-actions .profile-stat-card {
+        padding: 0.85rem 0.6rem;
+    }
+
+    .user-center-actions .profile-stat-value {
+        font-size: 1.4rem;
+    }
+
+    .user-center-actions .profile-stat-card .mt-2 {
+        margin-top: 0.4rem;
+        letter-spacing: 0.12em;
+    }
+
+    .user-center-main :deep(.activity-section),
+    .user-center-main :deep(.activity-summary),
+    .user-center-main :deep(.activity-item) {
+        border-radius: 18px;
+    }
+
+    .user-center-main :deep(.activity-summary) {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.85rem;
+    }
+
+    .user-center-main :deep(.activity-breakdown) {
+        grid-template-columns: 1fr;
+    }
+
+    .user-center-main :deep(.activity-stats .grid) {
+        grid-template-columns: 1fr;
+    }
+
+    .user-center-main :deep(.el-button) {
+        width: 100%;
+    }
+
+    .user-center-main :deep(.el-pagination) {
+        flex-wrap: wrap;
+        gap: 0.35rem;
+    }
+}
+
+/* 活跃度统计数据样式 */
+.activity-stats {
+    margin-top: 1.5rem;
+}
+
+.stat-card {
+    transition: all 0.2s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 16px 36px rgba(120, 146, 184, 0.14);
 }
 </style>

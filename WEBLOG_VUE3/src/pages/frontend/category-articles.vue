@@ -69,19 +69,29 @@
               <p class="mt-1 text-sm text-gray-500">该分类下还没有发布任何文章。</p>
             </div>
 
-            <div v-else>
-              <div class="mb-7 flex flex-col gap-3.5">
-                <ArticleCard 
-                  v-for="article in articles" 
-                  :key="article.id" 
-                  :article="article"
-                  variant="list"
-                  :category-id="categoryId"
-                />
-              </div>
+              <div v-else>
+                <div class="mb-7 grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  <div
+                    v-for="(article, index) in articles"
+                    :key="article.id"
+                    :class="[
+                      index % 2 === 1 ? 'mt-4 sm:mt-0' : 'mt-0',
+                      index % 4 === 1 ? 'sm:translate-y-0' : '',
+                      index % 4 === 3 ? 'mt-7 sm:mt-0' : ''
+                    ]"
+                  >
+                    <ArticleCard
+                      :article="article"
+                      :category-id="categoryId"
+                      :show-category-tag="false"
+                      :image-index="index"
+                      :compact="true"
+                    />
+                  </div>
+                </div>
 
-              <Pagination 
-                v-model:current-page="page" 
+                <Pagination 
+                  v-model:current-page="page" 
                 v-model:page-size="size" 
                 :total="total"
                 :simple-mode="true"
@@ -94,7 +104,7 @@
       </section>
 
       <!-- Sidebar -->
-      <aside class="w-full lg:w-[320px] 2xl:w-[320px] 2xl:shrink-0">
+      <aside class="hidden xl:block w-full lg:w-[320px] 2xl:w-[320px] 2xl:shrink-0">
         <HomeSidebar />
       </aside>
     </main>
@@ -105,8 +115,8 @@
 </template>
 
 <script setup>
-import { computed, ref, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { computed, ref, onMounted, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import ArticleCard from '@/pages/frontend/articleCard.vue'
 import HomeSidebar from '@/pages/frontend/HomeSidebar.vue'
 import DailyNoteSidebar from '@/pages/frontend/DailyNoteSidebar.vue'
@@ -114,10 +124,9 @@ import AppHeader from '@/components/frontend/AppHeader.vue'
 import AppFooter from '@/components/frontend/AppFooter.vue'
 import Pagination from '@/components/frontend/Pagination.vue'
 import { getArticlePageListByCategory } from '@/api/frontend/article'
-import { getCategoryList } from '@/api/frontend/category'
+import { getAllCategoryList } from '@/api/frontend/category'
 
 const route = useRoute()
-const router = useRouter()
 
 const articles = ref([])
 const page = ref(1)
@@ -127,7 +136,7 @@ const loading = ref(false)
 const keyword = ref('')
 const categoryName = ref('')
 
-const categoryId = route.params.id
+const categoryId = computed(() => Number(route.params.id))
 
 const categoryDescription = computed(() => {
   if (keyword.value) {
@@ -138,23 +147,60 @@ const categoryDescription = computed(() => {
 })
 
 onMounted(() => {
-  if (categoryId) {
-    loadCategoryInfo()
-    loadArticles()
-  }
+  syncFromRoute()
 })
+
+watch(
+  () => route.params.id,
+  () => {
+    syncFromRoute()
+  }
+)
+
+function syncFromRoute() {
+  page.value = 1
+  keyword.value = ''
+  articles.value = []
+  total.value = 0
+  loadCategoryPage()
+}
+
+async function loadCategoryPage() {
+  if (!categoryId.value) {
+    categoryName.value = '当前分类'
+    return
+  }
+
+  try {
+    await Promise.all([
+      loadCategoryInfo(),
+      loadArticles()
+    ])
+  } catch (error) {
+    console.error('Failed to load category page:', error)
+    categoryName.value = `分类 ${categoryId.value}`
+  }
+}
 
 async function loadCategoryInfo() {
   try {
-    const res = await getCategoryList({ current: 1, size: 1, id: categoryId })
-    if (res && res.success && res.data && res.data.length > 0) {
-      categoryName.value = res.data[0].name || `分类 ${categoryId}`
+    const queryName = typeof route.query.name === 'string' ? route.query.name.trim() : ''
+    if (queryName) {
+      categoryName.value = queryName
+      return
+    }
+
+    const res = await getAllCategoryList()
+    if (res && res.success) {
+      const list = Array.isArray(res.data) ? res.data : []
+      const currentCategory = list.find(item => String(item.id) === String(categoryId.value))
+      categoryName.value = currentCategory?.name || `分类 ${categoryId.value}`
     } else {
-      categoryName.value = `分类 ${categoryId}`
+      categoryName.value = `分类 ${categoryId.value}`
     }
   } catch (error) {
     console.error('Failed to load category info:', error)
-    categoryName.value = `分类 ${categoryId}`
+    categoryName.value = `分类 ${categoryId.value}`
   }
 }
 
@@ -165,7 +211,7 @@ async function loadArticles() {
       current: page.value,
       size: size.value,
       name: keyword.value,
-      categoryId: Number(categoryId)
+      categoryId: categoryId.value
     }
 
     const res = await getArticlePageListByCategory(params)

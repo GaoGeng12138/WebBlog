@@ -28,16 +28,27 @@ import java.util.regex.Pattern;
 public class DatabaseInitializationConfig {
     private static final Pattern INSERT_STATEMENT_PATTERN =
             Pattern.compile("(?i)^INSERT\\s+(?:IGNORE\\s+)?INTO\\b");
+    private static final Pattern CREATE_TABLE_PATTERN =
+            Pattern.compile("(?i)^CREATE\\s+TABLE\\s+(?:IF\\s+NOT\\s+EXISTS\\s+)?`?(\\w+)`?");
+    private static final Pattern ALTER_ADD_COLUMN_PATTERN =
+            Pattern.compile("(?i)^ALTER\\s+TABLE\\s+`?(\\w+)`?\\s+ADD\\s+COLUMN\\s+`?(\\w+)`?");
+    private static final Pattern ALTER_DROP_COLUMN_PATTERN =
+            Pattern.compile("(?i)^ALTER\\s+TABLE\\s+`?(\\w+)`?\\s+DROP\\s+COLUMN\\s+`?(\\w+)`?");
+
+    private static final String CREATE_TABLE_SQL = "sql/CreateTable.sql";
+    private static final String ADD_COLUMN_SQL = "sql/AddColumn.sql";
+    private static final String UPDATE_DATA_SQL = "sql/UpdateData.sql";
+    private static final String INSERT_DATA_SQL = "sql/InsertData.sql";
 
     private final DataSource dataSource;
-    private JdbcTemplate jdbcTemplate;
+    private final JdbcTemplate jdbcTemplate;
 
     @Value("${spring.datasource.driver-class-name}")
     private String driverClassName;
 
     @Value("${app.database.init.create:true}")
     private boolean databaseInitEnabled;
-    
+
     @Value("${app.database.init.inserts:true}")
     private boolean executeInserts;
 
@@ -52,7 +63,7 @@ public class DatabaseInitializationConfig {
     }
 
     /**
-     * Execute database initialization after application is ready
+     * Execute database initialization after application is ready.
      */
     @EventListener(ApplicationReadyEvent.class)
     public void initializeDatabase() {
@@ -60,96 +71,20 @@ public class DatabaseInitializationConfig {
             log.info("Database initialization is disabled");
             return;
         }
-        
-        log.info("Starting database initialization check...");
-        
-        try {
-            // First, process CREATE TABLE statements
-            List<String> createTableStatements = parseSqlFile("sql/CreateTable.sql");
-            
-            for (String sql : createTableStatements) {
-                String trimmedSql = sql.trim();
-                if (trimmedSql.toUpperCase().startsWith("CREATE TABLE")) {
-                    String tableName = extractTableName(trimmedSql);
-                    if (tableName != null && !isTableExists(tableName)) {
-                        log.info("Table {} does not exist, creating...", tableName);
-                        try {
-                            jdbcTemplate.execute(trimmedSql);
-                            log.info("Successfully created table: {}", tableName);
-                        } catch (Exception e) {
-                            log.error("Failed to create table: {}", tableName, e);
-                        }
-                    } else {
-                        log.info("Table {} already exists, skipping creation", tableName);
-                    }
-                }
-            }
 
-            // Apply lightweight schema patches for old databases that already have the table.
-            ensureColumnExists(
-                    "t_blog_settings",
-                    "frontend_article_page_size",
-                    "ALTER TABLE `t_blog_settings` ADD COLUMN `frontend_article_page_size` int(11) DEFAULT '12' COMMENT '前台文章列表每页数量' AFTER `logo_url`"
-            );
-            ensureColumnExists(
-                    "t_article",
-                    "article_source",
-                    "ALTER TABLE `t_article` ADD COLUMN `article_source` tinyint(1) NOT NULL DEFAULT '1' COMMENT '文章来源：1-后台发布，2-前台发布' AFTER `author`"
-            );
-            ensureColumnExists(
-                    "t_article",
-                    "visibility_scope",
-                    "ALTER TABLE `t_article` ADD COLUMN `visibility_scope` tinyint(1) NOT NULL DEFAULT '1' COMMENT '可见范围：1-公开，2-指定用户可见' AFTER `article_source`"
-            );
-            ensureColumnExists(
-                    "t_category",
-                    "show_on_front",
-                    "ALTER TABLE `t_category` ADD COLUMN `show_on_front` tinyint(1) NOT NULL DEFAULT '1' COMMENT '是否在前台导航展示：1-是，0-否' AFTER `illustrate`"
-            );
-            ensureColumnExists(
-                    "t_category",
-                    "visibility_scope",
-                    "ALTER TABLE `t_category` ADD COLUMN `visibility_scope` tinyint(1) NOT NULL DEFAULT '1' COMMENT '可见范围：1-公开，2-指定用户可见' AFTER `show_on_front`"
-            );
-            removeColumnIfExists("t_blog_settings", "slogan");
-            removeColumnIfExists("t_blog_settings", "contact_email");
-            
-            // Then, process INSERT statements from both files (if enabled)
+        log.info("Starting database initialization check...");
+
+        try {
+            executeCreateStatements(loadSqlStatements(CREATE_TABLE_SQL));
+            executeUpdateStatements(loadSqlStatements(ADD_COLUMN_SQL));
+            executeUpdateStatements(loadSqlStatements(UPDATE_DATA_SQL));
+
             if (executeInserts) {
-                List<String> insertStatements = new ArrayList<>();
-                
-                // Add INSERT statements from CreateTable.sql (in case there are any)
-                List<String> createTableSqlStatements = parseSqlFile("sql/CreateTable.sql");
-                for (String sql : createTableSqlStatements) {
-                    String trimmedSql = sql.trim();
-                    if (isInsertStatement(trimmedSql)) {
-                        insertStatements.add(trimmedSql);
-                    }
-                }
-                
-                // Add INSERT statements from InsertData.sql
-                List<String> insertDataStatements = parseSqlFile("sql/InsertData.sql");
-                for (String sql : insertDataStatements) {
-                    String trimmedSql = sql.trim();
-                    if (isInsertStatement(trimmedSql)) {
-                        insertStatements.add(trimmedSql);
-                    }
-                }
-                
-                // Execute all INSERT statements
-                for (String insertSql : insertStatements) {
-                    try {
-                        jdbcTemplate.execute(insertSql);
-                        log.info("Successfully executed insert statement");
-                    } catch (Exception e) {
-                        // Log but don't fail - these might be duplicate inserts
-                        log.warn("Failed to execute insert statement (may be duplicate): {}", e.getMessage());
-                    }
-                }
+                executeInsertStatements(loadSqlStatements(INSERT_DATA_SQL));
             } else {
                 log.info("INSERT statement execution is disabled");
             }
-            
+
             log.info("Database initialization check completed.");
         } catch (Exception e) {
             log.error("Error during database initialization", e);
@@ -157,33 +92,35 @@ public class DatabaseInitializationConfig {
     }
 
     /**
-     * Parse the SQL file and extract SQL statements
+     * Load SQL statements from one classpath resource.
+     *
+     * @param filePath sql file path under resources
+     * @return parsed SQL statements
+     * @throws Exception when reading the resource fails
      */
-    private List<String> parseSqlFile(String filePath) throws Exception {
+    private List<String> loadSqlStatements(String filePath) throws Exception {
         List<String> sqlStatements = new ArrayList<>();
         ClassPathResource resource = new ClassPathResource(filePath);
-        
+
+        if (!resource.exists()) {
+            log.info("SQL file {} does not exist, skipping", filePath);
+            return sqlStatements;
+        }
+
         try (InputStream inputStream = resource.getInputStream();
              BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
-            
+
             StringBuilder currentStatement = new StringBuilder();
             String line;
-            
+
             while ((line = reader.readLine()) != null) {
-                // Skip empty lines
-                if (line.trim().isEmpty()) {
+                String trimmedLine = line.trim();
+                if (trimmedLine.isEmpty() || trimmedLine.startsWith("--")) {
                     continue;
                 }
-                
-                // Skip comments
-                if (line.trim().startsWith("--")) {
-                    continue;
-                }
-                
-                currentStatement.append(line).append("\n");
-                
-                // If line ends with semicolon, it's a complete statement
-                if (line.trim().endsWith(";")) {
+
+                currentStatement.append(line).append('\n');
+                if (trimmedLine.endsWith(";")) {
                     String statement = currentStatement.toString().trim();
                     if (!statement.isEmpty()) {
                         sqlStatements.add(statement);
@@ -192,43 +129,103 @@ public class DatabaseInitializationConfig {
                 }
             }
         }
-        
+
         return sqlStatements;
     }
 
     /**
-     * Extract table name from CREATE TABLE statement
+     * Execute CREATE TABLE statements only when the target table does not exist.
+     *
+     * @param createStatements create statements
+     */
+    private void executeCreateStatements(List<String> createStatements) {
+        for (String createSql : createStatements) {
+            String tableName = extractTableName(createSql);
+            if (tableName != null && isTableExists(tableName)) {
+                log.info("Table {} already exists, skipping creation", tableName);
+                continue;
+            }
+
+            try {
+                jdbcTemplate.execute(createSql);
+                if (tableName != null) {
+                    log.info("Successfully created table: {}", tableName);
+                }
+            } catch (Exception e) {
+                log.error("Failed to create table: {}", tableName, e);
+            }
+        }
+    }
+
+    /**
+     * Execute UPDATE or ALTER statements in a safe way.
+     *
+     * @param updateStatements update statements
+     */
+    private void executeUpdateStatements(List<String> updateStatements) {
+        for (String updateSql : updateStatements) {
+            if (shouldSkipAddColumnMigration(updateSql) || shouldSkipDropColumnMigration(updateSql)) {
+                continue;
+            }
+
+            try {
+                jdbcTemplate.execute(updateSql);
+                log.info("Successfully executed update statement");
+            } catch (Exception e) {
+                log.error("Failed to execute update statement: {}", updateSql, e);
+            }
+        }
+    }
+
+    /**
+     * Execute INSERT statements as idempotent seed data.
+     *
+     * @param insertStatements insert statements
+     */
+    private void executeInsertStatements(List<String> insertStatements) {
+        for (String insertSql : insertStatements) {
+            String idempotentInsertSql = normalizeInsertStatement(insertSql);
+            try {
+                jdbcTemplate.execute(idempotentInsertSql);
+                log.info("Successfully executed insert statement");
+            } catch (Exception e) {
+                log.warn("Failed to execute insert statement (may be duplicate): {}", e.getMessage());
+            }
+        }
+    }
+
+    /**
+     * Extract table name from a CREATE TABLE statement.
+     *
+     * @param createTableSql create table SQL
+     * @return table name or null when parsing fails
      */
     private String extractTableName(String createTableSql) {
-        // Pattern to match CREATE TABLE `table_name` or CREATE TABLE table_name
-        Pattern pattern = Pattern.compile("(?i)create\\s+table\\s+(?:`?)(\\w+)`?", Pattern.CASE_INSENSITIVE);
-        Matcher matcher = pattern.matcher(createTableSql);
-        
+        Matcher matcher = CREATE_TABLE_PATTERN.matcher(createTableSql.trim());
         if (matcher.find()) {
             return matcher.group(1);
         }
-        
         return null;
     }
 
     /**
-     * Check if a table exists in the database
+     * Check if a table exists in the database.
+     *
+     * @param tableName table name
+     * @return true when the table exists
      */
     private boolean isTableExists(String tableName) {
         try (Connection connection = dataSource.getConnection()) {
             DatabaseMetaData metaData = connection.getMetaData();
-            
-            // Handle different database types
             String schema = null;
             String catalog = null;
-            
-            // For MySQL, we typically need to specify the catalog
+
             if (driverClassName.toLowerCase().contains("mysql") || driverClassName.contains("p6spy")) {
                 catalog = connection.getCatalog();
             } else {
                 schema = connection.getSchema();
             }
-            
+
             try (ResultSet resultSet = metaData.getTables(catalog, schema, tableName, new String[]{"TABLE"})) {
                 return resultSet.next();
             }
@@ -239,33 +236,18 @@ public class DatabaseInitializationConfig {
     }
 
     /**
-     * Add a column for legacy databases when it does not yet exist.
+     * Check if a column exists in a table.
+     *
+     * @param tableName table name
+     * @param columnName column name
+     * @return true when the column exists
      */
-    private void ensureColumnExists(String tableName, String columnName, String alterSql) {
-        if (!isTableExists(tableName)) {
-            return;
-        }
-
-        if (isColumnExists(tableName, columnName)) {
-            log.info("Column {}.{} already exists, skipping patch", tableName, columnName);
-            return;
-        }
-
-        try {
-            log.info("Column {}.{} does not exist, applying patch...", tableName, columnName);
-            jdbcTemplate.execute(alterSql);
-            log.info("Successfully added column {}.{}", tableName, columnName);
-        } catch (Exception e) {
-            log.error("Failed to add column {}.{}", tableName, columnName, e);
-        }
-    }
-
     private boolean isColumnExists(String tableName, String columnName) {
         try (Connection connection = dataSource.getConnection()) {
             DatabaseMetaData metaData = connection.getMetaData();
-
             String schema = null;
             String catalog = null;
+
             if (driverClassName.toLowerCase().contains("mysql") || driverClassName.contains("p6spy")) {
                 catalog = connection.getCatalog();
             } else {
@@ -281,21 +263,58 @@ public class DatabaseInitializationConfig {
         }
     }
 
-    private void removeColumnIfExists(String tableName, String columnName) {
-        if (!isTableExists(tableName) || !isColumnExists(tableName, columnName)) {
-            return;
+    /**
+     * Skip ADD COLUMN migrations if the target column already exists.
+     *
+     * @param updateSql update statement
+     * @return true if the statement should be skipped
+     */
+    private boolean shouldSkipAddColumnMigration(String updateSql) {
+        Matcher matcher = ALTER_ADD_COLUMN_PATTERN.matcher(updateSql.trim());
+        if (!matcher.find()) {
+            return false;
         }
 
-        try {
-            log.info("Removing unused column {}.{} ...", tableName, columnName);
-            jdbcTemplate.execute(String.format("ALTER TABLE `%s` DROP COLUMN `%s`", tableName, columnName));
-            log.info("Successfully removed unused column {}.{}", tableName, columnName);
-        } catch (Exception e) {
-            log.error("Failed to remove unused column {}.{}", tableName, columnName, e);
+        String tableName = matcher.group(1);
+        String columnName = matcher.group(2);
+        if (isColumnExists(tableName, columnName)) {
+            log.info("Column {}.{} already exists, skipping migration", tableName, columnName);
+            return true;
         }
+        return false;
     }
 
-    private boolean isInsertStatement(String sql) {
-        return INSERT_STATEMENT_PATTERN.matcher(sql).find();
+    /**
+     * Skip DROP COLUMN migrations if the target column does not exist.
+     *
+     * @param updateSql update statement
+     * @return true if the statement should be skipped
+     */
+    private boolean shouldSkipDropColumnMigration(String updateSql) {
+        Matcher matcher = ALTER_DROP_COLUMN_PATTERN.matcher(updateSql.trim());
+        if (!matcher.find()) {
+            return false;
+        }
+
+        String tableName = matcher.group(1);
+        String columnName = matcher.group(2);
+        if (!isColumnExists(tableName, columnName)) {
+            log.info("Column {}.{} does not exist, skipping migration", tableName, columnName);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Normalize insert statements to be idempotent.
+     *
+     * @param insertSql insert statement
+     * @return normalized insert statement
+     */
+    private String normalizeInsertStatement(String insertSql) {
+        if (insertSql.matches("(?i)^INSERT\\s+IGNORE\\s+INTO\\b.*")) {
+            return insertSql;
+        }
+        return insertSql.replaceFirst("(?i)^INSERT\\s+INTO", "INSERT IGNORE INTO");
     }
 }

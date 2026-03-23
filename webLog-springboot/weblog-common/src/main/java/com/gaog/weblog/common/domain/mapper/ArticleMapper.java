@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.gaog.weblog.common.domain.dos.ArticleDO;
 import com.gaog.weblog.common.enums.ArticleStatusEnum;
+import com.gaog.weblog.common.enums.VisibilityScopeEnum;
 
 import java.time.LocalDate;
 import java.util.Objects;
@@ -101,32 +102,25 @@ public interface ArticleMapper extends BaseMapper<ArticleDO> {
             return;
         }
 
-        String categoryAccessibleSubquery;
         if (viewerUserId == null) {
-            categoryAccessibleSubquery = "SELECT acr.article_id FROM t_article_category_rel acr " +
-                    "JOIN t_category c ON c.id = acr.category_id " +
-                    "WHERE c.visibility_scope = 1";
-        } else {
-            categoryAccessibleSubquery = "SELECT acr.article_id FROM t_article_category_rel acr " +
-                    "JOIN t_category c ON c.id = acr.category_id " +
-                    "WHERE c.visibility_scope = 1 " +
-                    "OR c.id IN (SELECT category_id FROM t_category_access_user WHERE user_id = " + viewerUserId + ")";
-        }
-
-        if (viewerUserId == null) {
-            wrapper.eq(ArticleDO::getVisibilityScope, 1)
-                    .inSql(ArticleDO::getId, categoryAccessibleSubquery);
+            wrapper.inSql(ArticleDO::getId,
+                            "SELECT acr.article_id FROM t_article_category_rel acr " +
+                                    "JOIN t_category c ON c.id = acr.category_id " +
+                                    "WHERE c.visibility_scope = 1")
+                    .eq(ArticleDO::getVisibilityScope, VisibilityScopeEnum.PUBLIC.getCode());
             return;
         }
 
         wrapper.and(w -> w.eq(ArticleDO::getUserId, viewerUserId)
-                        .or()
-                        .eq(ArticleDO::getVisibilityScope, 1)
-                        .or()
-                        .inSql(ArticleDO::getId, "SELECT article_id FROM t_article_access_user WHERE user_id = " + viewerUserId))
-                .and(w -> w.eq(ArticleDO::getUserId, viewerUserId)
-                        .or()
-                        .inSql(ArticleDO::getId, categoryAccessibleSubquery));
+                .or()
+                .and(x -> x.inSql(ArticleDO::getId,
+                                "SELECT acr.article_id FROM t_article_category_rel acr " +
+                                        "JOIN t_category c ON c.id = acr.category_id " +
+                                        "WHERE c.visibility_scope = 1 " +
+                                        "OR c.id IN (SELECT category_id FROM t_category_access_user WHERE user_id = " + viewerUserId + ")")
+                        .and(y -> y.eq(ArticleDO::getVisibilityScope, VisibilityScopeEnum.PUBLIC.getCode())
+                                .or()
+                                .inSql(ArticleDO::getId, "SELECT article_id FROM t_article_access_user WHERE user_id = " + viewerUserId))));
     }
 
     /**

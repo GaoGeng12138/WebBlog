@@ -56,9 +56,8 @@ public class UserDetailServiceImpl implements UserDetailsService {
 
         UserDO userDO = userMapper.findByUsername(username);
 
-        //TODO  用户不存在 这个异常抛出有问题
         if (Objects.isNull(userDO)) {
-            throw new UsernameNotFoundException("用户名不存在");
+            throw new UsernameNotFoundException("用户不存在或已注销");
         }
 
         // 检查用户是否已启用（兼容旧数据：null 视为已启用）

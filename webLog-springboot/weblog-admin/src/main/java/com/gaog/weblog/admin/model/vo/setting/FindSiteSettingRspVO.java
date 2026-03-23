@@ -8,6 +8,8 @@ import lombok.Data;
 @Data
 @ApiModel("站点设置出参")
 public class FindSiteSettingRspVO {
+    private static final String DEFAULT_ACTIVITY_LEVEL_RULES = "[{\"level\":1,\"minScore\":0,\"name\":\"新手\"},{\"level\":2,\"minScore\":100,\"name\":\"作者\"},{\"level\":3,\"minScore\":300,\"name\":\"进阶作者\"},{\"level\":4,\"minScore\":600,\"name\":\"资深作者\"},{\"level\":5,\"minScore\":1000,\"name\":\"传奇作者\"}]";
+    private static final String DEFAULT_ACTIVITY_SCORE_RULES = "[{\"type\":\"article\",\"name\":\"发布文章\",\"score\":10},{\"type\":\"comment\",\"name\":\"发表评论\",\"score\":2},{\"type\":\"favorite\",\"name\":\"收藏文章\",\"score\":1},{\"type\":\"like\",\"name\":\"点赞评论\",\"score\":1},{\"type\":\"login\",\"name\":\"每日登录\",\"score\":1}]";
 
     @ApiModelProperty("网站标题")
     private String title;
@@ -20,6 +22,12 @@ public class FindSiteSettingRspVO {
 
     @ApiModelProperty("前台文章列表每页数量")
     private Integer frontendArticlePageSize;
+
+    @ApiModelProperty("活跃度等级规则JSON")
+    private String activityLevelRules;
+
+    @ApiModelProperty("活跃度加分规则JSON")
+    private String activityScoreRules;
 
     @ApiModelProperty("是否启用GitHub功能")
     private Boolean githubEnabled;
@@ -81,6 +89,12 @@ public class FindSiteSettingRspVO {
         vo.setDescription(settingDO.getDescription());
         vo.setLogoUrl(settingDO.getLogoUrl());
         vo.setFrontendArticlePageSize(settingDO.getFrontendArticlePageSize());
+        vo.setActivityLevelRules(settingDO.getActivityLevelRules() == null || settingDO.getActivityLevelRules().trim().isEmpty()
+                ? DEFAULT_ACTIVITY_LEVEL_RULES
+                : settingDO.getActivityLevelRules());
+        vo.setActivityScoreRules(settingDO.getActivityScoreRules() == null || settingDO.getActivityScoreRules().trim().isEmpty()
+                ? DEFAULT_ACTIVITY_SCORE_RULES
+                : settingDO.getActivityScoreRules());
         vo.setGithubEnabled(settingDO.getGithubEnabled());
         vo.setGithubShowFront(settingDO.getGithubShowFront());
         vo.setGithubShowRegister(settingDO.getGithubShowRegister());

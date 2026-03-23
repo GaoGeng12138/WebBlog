@@ -5,7 +5,7 @@
     <AppHeader :keyword="keyword" @update:keyword="keyword = $event" @search="search" />
 
     <!-- Main Content -->
-    <main class="flex-1 max-w-[1500px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
+    <main class="flex-1 max-w-[1500px] w-full mx-auto px-3 sm:px-6 lg:px-8 py-6 lg:py-12">
       <div class="flex flex-col xl:flex-row gap-8 xl:gap-8">
         <aside class="hidden xl:block xl:w-[250px] xl:shrink-0">
           <DailyNoteSidebar />
@@ -13,8 +13,8 @@
 
         <!-- Categories Section -->
         <section class="flex-1 min-w-0">
-          <div class="mb-8 pl-2">
-            <h2 class="text-3xl font-extrabold text-gray-900 tracking-tight">文章分类</h2>
+          <div class="mb-7 pl-1 sm:pl-2">
+            <h2 class="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">文章分类</h2>
             <p class="mt-2 text-gray-500">探索博客涵盖的所有技术领域</p>
           </div>
 
@@ -35,19 +35,23 @@
             </div>
 
             <div v-else>
-              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              <div class="grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4 xl:gap-6">
                 <div 
                   v-for="(category, index) in categories" 
                   :key="category.id" 
-                  class="group bg-white rounded-3xl p-6 border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden relative"
-                  @click="goToCategoryArticles(category.id)"
+                  class="group bg-white rounded-[22px] p-4 sm:p-6 border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden relative min-h-[170px] sm:min-h-[210px]"
+                  :class="[
+                    index % 2 === 1 ? 'mt-4 sm:mt-0' : 'mt-0',
+                    index % 4 === 3 ? 'sm:mt-0' : ''
+                  ]"
+                  @click="goToCategoryArticles(category)"
                 >
                   <div class="absolute inset-0 bg-gradient-to-br from-gray-50 to-white opacity-0 group-hover:opacity-100 transition-opacity z-0"></div>
                   
                   <div class="relative z-10 flex flex-col h-full">
                     <div class="flex items-start justify-between mb-4">
                       <!-- 动态生成前四个分类的渐变色块，后续则默认为灰蓝 -->
-                      <div class="w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm text-white font-bold text-xl group-hover:scale-110 transition-transform"
+                      <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center shadow-sm text-white font-bold text-base sm:text-xl group-hover:scale-110 transition-transform"
                         :class="{
                           'bg-gradient-to-br from-blue-500 to-indigo-600': index % 4 === 0,
                           'bg-gradient-to-br from-emerald-400 to-teal-500': index % 4 === 1,
@@ -57,14 +61,14 @@
                       >
                          {{ category.name ? category.name.substring(0, 1).toUpperCase() : 'C' }}
                       </div>
-                      <span class="bg-gray-50 group-hover:bg-blue-50 text-gray-400 group-hover:text-blue-600 text-xs font-bold px-3 py-1 rounded-full transition-colors flex items-center gap-1">
+                      <span class="bg-gray-50 group-hover:bg-blue-50 text-gray-400 group-hover:text-blue-600 text-[10px] sm:text-xs font-bold px-2.5 py-1 rounded-full transition-colors flex items-center gap-1">
                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                         {{ category.articleCount || 0 }}
                       </span>
                     </div>
                     
-                    <h3 class="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors mb-2">{{ category.name }}</h3>
-                    <p class="text-sm text-gray-500 line-clamp-2 mt-auto">包含有关 {{ category.name }} 的各类技术探讨和文章分享。</p>
+                    <h3 class="text-base sm:text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors mb-2 line-clamp-2">{{ category.name }}</h3>
+                    <p class="text-[12px] sm:text-sm text-gray-500 line-clamp-2 mt-auto">包含有关 {{ category.name }} 的各类技术探讨和文章分享。</p>
                   </div>
                 </div>
               </div>
@@ -84,7 +88,7 @@
         </section>
 
         <!-- Sidebar -->
-        <aside class="w-full xl:w-[320px] xl:shrink-0">
+        <aside class="hidden xl:block w-full xl:w-[320px] xl:shrink-0">
           <HomeSidebar />
         </aside>
       </div>
@@ -162,8 +166,13 @@ function handlePageChange(newPage) {
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
-function goToCategoryArticles(id) {
-  router.push({ path: `/category/${id}` })
+function goToCategoryArticles(category) {
+  router.push({
+    path: `/category/${category.id}`,
+    query: {
+      name: category.name
+    }
+  })
 }
 
 </script>

@@ -70,13 +70,22 @@
 
               <div v-else>
                 <!-- Articles Grid -->
-                <div class="mb-7 flex flex-col gap-3.5">
-                  <ArticleCard 
-                    v-for="article in articles" 
-                    :key="article.id" 
-                    :article="article"
-                    variant="list"
-                  />
+                <div class="mb-7 grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  <div
+                    v-for="(article, index) in articles"
+                    :key="article.id"
+                    :class="[
+                      index % 2 === 1 ? 'mt-4 sm:mt-0' : 'mt-0',
+                      index % 4 === 1 ? 'sm:translate-y-0' : '',
+                      index % 4 === 3 ? 'mt-7 sm:mt-0' : ''
+                    ]"
+                  >
+                    <ArticleCard
+                      :article="article"
+                      :image-index="index"
+                      :compact="true"
+                    />
+                  </div>
                 </div>
 
                 <!-- Pagination -->
@@ -94,7 +103,7 @@
         </section>
 
         <!-- Sidebar -->
-        <aside class="w-full lg:w-[24%]">
+        <aside class="hidden xl:block w-full lg:w-[24%]">
           <HomeSidebar />
         </aside>
       </main>
@@ -105,18 +114,17 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { computed, ref, onMounted, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import ArticleCard from '@/pages/frontend/articleCard.vue'
 import HomeSidebar from '@/pages/frontend/HomeSidebar.vue'
 import AppHeader from '@/components/frontend/AppHeader.vue'
 import AppFooter from '@/components/frontend/AppFooter.vue'
 import Pagination from '@/components/frontend/Pagination.vue'
 import { getArticlePageListByTag } from '@/api/frontend/article'
-import { getTagList } from '@/api/frontend/tag'
+import { getAllTagList } from '@/api/frontend/tag'
 
 const route = useRoute()
-const router = useRouter()
 
 const articles = ref([])
 const page = ref(1)
@@ -126,26 +134,63 @@ const loading = ref(false)
 const searchKeyword = ref('')
 const tagName = ref('')
 
-const tagId = route.params.id
+const tagId = computed(() => Number(route.params.id))
 
 onMounted(() => {
-  if (tagId) {
-    loadTagInfo()
-    loadArticles()
-  }
+  syncFromRoute()
 })
+
+watch(
+  () => route.params.id,
+  () => {
+    syncFromRoute()
+  }
+)
+
+function syncFromRoute() {
+  page.value = 1
+  searchKeyword.value = ''
+  articles.value = []
+  total.value = 0
+  loadTagPage()
+}
+
+async function loadTagPage() {
+  if (!tagId.value) {
+    tagName.value = '当前标签'
+    return
+  }
+
+  try {
+    await Promise.all([
+      loadTagInfo(),
+      loadArticles()
+    ])
+  } catch (error) {
+    console.error('Failed to load tag page:', error)
+    tagName.value = `标签 ${tagId.value}`
+  }
+}
 
 async function loadTagInfo() {
   try {
-    const res = await getTagList({ current: 1, size: 1, id: tagId })
-    if (res && res.success && res.data && res.data.length > 0) {
-      tagName.value = res.data[0].name || `标签 ${tagId}`
+    const queryName = typeof route.query.name === 'string' ? route.query.name.trim() : ''
+    if (queryName) {
+      tagName.value = queryName
+      return
+    }
+
+    const res = await getAllTagList()
+    if (res && res.success) {
+      const list = Array.isArray(res.data) ? res.data : []
+      const currentTag = list.find(item => String(item.id) === String(tagId.value))
+      tagName.value = currentTag?.name || `标签 ${tagId.value}`
     } else {
-      tagName.value = `标签 ${tagId}`
+      tagName.value = `标签 ${tagId.value}`
     }
   } catch (error) {
     console.error('Failed to load tag info:', error)
-    tagName.value = `标签 ${tagId}`
+    tagName.value = `标签 ${tagId.value}`
   }
 }
 
@@ -156,7 +201,7 @@ async function loadArticles() {
       current: page.value,
       size: size.value,
       name: searchKeyword.value,
-      tagId: Number(tagId)
+      tagId: tagId.value
     }
     
     const res = await getArticlePageListByTag(params)

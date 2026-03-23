@@ -1,13 +1,13 @@
 <template>
   <div class="article-detail-page min-h-screen bg-transparent flex flex-col">
     <!-- Header -->
-    <AppHeader :keyword="keyword" @update:keyword="keyword = $event" @search="searchArticles" />
+    <AppHeader :keyword="searchKeyword" @update:keyword="searchKeyword = $event" @search="searchArticles" />
     
     <!-- Main Content -->
-    <main class="flex-1 max-w-[1720px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
-      <div class="flex gap-5 lg:gap-6">
+    <main class="flex-1 max-w-[1720px] w-full mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12">
+      <div class="grid grid-cols-1 gap-6 xl:grid-cols-[260px_minmax(0,1fr)_280px] xl:gap-6">
         <!-- 左侧导航栏（文章目录） -->
-        <aside v-if="article" class="hidden xl:block w-60 shrink-0">
+        <aside v-if="article" class="hidden xl:block">
           <div class="sticky top-24">
             <div class="rounded-[26px] border border-[rgba(129,158,196,0.22)] bg-white/78 p-5 shadow-[0_18px_48px_rgba(120,146,184,0.14)] backdrop-blur-2xl">
               <h3 class="mb-4 flex items-center gap-2 text-sm font-bold text-slate-800">
@@ -43,15 +43,15 @@
         </aside>
 
         <!-- 主内容区域 -->
-        <div class="flex-1 flex flex-col gap-8 min-w-0">
+        <div class="min-w-0 flex flex-col gap-8">
           <!-- Article Detail Section -->
-          <article class="flex-1 max-w-[1120px] w-full mx-auto md:mx-0">
+          <article class="w-full min-w-0">
             <div v-if="loading" class="py-20 text-center">
               <div class="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
               <p class="mt-4 text-sm text-gray-500 font-medium">全力加载中 ...</p>
             </div>
 
-            <div v-else-if="article" class="rounded-[34px] border border-[rgba(129,158,196,0.2)] bg-white/92 p-6 shadow-[0_24px_80px_rgba(120,146,184,0.14)] backdrop-blur-xl sm:p-10 lg:p-14">
+            <div v-else-if="article" class="rounded-[28px] border border-[rgba(129,158,196,0.2)] bg-white/92 p-4 shadow-[0_24px_80px_rgba(120,146,184,0.14)] backdrop-blur-xl sm:rounded-[34px] sm:p-10 lg:p-14">
               <!-- 封面图 -->
               <div v-if="article.cover" class="mb-8 rounded-[28px] overflow-hidden border border-slate-200/80 bg-slate-950 shadow-[0_24px_70px_rgba(15,23,42,0.12)]">
                 <img :src="article.cover" :alt="article.title || article.summary || '文章封面'" class="article-hero-image w-full h-auto max-h-[560px] object-contain">
@@ -60,11 +60,50 @@
               <!-- 文章头部信息 -->
               <header class="mb-10">
                 <div v-if="article.title || article.summary" class="mb-6 space-y-5">
-                  <h1 v-if="article.title" class="text-3xl sm:text-4xl font-extrabold text-gray-900 leading-tight">{{ article.title }}</h1>
+                  <h1 v-if="article.title" class="text-[clamp(1.95rem,8.4vw,3.55rem)] sm:text-4xl font-extrabold text-gray-900 leading-[1.08] tracking-tight">{{ article.title }}</h1>
 
-                  <p v-if="article.summary" class="max-w-3xl text-base leading-8 text-slate-600">
+                  <p v-if="article.summary" class="max-w-3xl text-[0.98rem] leading-7 text-slate-600 sm:text-base sm:leading-8">
                     {{ article.summary }}
                   </p>
+                </div>
+
+                <div v-if="headings.length > 0" class="mb-6 xl:hidden">
+                  <button
+                    type="button"
+                    class="flex w-full items-center justify-between rounded-2xl border border-[rgba(129,158,196,0.18)] bg-[rgba(244,248,252,0.9)] px-4 py-3 text-left text-sm font-semibold text-slate-700 shadow-[0_12px_28px_rgba(120,146,184,0.08)]"
+                    @click="mobileTocOpen = !mobileTocOpen"
+                  >
+                    <span class="inline-flex items-center gap-2">
+                      <el-icon class="text-[var(--theme-primary)]"><Menu /></el-icon>
+                      文章目录
+                    </span>
+                    <span class="text-xs font-medium text-slate-400">{{ mobileTocOpen ? '收起' : '展开' }}</span>
+                  </button>
+
+                  <transition name="toc-slide">
+                    <div
+                      v-show="mobileTocOpen"
+                      class="mt-3 rounded-2xl border border-[rgba(129,158,196,0.16)] bg-white/92 p-3 shadow-[0_14px_32px_rgba(120,146,184,0.1)]"
+                    >
+                      <nav class="max-h-72 space-y-1 overflow-y-auto pr-1 custom-scrollbar">
+                        <a
+                          v-for="(heading, index) in headings"
+                          :key="`mobile-${index}`"
+                          :href="`#${heading.id}`"
+                          @click.prevent="scrollToHeading(heading.id)"
+                          :class="[
+                            'block rounded-xl py-2 text-sm transition-all duration-300',
+                            heading.level === 1 ? 'pl-3' : heading.level === 2 ? 'pl-5' : heading.level === 3 ? 'pl-7' : 'pl-9',
+                            activeHeading === heading.id
+                              ? 'bg-[rgba(116,149,195,0.14)] text-[var(--theme-primary-deep)] font-semibold'
+                              : 'text-slate-500 hover:bg-[rgba(244,248,252,0.96)] hover:text-[var(--theme-primary)]'
+                          ]"
+                        >
+                          <span class="line-clamp-2 block">{{ heading.text }}</span>
+                        </a>
+                      </nav>
+                    </div>
+                  </transition>
                 </div>
 
                 <div class="flex flex-wrap items-center gap-3 text-sm text-slate-500 sm:gap-4">
@@ -90,7 +129,7 @@
                     v-if="siteConfig.isFeatureEnabled('favoriteEnabled') && isLoggedIn"
                     @click="toggleCollect"
                     :disabled="collectLoading"
-                    class="inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition-all duration-300 focus:outline-none sm:ml-auto"
+                    class="inline-flex w-full items-center justify-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition-all duration-300 focus:outline-none sm:ml-auto sm:w-auto"
                     :class="isCollected ? 'border-[rgba(116,149,195,0.24)] bg-[rgba(116,149,195,0.14)] text-[var(--theme-primary-deep)] shadow-sm hover:bg-[rgba(116,149,195,0.18)] hover:-translate-y-0.5' : 'border-[rgba(129,158,196,0.24)] bg-white/90 text-slate-500 hover:border-[rgba(116,149,195,0.28)] hover:bg-[rgba(116,149,195,0.08)] hover:text-[var(--theme-primary)] hover:-translate-y-0.5'"
                   >
                     <el-icon class="text-base leading-none"><StarFilled v-if="isCollected" /><Star v-else /></el-icon>
@@ -100,7 +139,7 @@
                   <button 
                     v-else-if="siteConfig.isFeatureEnabled('favoriteEnabled') && !isLoggedIn"
                     @click="handleCollectClickForGuest"
-                    class="inline-flex items-center gap-2 rounded-full border border-[rgba(129,158,196,0.24)] bg-white/90 px-4 py-2 text-sm font-medium text-slate-500 transition-all duration-300 focus:outline-none hover:-translate-y-0.5 hover:border-[rgba(116,149,195,0.3)] hover:bg-[rgba(116,149,195,0.08)] hover:text-[var(--theme-primary)] sm:ml-auto"
+                    class="inline-flex w-full items-center justify-center gap-2 rounded-full border border-[rgba(129,158,196,0.24)] bg-white/90 px-4 py-2 text-sm font-medium text-slate-500 transition-all duration-300 focus:outline-none hover:-translate-y-0.5 hover:border-[rgba(116,149,195,0.3)] hover:bg-[rgba(116,149,195,0.08)] hover:text-[var(--theme-primary)] sm:ml-auto sm:w-auto"
                   >
                      <el-icon class="text-base leading-none"><Star /></el-icon>
                      <span>登录后收藏</span>
@@ -149,6 +188,11 @@
             <!-- Comment Section -->
             <CommentSection v-if="article && !loading" :article-id="article.id" class="mt-8" />
 
+            <!-- Mobile Sidebar -->
+            <section v-if="article && !loading" class="mt-8 xl:hidden">
+              <HomeSidebar />
+            </section>
+
             <!-- 404状态 -->
             <div v-if="!article && !loading" class="rounded-[34px] border border-[rgba(129,158,196,0.18)] bg-white/92 px-6 py-24 text-center shadow-[0_24px_80px_rgba(120,146,184,0.12)]">
               <div class="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-[rgba(244,248,252,0.92)]">
@@ -166,10 +210,10 @@
         </div>
 
         <!-- Sidebar -->
-        <aside class="w-[260px] xl:w-[280px] shrink-0">
+        <aside class="hidden xl:block">
           <HomeSidebar />
         </aside>
-      </div> <!-- 闭合 <div class="flex gap-8 lg:gap-12"> -->
+      </div>
     </main>
 
     <AppFooter />
@@ -187,13 +231,12 @@ import hljs from 'highlight.js'
 // 代码高亮样式
 import 'highlight.js/styles/tokyo-night-dark.css'
 import moment from 'moment'
-import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Star, StarFilled, Menu } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/stores/user'
 import { useSiteConfigStore } from '@/stores/siteConfig'
-import { computed } from 'vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -209,6 +252,7 @@ const collectLoading = ref(false)
 const headings = ref([]) // 文章目录
 const activeHeading = ref('') // 当前激活的标题
 const categoryNeighbors = ref({ preArticle: null, nextArticle: null })
+const mobileTocOpen = ref(false)
 
 // 检查用户是否已登录
 const isLoggedIn = computed(() => {
@@ -239,19 +283,14 @@ const displayNextArticle = computed(() => {
 })
 
 onMounted(() => {
-    // 先刷新配置，确保权限是最新的
-    console.log('刷新网站权限配置...')
-    siteConfig.fetchPermissions().then(() => {
-        console.log('权限配置刷新完成')
-        // Load frontend user info first, then load article
-        userStore.setFrontendUserInfo().then(() => {
-            loadArticle()
-        }).catch((error) => {
-            console.error('Failed to load user info:', error)
-            // Even if user info fails to load, we still try to load the article
-            loadArticle()
-        })
+  // 先刷新配置，确保权限是最新的，再加载用户和文章信息
+  siteConfig.fetchPermissions().then(() => {
+    userStore.setFrontendUserInfo().then(() => {
+      loadArticle()
+    }).catch(() => {
+      loadArticle()
     })
+  })
 })
 
 onBeforeUnmount(() => {
@@ -265,29 +304,17 @@ watch(() => route.params.id, (newId, oldId) => {
   }
 })
 
-// 点击上一篇/下一篇时调用：更新地址并触发加载
-function navigateToArticle(id) {
-  if (!id) return
-  // 更新路由（push 会改变地址），watch 会触发 loadArticle
-  router.push(`/article/${id}`)
-  // 平滑滚动到顶部
-  window.scrollTo({ top: 0, behavior: 'smooth' })
-}
-
 // 代码高亮函数
 function highlightCode() {
   if (!articleContentRef.value) {
-    console.warn('articleContentRef.value 为空')
     return
   }
 
   // 使用 DOM API 直接查询
   const blocks = articleContentRef.value.querySelectorAll('pre code')
-  console.log(`找到 ${blocks.length} 个代码块`)
 
   blocks.forEach((block, index) => {
     try {
-      console.log(`正在高亮第 ${index + 1} 个代码块`)
       // 移除之前的 hljs 类（防止重复高亮）
       block.removeAttribute('data-highlighted')
       // 执行高亮
@@ -334,7 +361,6 @@ function highlightCode() {
               copyButton.textContent = '复制'
             }, 1600)
           } catch (error) {
-            console.warn('复制代码失败:', error)
             copyButton.textContent = '复制失败'
             setTimeout(() => {
               copyButton.textContent = '复制'
@@ -348,9 +374,8 @@ function highlightCode() {
         toolbar.appendChild(actions)
         pre.insertBefore(toolbar, block)
       }
-      console.log(`第 ${index + 1} 个代码块高亮成功`)
     } catch (e) {
-      console.warn(`第 ${index + 1} 个代码块高亮失败:`, e)
+      console.warn('代码高亮失败:', e)
     }
   })
 }
@@ -443,7 +468,6 @@ async function toggleCollect() {
       ElMessage.success('收藏成功')
     }
   } catch (error) {
-    console.error('收藏操作失败:', error)
     // 检查是否是权限错误
     if (error.response && error.response.data) {
       const errorMsg = error.response.data.message || error.response.data.errorMsg
@@ -472,22 +496,18 @@ async function checkIfCollected() {
   
   try {
     const res = await isArticleCollected(article.value.id)
-    console.log('检查收藏状态结果:', res)
     if (res && res.success) {
       isCollected.value = res.data
     } else if (res && !res.success && res.errorCode === '20002') {
       // 特殊处理认证错误
-      console.log('用户未登录，无法检查收藏状态')
     }
   } catch (error) {
-    console.error('检查收藏状态失败:', error)
     // 如果是权限错误，不显示错误消息，因为用户可能未登录
     if (error.response && error.response.data) {
       const errorMsg = error.response.data.message || error.response.data.errorMsg
       const errorCode = error.response.data.errorCode
       if (errorCode === '20002' || (errorMsg && (errorMsg.includes('无访问权限') || errorMsg.includes('请先登录')))) {
         // 认证错误，不显示错误消息
-        console.log('用户未登录，无法检查收藏状态')
       } else {
         ElMessage.error('检查收藏状态失败')
       }
@@ -498,7 +518,6 @@ async function checkIfCollected() {
 async function loadArticle() {
   const articleId = route.params.id
   if (!articleId) {
-    console.warn('未获取到文章 ID')
     loading.value = false
     return
   }
@@ -507,11 +526,10 @@ async function loadArticle() {
   try {
     // 后端期望接收 JSON { articleId: <number> }
     const res = await getArticleDetail(Number(articleId))
-    console.log('文章加载结果:', res)
 
     if (res && res.success) {
       article.value = res.data
-      console.log('文章数据设置成功')
+      mobileTocOpen.value = false
       await resolveCategoryNeighbors()
       
       // 动态更新浏览器标签页标题
@@ -523,7 +541,6 @@ async function loadArticle() {
       }
     } else {
       article.value = null
-      console.warn('文章加载失败或无数据')
     }
 
     // 等待 DOM 更新后对文章中的代码块进行高亮
@@ -536,7 +553,6 @@ async function loadArticle() {
     }, 100)
 
   } catch (e) {
-    console.error('加载文章失败', e)
     article.value = null
     categoryNeighbors.value = { preArticle: null, nextArticle: null }
   } finally {
@@ -584,7 +600,6 @@ async function resolveCategoryNeighbors() {
       nextArticle: currentIndex < list.length - 1 ? list[currentIndex + 1] : null
     }
   } catch (error) {
-    console.error('按分类计算相邻文章失败:', error)
     categoryNeighbors.value = { preArticle: null, nextArticle: null }
   }
 }
@@ -825,6 +840,7 @@ function handleCollectClickForGuest() {
 ::v-deep(pre) {
   margin: 1.7rem 0;
   position: relative;
+  overflow-x: auto;
 }
 
 ::v-deep(pre.code-block-shell) {
@@ -904,5 +920,77 @@ function handleCollectClickForGuest() {
 ::v-deep(.code-copy-button:hover) {
   background: rgba(116, 149, 195, 0.85);
   transform: translateY(-1px);
+}
+
+.toc-slide-enter-active,
+.toc-slide-leave-active {
+  transition: all 0.22s ease;
+}
+
+.toc-slide-enter-from,
+.toc-slide-leave-to {
+  opacity: 0;
+  transform: translateY(-6px);
+}
+
+@media (max-width: 768px) {
+  ::v-deep(.article-content) {
+    font-size: 0.98rem;
+    line-height: 1.86;
+  }
+
+  ::v-deep(.article-content h2) {
+    margin-top: 2.3rem;
+    font-size: clamp(1.45rem, 7vw, 2rem);
+  }
+
+  ::v-deep(.article-content h3) {
+    margin-top: 1.8rem;
+    font-size: clamp(1.15rem, 5.2vw, 1.45rem);
+  }
+
+  ::v-deep(.article-content h4) {
+    margin-top: 1.4rem;
+    font-size: 1.02rem;
+  }
+
+  ::v-deep(.article-content blockquote) {
+    margin: 1.4rem 0;
+    padding: 0.95rem 1rem;
+  }
+
+  ::v-deep(.article-content img) {
+    border-radius: 16px;
+  }
+
+  ::v-deep(.article-content table) {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+    border-radius: 14px;
+  }
+
+  ::v-deep(.article-content th),
+  ::v-deep(.article-content td) {
+    padding: 0.78rem 0.85rem;
+  }
+
+  ::v-deep(pre.code-block-shell) {
+    border-radius: 16px;
+  }
+
+  ::v-deep(.code-block-toolbar) {
+    padding: 0.5rem 0.75rem 0.45rem;
+  }
+
+  ::v-deep(pre code.hljs) {
+    font-size: 0.86rem;
+    line-height: 1.7;
+    padding: 0.9rem 1rem 1rem;
+  }
+
+  ::v-deep(.code-copy-button) {
+    padding: 0.24rem 0.52rem;
+  }
 }
 </style>

@@ -23,22 +23,22 @@
     <template v-else>
       <AppHeader :keyword="keyword" @update:keyword="keyword = $event" @search="search" />
 
-      <main class="flex-1 max-w-[1500px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12 flex flex-col xl:flex-row gap-8 xl:gap-8">
+      <main class="flex-1 max-w-[1500px] w-full mx-auto px-3 sm:px-6 lg:px-8 py-6 lg:py-12 flex flex-col xl:flex-row gap-6 xl:gap-8">
         <aside class="hidden xl:block xl:w-[250px] xl:shrink-0">
           <DailyNoteSidebar />
         </aside>
 
         <section class="flex-1 min-w-0">
-          <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 md:p-10 min-h-[600px]">
-            <div class="flex items-end justify-between mb-10 pb-6 border-b border-gray-100/80">
+          <div class="bg-white rounded-[28px] shadow-sm border border-gray-100 p-4 sm:p-6 md:p-10 min-h-[600px]">
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between mb-8 sm:mb-10 pb-5 sm:pb-6 border-b border-gray-100/80">
               <div>
-                <h2 class="text-3xl font-extrabold text-gray-900 tracking-tight flex items-center gap-3">
+                <h2 class="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight flex items-center gap-3">
                   <el-icon class="text-blue-600"><Calendar /></el-icon>
                   时光机归档
                 </h2>
                 <p class="mt-2 text-sm text-gray-500">重温过去的点滴思考</p>
               </div>
-              <div class="bg-blue-50 text-blue-700 font-bold px-4 py-1.5 rounded-full text-sm">
+              <div class="self-start bg-blue-50 text-blue-700 font-bold px-4 py-1.5 rounded-full text-sm">
                 共记录 {{ totalArticles }} 篇
               </div>
             </div>
@@ -58,58 +58,92 @@
               <p class="text-gray-500 max-w-sm mx-auto">岁月还未留下痕迹，等待您的第一篇分享。</p>
             </div>
 
-            <div v-else class="relative pl-6 lg:pl-8">
-              <!-- 大时间轴线段 -->
-              <div class="absolute left-[13px] lg:left-[21px] top-3 bottom-0 w-[2px] bg-gradient-to-b from-blue-100 via-gray-100 to-transparent"></div>
+            <div v-else>
+              <div class="xl:hidden space-y-10">
+                <div v-for="(months, year) in groupedByYear" :key="`mobile-${year}`" class="space-y-5">
+                  <div class="flex items-center justify-between gap-3">
+                    <h3 class="text-3xl font-black text-slate-900 tracking-tight">{{ year }}</h3>
+                    <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-500">年度归档</span>
+                  </div>
 
-              <div v-for="(months, year) in groupedByYear" :key="year" class="mb-14 relative group/year">
-                <!-- 年份节点大圆点 -->
-                <div class="absolute -left-[35px] lg:-left-[27px] top-1 w-7 h-7 rounded-full bg-blue-500 border-4 border-white shadow-sm z-10 flex items-center justify-center group-hover/year:scale-110 transition-transform">
-                   <div class="w-2 h-2 bg-white rounded-full"></div>
+                  <div v-for="(articles, month) in months" :key="`mobile-${year}-${month}`" class="space-y-3">
+                    <div class="flex items-center justify-between">
+                      <h4 class="text-sm font-semibold text-slate-700">{{ getMonthName(month) }}</h4>
+                      <span class="rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-semibold text-blue-600">{{ articles.length }} 篇</span>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                      <div
+                        v-for="(article, index) in articles"
+                        :key="article.id"
+                        class="transition-all duration-300"
+                        :class="[
+                          index % 2 === 1 ? 'mt-4' : 'mt-0',
+                          index % 4 === 1 ? 'sm:mt-0' : '',
+                          index % 4 === 3 ? 'mt-7 sm:mt-0' : ''
+                        ]"
+                        :style="{ animationDelay: `${Math.min(index * 70, 360)}ms` }"
+                      >
+                        <ArticleCard :article="article" :compact="true" :image-index="index" />
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <h3 class="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-gray-900 to-gray-500 italic mb-8 -mt-2 tracking-tighter">{{ year }}</h3>
+              </div>
 
-                <div v-for="(articles, month) in months" :key="month" class="mb-10 pl-6 lg:pl-10 relative">
-                  <!-- 月份节点小圆点 -->
-                  <div class="absolute -left-[35px] lg:-left-[15px] top-[6px] w-3 h-3 rounded-full bg-blue-200 border-2 border-white z-10"></div>
+              <div class="relative hidden xl:block pl-6 lg:pl-8">
+                <!-- 大时间轴线段 -->
+                <div class="absolute left-[13px] lg:left-[21px] top-3 bottom-0 w-[2px] bg-gradient-to-b from-blue-100 via-gray-100 to-transparent"></div>
 
-                  <h4 class="text-xl font-bold text-gray-800 mb-6 flex items-center gap-3">
-                    {{ getMonthName(month) }}
-                    <span class="text-xs font-semibold text-gray-500 bg-gray-100 px-2.5 py-1 rounded-full">{{ articles.length }} 篇</span>
-                  </h4>
+                <div v-for="(months, year) in groupedByYear" :key="year" class="mb-14 relative group/year">
+                  <!-- 年份节点大圆点 -->
+                  <div class="absolute -left-[35px] lg:-left-[27px] top-1 w-7 h-7 rounded-full bg-blue-500 border-4 border-white shadow-sm z-10 flex items-center justify-center group-hover/year:scale-110 transition-transform">
+                     <div class="w-2 h-2 bg-white rounded-full"></div>
+                  </div>
+                  <h3 class="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-gray-900 to-gray-500 italic mb-8 -mt-2 tracking-tighter">{{ year }}</h3>
 
-                  <div class="space-y-4">
-                    <div v-for="article in articles" :key="article.id"
-                      class="group bg-white border border-gray-100 rounded-2xl p-4 sm:p-5 hover:shadow-xl hover:border-blue-200 transition-all duration-300 cursor-pointer flex flex-col sm:flex-row sm:items-center gap-4 hover:-translate-y-1 relative overflow-hidden"
-                      @click="goToArticle(article.id)">
-                      
-                      <!-- 悬浮时的背景高亮 -->
-                      <div class="absolute inset-0 bg-blue-50/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                  <div v-for="(articles, month) in months" :key="month" class="mb-10 pl-6 lg:pl-10 relative">
+                    <!-- 月份节点小圆点 -->
+                    <div class="absolute -left-[35px] lg:-left-[15px] top-[6px] w-3 h-3 rounded-full bg-blue-200 border-2 border-white z-10"></div>
 
-                      <!-- 左侧：日期小日历样式 -->
-                      <div class="flex-shrink-0 w-16 text-center bg-gray-50 rounded-xl py-2 group-hover:bg-blue-600 transition-colors z-10">
-                        <div class="text-xs text-gray-400 group-hover:text-blue-100 font-medium">{{ getMonthName(month).slice(0,3).toUpperCase() }}</div>
-                        <div class="text-2xl font-black text-gray-700 group-hover:text-white leading-none mt-1">{{ getDay(article.createTime) }}</div>
-                      </div>
+                    <h4 class="text-xl font-bold text-gray-800 mb-6 flex items-center gap-3">
+                      {{ getMonthName(month) }}
+                      <span class="text-xs font-semibold text-gray-500 bg-gray-100 px-2.5 py-1 rounded-full">{{ articles.length }} 篇</span>
+                    </h4>
 
-                      <!-- 中间：文章标题与元信息 -->
-                      <div class="flex-1 min-w-0 z-10">
-                        <h5 class="font-bold text-gray-900 truncate group-hover:text-blue-600 transition-colors text-lg mb-1.5">
-                          {{ article.title }}
-                        </h5>
-                        <div class="flex flex-wrap items-center gap-2 sm:gap-4 mt-auto text-xs text-gray-500 font-medium">
-                          <span class="flex items-center gap-1.5 bg-gray-50 group-hover:bg-white px-2.5 py-1 rounded-md transition-colors border border-transparent group-hover:border-gray-100">
-                            <el-icon><Folder /></el-icon> {{ article.category || '未分类' }}
-                          </span>
-                          <span v-if="article.viewCount" class="flex items-center gap-1.5">
-                            <el-icon><View /></el-icon> {{ article.viewCount }}
-                          </span>
+                    <div class="space-y-4">
+                      <div v-for="article in articles" :key="article.id"
+                        class="group bg-white border border-gray-100 rounded-2xl p-4 sm:p-5 hover:shadow-xl hover:border-blue-200 transition-all duration-300 cursor-pointer flex flex-col sm:flex-row sm:items-center gap-4 hover:-translate-y-1 relative overflow-hidden"
+                        @click="goToArticle(article.id)">
+                        
+                        <!-- 悬浮时的背景高亮 -->
+                        <div class="absolute inset-0 bg-blue-50/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+
+                        <!-- 左侧：日期小日历样式 -->
+                        <div class="flex-shrink-0 w-16 text-center bg-gray-50 rounded-xl py-2 group-hover:bg-blue-600 transition-colors z-10">
+                          <div class="text-xs text-gray-400 group-hover:text-blue-100 font-medium">{{ getMonthName(month).slice(0,3).toUpperCase() }}</div>
+                          <div class="text-2xl font-black text-gray-700 group-hover:text-white leading-none mt-1">{{ getDay(article.createTime) }}</div>
                         </div>
-                      </div>
 
-                      <!-- 右侧：直达箭头 -->
-                      <div class="hidden sm:flex self-center w-10 h-10 rounded-full bg-gray-50 items-center justify-center group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors z-10">
-                         <el-icon class="text-gray-400 group-hover:text-blue-600 translate-x-0 group-hover:translate-x-1 transition-transform"><ArrowRight /></el-icon>
+                        <!-- 中间：文章标题与元信息 -->
+                        <div class="flex-1 min-w-0 z-10">
+                          <h5 class="font-bold text-gray-900 truncate group-hover:text-blue-600 transition-colors text-lg mb-1.5">
+                            {{ article.title }}
+                          </h5>
+                          <div class="flex flex-wrap items-center gap-2 sm:gap-4 mt-auto text-xs text-gray-500 font-medium">
+                            <span class="flex items-center gap-1.5 bg-gray-50 group-hover:bg-white px-2.5 py-1 rounded-md transition-colors border border-transparent group-hover:border-gray-100">
+                              <el-icon><Folder /></el-icon> {{ article.category || '未分类' }}
+                            </span>
+                            <span v-if="article.viewCount" class="flex items-center gap-1.5">
+                              <el-icon><View /></el-icon> {{ article.viewCount }}
+                            </span>
+                          </div>
+                        </div>
+
+                        <!-- 右侧：直达箭头 -->
+                        <div class="hidden sm:flex self-center w-10 h-10 rounded-full bg-gray-50 items-center justify-center group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors z-10">
+                           <el-icon class="text-gray-400 group-hover:text-blue-600 translate-x-0 group-hover:translate-x-1 transition-transform"><ArrowRight /></el-icon>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -120,7 +154,7 @@
         </section>
 
         <!-- Sidebar -->
-        <aside class="w-full xl:w-[320px] shrink-0 space-y-8">
+        <aside class="hidden xl:block w-full xl:w-[320px] shrink-0 space-y-8">
           <HomeSidebar />
         </aside>
       </main>
@@ -141,6 +175,7 @@ import AppHeader from '@/components/frontend/AppHeader.vue'
 import AppFooter from '@/components/frontend/AppFooter.vue'
 import HomeSidebar from '@/pages/frontend/HomeSidebar.vue'
 import DailyNoteSidebar from '@/pages/frontend/DailyNoteSidebar.vue'
+import ArticleCard from '@/pages/frontend/articleCard.vue'
 import { useUserStore } from '@/stores/user'
 import { getToken } from '@/composables/cookie'
 

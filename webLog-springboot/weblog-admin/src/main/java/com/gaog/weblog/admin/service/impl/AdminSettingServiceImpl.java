@@ -16,6 +16,9 @@ import java.util.Date;
 @Slf4j
 public class AdminSettingServiceImpl implements AdminSettingService {
 
+    private static final String DEFAULT_ACTIVITY_LEVEL_RULES = "[{\"level\":1,\"minScore\":0,\"name\":\"新手\"},{\"level\":2,\"minScore\":100,\"name\":\"作者\"},{\"level\":3,\"minScore\":300,\"name\":\"进阶作者\"},{\"level\":4,\"minScore\":600,\"name\":\"资深作者\"},{\"level\":5,\"minScore\":1000,\"name\":\"传奇作者\"}]";
+    private static final String DEFAULT_ACTIVITY_SCORE_RULES = "[{\"type\":\"article\",\"name\":\"发布文章\",\"score\":10},{\"type\":\"comment\",\"name\":\"发表评论\",\"score\":2},{\"type\":\"favorite\",\"name\":\"收藏文章\",\"score\":1},{\"type\":\"like\",\"name\":\"点赞评论\",\"score\":1},{\"type\":\"login\",\"name\":\"每日登录\",\"score\":1}]";
+
     @Autowired
     private SiteSettingMapper siteSettingMapper;
 
@@ -29,6 +32,8 @@ public class AdminSettingServiceImpl implements AdminSettingService {
                     .title("我的博客")
                     .description("")
                     .frontendArticlePageSize(12)
+                    .activityLevelRules(DEFAULT_ACTIVITY_LEVEL_RULES)
+                    .activityScoreRules(DEFAULT_ACTIVITY_SCORE_RULES)
                     .githubEnabled(false)
                     .githubShowFront(false)
                     .githubShowRegister(false)
@@ -66,6 +71,8 @@ public class AdminSettingServiceImpl implements AdminSettingService {
         setting.setDescription(reqVO.getDescription());
         setting.setLogoUrl(reqVO.getLogoUrl());
         setting.setFrontendArticlePageSize(reqVO.getFrontendArticlePageSize() == null ? 12 : reqVO.getFrontendArticlePageSize());
+        setting.setActivityLevelRules(reqVO.getActivityLevelRules());
+        setting.setActivityScoreRules(reqVO.getActivityScoreRules());
         setting.setGithubEnabled(reqVO.getGithubEnabled());
         setting.setGithubShowFront(reqVO.getGithubShowFront());
         setting.setGithubShowRegister(reqVO.getGithubShowRegister());

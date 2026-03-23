@@ -28,6 +28,14 @@ public class UpdateSiteSettingReqVO {
     @Max(value = 60, message = "前台文章列表每页数量不能大于60")
     private Integer frontendArticlePageSize;
 
+    @ApiModelProperty("活跃度等级规则JSON")
+    @Size(max = 4000, message = "活跃度等级规则最多4000字")
+    private String activityLevelRules;
+
+    @ApiModelProperty("活跃度加分规则JSON")
+    @Size(max = 4000, message = "活跃度加分规则最多4000字")
+    private String activityScoreRules;
+
     @ApiModelProperty("是否启用GitHub功能")
     private Boolean githubEnabled;
 

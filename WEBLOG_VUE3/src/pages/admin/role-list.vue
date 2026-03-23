@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
+  <div class="admin-list-page admin-role-list-page min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
     <div class="mb-8">
       <h1 class="text-3xl font-bold text-gray-900 flex items-center gap-2">
         <el-icon class="text-blue-600"><Lock /></el-icon>
@@ -49,7 +49,7 @@
         v-loading="loading"
         stripe
         style="width: 100%"
-        class="role-table"
+        class="role-table hidden md:block"
         header-cell-class-name="bg-gradient-to-r from-blue-50 to-blue-100 font-semibold text-gray-800 border-b-2 border-blue-200"
       >
         <el-table-column type="selection" width="50" fixed="left" />
@@ -117,6 +117,55 @@
           </template>
         </el-table-column>
       </el-table>
+
+      <div class="md:hidden px-4 pb-3 pt-1">
+        <div class="rounded-2xl border border-[rgba(149,171,210,0.16)] bg-gradient-to-r from-[#f7fbff] to-[#eef4ff] p-4 shadow-[0_10px_24px_rgba(15,23,42,0.05)]">
+          <el-button v-if="can('admin:role:add')" type="primary" @click="handleAddRole" class="admin-btn-primary w-full">
+            <el-icon><Plus /></el-icon>
+            新增角色
+          </el-button>
+          <div class="mt-3 flex items-center justify-center gap-2 text-sm font-semibold text-slate-700">
+            <el-icon class="text-blue-500"><DocumentCopy /></el-icon>
+            共 <span class="text-lg text-blue-600">{{ total }}</span> 条角色
+          </div>
+        </div>
+      </div>
+
+      <div class="md:hidden px-4 pb-4 space-y-3">
+        <article
+          v-for="row in roleList"
+          :key="row.id"
+          class="admin-mobile-card admin-mobile-card--role rounded-2xl border border-[rgba(149,171,210,0.16)] bg-white p-4 shadow-[0_10px_24px_rgba(15,23,42,0.05)]"
+        >
+          <div class="flex items-start justify-between gap-3">
+            <div class="min-w-0 flex-1">
+              <div class="flex flex-wrap items-center gap-2">
+                <el-tag type="primary" size="small">{{ row.name }}</el-tag>
+                <el-tag :type="row.isEnabled ? 'success' : 'danger'" size="small">
+                  {{ row.isEnabled ? '启用' : '停用' }}
+                </el-tag>
+                <el-tag v-if="row.isSystem" type="warning" size="small">系统角色</el-tag>
+              </div>
+              <p class="mt-2 text-sm leading-6 text-slate-600">
+                {{ row.description || '暂无描述' }}
+              </p>
+              <div class="mt-3 flex flex-wrap gap-2 text-xs text-slate-500">
+                <span class="rounded-full bg-slate-100 px-2.5 py-1">{{ formatDate(row.createTime) || '无创建时间' }}</span>
+                <span class="rounded-full bg-slate-100 px-2.5 py-1">{{ formatDate(row.updateTime) || '无更新时间' }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-4 grid grid-cols-2 gap-2">
+            <el-button v-if="can('admin:role:update')" type="primary" size="small" @click="handleEdit(row)" class="admin-btn-primary">编辑</el-button>
+            <el-button v-if="can('admin:role:permission-assign')" type="info" size="small" @click="handleAssignPermissions(row)" class="admin-btn-secondary">权限</el-button>
+            <el-button v-if="can('admin:role:update')" size="small" :type="row.isEnabled ? 'warning' : 'success'" @click="handleChangeStatus(row)" class="admin-btn-secondary">
+              {{ row.isEnabled ? '停用' : '启用' }}
+            </el-button>
+            <el-button v-if="can('admin:role:delete')" type="danger" size="small" @click="handleDelete(row)" :disabled="row.isSystem" class="admin-btn-secondary">删除</el-button>
+          </div>
+        </article>
+      </div>
 
       <!-- 分页 -->
       <div class="px-6 py-4 flex items-center justify-between border-t border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100">
@@ -612,6 +661,63 @@ onMounted(() => {
   padding: 4px 8px;
   font-size: 12px;
   font-weight: 500;
+}
+
+@media (max-width: 768px) {
+  .admin-role-list-page {
+    padding: 1rem !important;
+  }
+
+  .admin-role-list-page .mb-8 h1 {
+    font-size: 1.5rem;
+    line-height: 2rem;
+  }
+
+  .admin-role-list-page .bg-white.rounded-xl {
+    padding: 1rem !important;
+  }
+
+  .admin-role-list-page .flex.flex-col.md\\:flex-row {
+    gap: 0.75rem !important;
+  }
+
+  .admin-role-list-page .flex.gap-2 {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .admin-role-list-page .flex.gap-2 .el-button {
+    width: 100%;
+  }
+
+  .role-table :deep(.el-table__header th),
+  .role-table :deep(.el-table__body td) {
+    font-size: 12px;
+  }
+
+  .role-table :deep(.el-table__header th:nth-child(1)),
+  .role-table :deep(.el-table__body td:nth-child(1)),
+  .role-table :deep(.el-table__header th:nth-child(2)),
+  .role-table :deep(.el-table__body td:nth-child(2)),
+  .role-table :deep(.el-table__header th:nth-child(5)),
+  .role-table :deep(.el-table__body td:nth-child(5)),
+  .role-table :deep(.el-table__header th:nth-child(7)),
+  .role-table :deep(.el-table__body td:nth-child(7)) {
+    display: none !important;
+  }
+
+  .role-table :deep(.el-button) {
+    min-width: 0;
+    padding-inline: 0.75rem;
+  }
+
+  .admin-role-list-page .el-dialog {
+    width: calc(100vw - 1rem) !important;
+  }
+
+  .permission-tree {
+    max-height: 48vh;
+  }
 }
 </style>
 

@@ -53,7 +53,7 @@ public class UserActivityScoreDO {
      * Favorite count for the day
      */
     private Integer favoriteCount;
-    
+
     /**
      * Login count for the day (should typically be 0 or 1)
      */

@@ -7,6 +7,7 @@ export const useMenuStore = defineStore('menu', () => {
 
   // 左边栏菜单默认宽度
   const menuWidth = ref("250px")
+  const mobileMenuOpen = ref(false)
   const baseMenus = [
     {
       'name': '仪表盘',
@@ -31,6 +32,12 @@ export const useMenuStore = defineStore('menu', () => {
       'icon': 'PriceTag',
       'path': '/admin/tag/list',
       'permission': 'admin:tag:list'
+    },
+    {
+      'name': '评论管理',
+      'icon': 'ChatLineRound',
+      'path': '/admin/comment/list',
+      'permission': 'admin:comment:list'
     },
     {
       'name': '用户管理',
@@ -71,7 +78,19 @@ export const useMenuStore = defineStore('menu', () => {
     menuWidth.value = menuWidth.value == '250px' ? '64px' : '250px'
   }
 
-  return { menuWidth, handleMenuWidth, menus }
+  function openMobileMenu() {
+    mobileMenuOpen.value = true
+  }
+
+  function closeMobileMenu() {
+    mobileMenuOpen.value = false
+  }
+
+  function toggleMobileMenu() {
+    mobileMenuOpen.value = !mobileMenuOpen.value
+  }
+
+  return { menuWidth, mobileMenuOpen, handleMenuWidth, openMobileMenu, closeMobileMenu, toggleMobileMenu, menus }
 },
   {
     // 开启持久化

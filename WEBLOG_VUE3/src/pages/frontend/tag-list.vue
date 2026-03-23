@@ -4,12 +4,12 @@
     <AppHeader :keyword="keyword" @update:keyword="keyword = $event" @search="search" />
 
     <!-- Main Content -->
-    <main class="flex-1 max-w-[1500px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
+    <main class="flex-1 max-w-[1500px] w-full mx-auto px-3 sm:px-6 lg:px-8 py-6 lg:py-12">
       <div class="flex flex-col lg:flex-row gap-8 lg:gap-12">
         <!-- Tags Section -->
         <section class="flex-1 min-w-0">
-          <div class="mb-8">
-            <h2 class="text-3xl font-extrabold text-gray-900 tracking-tight">探索标签</h2>
+          <div class="mb-7">
+            <h2 class="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">探索标签</h2>
             <p class="mt-2 text-gray-500">通过标签快速定位你感兴趣的技术内容</p>
           </div>
 
@@ -30,12 +30,16 @@
             </div>
 
             <div v-else>
-              <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6">
+              <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-5 xl:gap-6">
                 <div 
                   v-for="(tag, index) in tags" 
                   :key="tag.id" 
-                  class="group relative bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden flex flex-col items-center justify-center text-center h-32"
-                  @click="goToTagArticles(tag.id)"
+                  class="group relative bg-white rounded-[22px] p-4 sm:p-5 border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden flex flex-col items-center justify-center text-center h-28 sm:h-32"
+                  :class="[
+                    index % 2 === 1 ? 'mt-4 sm:mt-0' : 'mt-0',
+                    index % 4 === 3 ? 'sm:mt-0' : ''
+                  ]"
+                  @click="goToTagArticles(tag)"
                 >
                   <!-- 悬浮时的背景高亮 -->
                   <div class="absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-10 transition-opacity duration-300"
@@ -44,10 +48,10 @@
                   
                   <div class="relative z-10 w-full">
                      <div class="inline-flex items-center justify-center mb-3">
-                       <span class="text-2xl font-black text-gray-200 group-hover:text-blue-200 transition-colors mr-1">#</span>
-                       <span class="font-bold text-gray-900 group-hover:text-blue-600 transition-colors text-lg truncate max-w-full" :title="tag.name">{{ tag.name }}</span>
+                       <span class="text-xl sm:text-2xl font-black text-gray-200 group-hover:text-blue-200 transition-colors mr-1">#</span>
+                       <span class="font-bold text-gray-900 group-hover:text-blue-600 transition-colors text-sm sm:text-lg truncate max-w-full" :title="tag.name">{{ tag.name }}</span>
                      </div>
-                     <div class="bg-gray-50 group-hover:bg-blue-50 text-gray-500 group-hover:text-blue-600 text-xs font-semibold px-3 py-1 rounded-full transition-colors inline-block">
+                     <div class="bg-gray-50 group-hover:bg-blue-50 text-gray-500 group-hover:text-blue-600 text-[10px] sm:text-xs font-semibold px-3 py-1 rounded-full transition-colors inline-block">
                         {{ tag.articleCount }} 篇文章
                      </div>
                   </div>
@@ -69,7 +73,7 @@
         </section>
 
         <!-- Sidebar -->
-        <aside class="w-full lg:w-[320px] xl:w-[360px] shrink-0">
+        <aside class="hidden xl:block w-full lg:w-[320px] xl:w-[360px] shrink-0">
           <HomeSidebar />
         </aside>
       </div>
@@ -182,9 +186,14 @@ function handlePageChange(newPage) {
   loadTags()
 }
 
-function goToTagArticles(tagId) {
+function goToTagArticles(tag) {
   // Navigate to articles filtered by tag
-  router.push(`/tag/${tagId}`)
+  router.push({
+    path: `/tag/${tag.id}`,
+    query: {
+      name: tag.name
+    }
+  })
 }
 
 function getTagClass(articleCount) {

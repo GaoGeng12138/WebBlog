@@ -5,13 +5,27 @@
     <!-- 已登录：显示头像和下拉菜单 -->
     <div v-else-if="user && user.nickname" class="flex items-center gap-2">
       <el-dropdown trigger="click">
-        <div class="flex items-center gap-2 cursor-pointer hover:opacity-90 transition-opacity">
+        <div class="flex items-center gap-2 cursor-pointer rounded-full border border-transparent bg-white/45 px-2 py-1.5 shadow-[0_10px_24px_rgba(120,146,184,0.08)] transition-all hover:border-[rgba(148,176,231,0.16)] hover:bg-white/70 hover:shadow-[0_14px_28px_rgba(120,146,184,0.12)]">
           <img :src="displayAvatar" @error="handleAvatarError" alt="avatar" class="w-8 h-8 rounded-full object-cover border border-[rgba(149,171,210,0.28)] shadow-[0_0_0_4px_rgba(255,255,255,0.38)]" />
+          <div class="hidden min-w-0 flex-col leading-tight sm:flex">
+            <span class="truncate text-sm font-semibold text-slate-700">{{ user.nickname }}</span>
+            <div class="mt-1 flex items-center gap-2 text-[11px] text-slate-400">
+              <span class="inline-flex items-center gap-1">
+                <span class="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_0_3px_rgba(16,185,129,0.14)]"></span>
+                在线
+              </span>
+            </div>
+          </div>
+          <svg class="hidden h-4 w-4 text-slate-400 sm:block" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+          </svg>
         </div>
         <template #dropdown>
           <el-dropdown-menu>
-            <el-dropdown-item @click.native.prevent="goUserCenter">用户中心</el-dropdown-item>
-            <el-dropdown-item divided @click.native.prevent="logout">登出</el-dropdown-item>
+            <el-dropdown-item @click="goUserCenter">用户中心</el-dropdown-item>
+            <el-dropdown-item v-if="canEnterAdmin" divided @click="goAdminCenter">进入后台</el-dropdown-item>
+            <el-dropdown-item v-if="canUserPublish" @click="goPublish">写文章</el-dropdown-item>
+            <el-dropdown-item divided @click="logout">登出</el-dropdown-item>
           </el-dropdown-menu>
         </template>
       </el-dropdown>
@@ -33,16 +47,22 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { getToken } from '@/composables/cookie'
+import { hasAccess } from '@/composables/permission'
 import { useUserStore } from '@/stores/user'
+import { useSiteConfigStore } from '@/stores/siteConfig'
 
 const router = useRouter()
 const userStore = useUserStore()
+const siteConfig = useSiteConfigStore()
 const user = computed(() => userStore.frontendUserInfo)
 const loading = computed(() => false)
 const defaultAvatar = `${import.meta.env.BASE_URL}default-avatar.svg`
 const displayAvatar = computed(() => user.value?.avatar || defaultAvatar)
+const canUserPublish = computed(() => siteConfig.isFeatureEnabled('userPublishEnabled') === true)
+const canEnterAdmin = computed(() => hasAccess(userStore.userInfo, 'admin:dashboard:view'))
 
 const handleAvatarError = (event) => {
   if (event.target.src.endsWith('default-avatar.svg')) {
@@ -50,6 +70,12 @@ const handleAvatarError = (event) => {
   }
   event.target.src = defaultAvatar
 }
+
+onMounted(() => {
+  if (getToken()) {
+    userStore.ensureUserInfoReady().catch(() => {})
+  }
+})
 
 // 跳转登录页
 const goLogin = () => {
@@ -65,5 +91,15 @@ const logout = () => {
 // 跳转用户中心
 const goUserCenter = () => {
   router.push('/user')
+}
+
+// 跳转后台首页
+const goAdminCenter = () => {
+  router.push('/admin/index')
+}
+
+// 跳转写文章页
+const goPublish = () => {
+  router.push('/article/publish')
 }
 </script>

@@ -1,5 +1,5 @@
 <template>
-    <div class="p-4">
+    <div class="admin-article-page p-4">
         <el-page-header :icon="ArrowLeft" title="返回" @back="goBack">
             <template #content>
                 <span class="text-large font-600 mr-3"> {{ isEdit ? '编辑文章' : '发布文章' }} </span>
@@ -7,7 +7,7 @@
         </el-page-header>
 
         <el-card shadow="never" class="admin-card mt-5">
-            <el-form ref="formRef" :model="form" :rules="rules" label-width="80px" size="large">
+            <el-form ref="formRef" :model="form" :rules="rules" label-width="80px" size="large" class="admin-article-form">
                 <!-- 文章标题 -->
                 <el-form-item label="文章标题">
                     <el-input v-model="form.title" placeholder="请输入文章标题（选填）" maxlength="40" show-word-limit clearable class="admin-input" />
@@ -229,7 +229,6 @@ const remoteSearchTags = (query) => {
 
 // 编辑器图片上传
 const uploadSingleEditorImage = async (file) => {
-    console.log('==> 编辑器开始上传文件...')
     const formData = new FormData()
     formData.append('file', file)
 
@@ -246,7 +245,6 @@ const onUploadImg = async (files, callback) => {
         const urls = await Promise.all(files.map((file) => uploadSingleEditorImage(file)))
         callback(urls)
     } catch (error) {
-        console.error('Markdown 图片上传失败:', error)
         showMessage(error.message || '图片上传失败', 'error')
     }
 }
@@ -561,5 +559,69 @@ const loadArticleDetail = (id = articleId.value) => {
     font-weight: 700;
     letter-spacing: 0.08em;
     text-transform: uppercase;
+}
+
+@media (max-width: 768px) {
+    .admin-article-page {
+        padding: 0.75rem;
+    }
+
+    .admin-article-page :deep(.el-page-header) {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .avatar-uploader .avatar,
+    .el-icon.avatar-uploader-icon {
+        width: 132px;
+        height: 132px;
+    }
+
+    .admin-article-page :deep(.el-form-item__label) {
+        width: auto !important;
+        padding-right: 0 !important;
+    }
+
+    .admin-article-page :deep(.el-form-item__content) {
+        display: block;
+    }
+
+    .admin-article-page :deep(.el-select) {
+        width: 100% !important;
+    }
+
+    .admin-article-page :deep(.el-radio-group) {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem 1rem;
+    }
+
+    .admin-article-page :deep(.el-form-item__content > .flex) {
+        flex-wrap: wrap;
+    }
+
+    .admin-editor-shell__meta {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .admin-editor-shell__title {
+        font-size: 18px;
+    }
+
+    .admin-editor-shell :deep(.md-editor),
+    .admin-editor-shell :deep(.md-editor__content) {
+        min-height: 520px !important;
+    }
+
+    .admin-article-page :deep(.el-form-item:last-child .el-form-item__content) {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+    }
+
+    .admin-article-page :deep(.el-button) {
+        width: 100%;
+    }
 }
 </style>

@@ -58,6 +58,7 @@ html, body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+  overflow-x: hidden;
 }
 
 body::before {
@@ -212,6 +213,13 @@ body::before {
   transition: all 0.24s ease;
 }
 
+img,
+video,
+iframe,
+canvas {
+  max-width: 100%;
+}
+
 .el-input__inner,
 .el-textarea__inner,
 .el-select__wrapper,
@@ -306,4 +314,23 @@ body::before {
   background: rgba(148, 176, 231, 0.16) !important;
   border-color: rgba(148, 176, 231, 0.24) !important;
   color: var(--cosmic-blue-deep) !important;
+}
+
+@media (max-width: 768px) {
+  .el-button {
+    min-height: 40px;
+  }
+
+  .el-pagination {
+    gap: 0.35rem;
+  }
+
+  .el-dialog {
+    width: calc(100vw - 1.5rem) !important;
+    margin: 0.75rem auto !important;
+  }
+
+  .el-table__body-wrapper {
+    overflow-x: auto;
+  }
 }

@@ -158,6 +158,7 @@ public class AdminUserServiceImpl implements AdminUserService {
         Long current = findUserListReqVO.getCurrent();
         Long size = findUserListReqVO.getSize();
         String username = findUserListReqVO.getUsername();
+        Boolean isDeleted = findUserListReqVO.getIsDeleted();
         Boolean isEnabled = findUserListReqVO.getIsEnabled();
 
         // 构建分页对象
@@ -166,8 +167,8 @@ public class AdminUserServiceImpl implements AdminUserService {
         // 构建查询条件
         LambdaQueryWrapper<UserDO> wrapper = new LambdaQueryWrapper<>();
         wrapper.like(StringUtils.isNotBlank(username), UserDO::getUsername, username)
+                .eq(Objects.nonNull(isDeleted), UserDO::getIsDeleted, isDeleted)
                 .eq(Objects.nonNull(isEnabled), UserDO::getIsEnabled, isEnabled)
-                .eq(UserDO::getIsDeleted, false)
                 .orderByDesc(UserDO::getCreateTime);
 
         //查询用户角色
@@ -204,6 +205,7 @@ public class AdminUserServiceImpl implements AdminUserService {
                             .email(userDO.getEmail())
                             .avatar(userDO.getAvatar())
                             .isEnabled(userDO.getIsEnabled())
+                            .isDeleted(userDO.getIsDeleted())
                             .roles(roleNames)
                             .createTime(userDO.getCreateTime())
                             .updateTime(userDO.getUpdateTime())
@@ -495,11 +497,25 @@ public class AdminUserServiceImpl implements AdminUserService {
 
     @Override
     public Response findUserSelectList() {
-        List<SelectRspVO> options = userMapper.selectList(new LambdaQueryWrapper<UserDO>()
-                        .eq(UserDO::getIsDeleted, false)
-                        .eq(UserDO::getIsEnabled, true)
-                        .orderByDesc(UserDO::getCreateTime))
-                .stream()
+        CustomUserDetails currentUser = SecurityContextUtil.getCurrentUser();
+        boolean isAdmin = currentUser != null && currentUser.getRoles() != null
+                && currentUser.getRoles().stream().anyMatch("ROLE_ADMIN"::equals);
+        boolean isEditor = currentUser != null && currentUser.getRoles() != null
+                && currentUser.getRoles().stream().anyMatch("ROLE_EDITOR"::equals);
+
+        List<UserDO> users = userMapper.selectList(new LambdaQueryWrapper<UserDO>()
+                .eq(UserDO::getIsDeleted, false)
+                .eq(UserDO::getIsEnabled, true)
+                .orderByDesc(UserDO::getCreateTime));
+
+        // 指定可见用户列表里不包含管理员账号，管理员本身也不需要出现在可选项中
+        if (isAdmin || isEditor) {
+            users = users.stream()
+                    .filter(user -> !isAdminUser(user))
+                    .collect(Collectors.toList());
+        }
+
+        List<SelectRspVO> options = users.stream()
                 .map(user -> SelectRspVO.builder()
                         .label(StringUtils.isNotBlank(user.getNickname())
                                 ? user.getNickname() + " (" + user.getUsername() + ")"
@@ -508,5 +524,30 @@ public class AdminUserServiceImpl implements AdminUserService {
                         .build())
                 .collect(Collectors.toList());
         return Response.success(options);
+    }
+
+    private boolean isAdminUser(UserDO user) {
+        if (user == null || user.getId() == null) {
+            return false;
+        }
+
+        List<UserRoleDO> userRoles = userRoleMapper.selectByUserId(user.getId());
+        if (CollectionUtils.isEmpty(userRoles)) {
+            return false;
+        }
+
+        List<Long> roleIds = userRoles.stream()
+                .map(UserRoleDO::getRoleId)
+                .collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(roleIds)) {
+            return false;
+        }
+
+        List<RoleDO> roles = roleMapper.selectBatchIds(roleIds);
+        if (CollectionUtils.isEmpty(roles)) {
+            return false;
+        }
+
+        return roles.stream().anyMatch(role -> role != null && "ROLE_ADMIN".equals(role.getName()));
     }
 }

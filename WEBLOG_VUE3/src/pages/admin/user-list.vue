@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
+  <div class="admin-list-page admin-user-list-page min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
     <!-- 页面标题 -->
     <div class="mb-8">
       <h1 class="text-3xl font-bold text-gray-900 flex items-center gap-2">
@@ -31,6 +31,16 @@
             <el-option label="启用" :value="1" />
             <el-option label="停用" :value="0" />
           </el-select>
+          <el-select
+            v-model="searchForm.isDeleted"
+            placeholder="注销状态"
+            clearable
+            class="md:w-40"
+            @change="handleSearch"
+          >
+            <el-option label="正常" :value="false" />
+            <el-option label="已注销" :value="true" />
+          </el-select>
         </div>
         <div class="flex gap-2">
           <el-button v-if="can('admin:user:create')" type="primary" @click="handleAddUser" size="default">
@@ -46,6 +56,12 @@
 
     <!-- 用户列表 -->
     <div class="w-full bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow duration-200">
+      <div class="flex justify-end items-center px-6 pt-5 pb-4">
+        <div class="text-sm font-semibold text-gray-700 flex items-center gap-2">
+          <el-icon class="text-blue-500"><DocumentCopy /></el-icon>
+          共 <span class="text-blue-600 font-bold text-lg">{{ total }}</span> 条用户
+        </div>
+      </div>
       <el-table
         :data="userList"
         v-loading="loading"
@@ -53,7 +69,7 @@
         style="width: 100%"
         @selection-change="handleSelectionChange"
         :default-sort="{ prop: 'id', order: 'descending' }"
-        class="user-table"
+        class="user-table hidden md:block"
         header-cell-class-name="bg-gradient-to-r from-blue-50 to-blue-100 font-semibold text-gray-800 border-b-2 border-blue-200"
       >
         <el-table-column type="selection" width="50" fixed="left" />
@@ -78,9 +94,12 @@
             </div>
           </template>
         </el-table-column>
-        <el-table-column prop="isEnabled" label="状态" width="80">
+        <el-table-column prop="isEnabled" label="账号状态" width="100">
           <template #default="scope">
-            <el-tag :type="scope.row.isEnabled ? 'success' : 'danger'" size="small">
+            <el-tag v-if="scope.row.isDeleted" type="danger" size="small">
+              已注销
+            </el-tag>
+            <el-tag v-else :type="scope.row.isEnabled ? 'success' : 'warning'" size="small">
               {{ scope.row.isEnabled ? '启用' : '停用' }}
             </el-tag>
           </template>
@@ -93,50 +112,123 @@
         <el-table-column label="操作" width="360" fixed="right">
           <template #default="scope">
             <div class="flex flex-wrap gap-1">
-              <el-button
-                v-if="can('admin:user:update')"
-                size="small"
-                type="primary"
-                @click="handleEdit(scope.row)"
-              >
-                编辑
-              </el-button>
-              <el-button
-                v-if="can('admin:user:role-assign')"
-                size="small"
-                type="info"
-                @click="handleAuthorize(scope.row)"
-              >
-                授权
-              </el-button>
-              <el-button
-                v-if="can('admin:user:password')"
-                size="small"
-                type="warning"
-                @click="handleChangePassword(scope.row)"
-              >
-                修改密码
-              </el-button>
-              <el-button
-                v-if="can('admin:user:status')"
-                size="small"
-                :type="scope.row.isEnabled ? 'warning' : 'success'"
-                @click="handleChangeStatus(scope.row)"
-              >
-                {{ scope.row.isEnabled ? '停用' : '启用' }}
-              </el-button>
-              <el-button
-                v-if="can('admin:user:delete')"
-                size="small"
-                type="danger"
-                @click="handleDelete(scope.row)"
-              >
-                删除
-              </el-button>
+              <template v-if="!scope.row.isDeleted">
+                <el-button
+                  v-if="can('admin:user:update')"
+                  size="small"
+                  type="primary"
+                  @click="handleEdit(scope.row)"
+                >
+                  编辑
+                </el-button>
+                <el-button
+                  v-if="can('admin:user:role-assign')"
+                  size="small"
+                  type="info"
+                  @click="handleAuthorize(scope.row)"
+                >
+                  授权
+                </el-button>
+                <el-button
+                  v-if="can('admin:user:password')"
+                  size="small"
+                  type="warning"
+                  @click="handleChangePassword(scope.row)"
+                >
+                  修改密码
+                </el-button>
+                <el-button
+                  v-if="can('admin:user:status')"
+                  size="small"
+                  :type="scope.row.isEnabled ? 'warning' : 'success'"
+                  @click="handleChangeStatus(scope.row)"
+                >
+                  {{ scope.row.isEnabled ? '停用' : '启用' }}
+                </el-button>
+                <el-button
+                  v-if="can('admin:user:delete')"
+                  size="small"
+                  type="danger"
+                  @click="handleDelete(scope.row)"
+                >
+                  删除
+                </el-button>
+              </template>
+              <el-tag v-else type="info" effect="plain" size="small">
+                已注销账号不可操作
+              </el-tag>
             </div>
           </template>
         </el-table-column>
       </el-table>
+
+      <div class="md:hidden px-4 pb-3 pt-1">
+        <div class="rounded-2xl border border-[rgba(149,171,210,0.16)] bg-gradient-to-r from-[#f7fbff] to-[#eef4ff] p-4 shadow-[0_10px_24px_rgba(15,23,42,0.05)]">
+          <el-button v-if="can('admin:user:create')" type="primary" @click="handleAddUser" class="admin-btn-primary w-full">
+            <el-icon><Plus /></el-icon>
+            新增用户
+          </el-button>
+          <div class="mt-3 flex items-center justify-center gap-2 text-sm font-semibold text-slate-700">
+            <el-icon class="text-blue-500"><DocumentCopy /></el-icon>
+            共 <span class="text-lg text-blue-600">{{ total }}</span> 条用户
+          </div>
+        </div>
+      </div>
+
+      <div class="md:hidden px-4 pb-4 space-y-3">
+        <article
+          v-for="row in userList"
+          :key="row.id"
+          class="admin-mobile-card admin-mobile-card--user rounded-2xl border border-[rgba(149,171,210,0.16)] bg-white p-4 shadow-[0_10px_24px_rgba(15,23,42,0.05)]"
+        >
+          <div class="flex items-start gap-3">
+            <img
+              :src="row.avatar || defaultAvatar"
+              alt="avatar"
+              class="h-12 w-12 shrink-0 rounded-2xl object-cover border border-[rgba(149,171,210,0.18)]"
+            />
+            <div class="min-w-0 flex-1">
+              <div class="flex flex-wrap items-center gap-2">
+                <strong class="text-base text-slate-900">{{ row.username }}</strong>
+                <el-tag v-if="row.isDeleted" type="danger" size="small">已注销</el-tag>
+                <el-tag v-else :type="row.isEnabled ? 'success' : 'warning'" size="small">
+                  {{ row.isEnabled ? '启用' : '停用' }}
+                </el-tag>
+              </div>
+              <p class="mt-1 text-sm text-slate-600">{{ row.nickname || '未设置昵称' }}</p>
+              <p class="mt-1 text-xs text-slate-500">{{ row.email || '未填写邮箱' }}</p>
+            </div>
+          </div>
+
+          <div class="mt-3 flex flex-wrap gap-1">
+            <template v-if="row.roles && row.roles.length > 0">
+              <el-tag v-for="roleName in row.roles.slice(0, 3)" :key="roleName" :type="getRoleTagType(roleName)" size="small">
+                {{ getRoleDisplayName(roleName) }}
+              </el-tag>
+            </template>
+            <el-tag v-else type="info" size="small">普通用户</el-tag>
+          </div>
+
+          <div class="mt-3 flex flex-wrap gap-2 text-xs text-slate-500">
+            <span class="rounded-full bg-slate-100 px-2.5 py-1">{{ formatDate(row.createTime) }}</span>
+            <span v-if="row.isDeleted" class="rounded-full bg-rose-50 px-2.5 py-1 text-rose-700">已注销</span>
+          </div>
+
+          <div class="mt-4 grid grid-cols-2 gap-2">
+            <el-button v-if="!row.isDeleted && can('admin:user:update')" size="small" type="primary" @click="handleEdit(row)" class="admin-btn-primary">编辑</el-button>
+            <el-button v-if="!row.isDeleted && can('admin:user:role-assign')" size="small" type="info" @click="handleAuthorize(row)" class="admin-btn-secondary">授权</el-button>
+            <el-button v-if="!row.isDeleted && can('admin:user:status')" size="small" :type="row.isEnabled ? 'warning' : 'success'" @click="handleChangeStatus(row)" class="admin-btn-secondary">
+              {{ row.isEnabled ? '停用' : '启用' }}
+            </el-button>
+            <el-button v-if="!row.isDeleted && can('admin:user:password')" size="small" type="warning" @click="handleChangePassword(row)" class="admin-btn-secondary">
+              密码
+            </el-button>
+            <el-button v-if="!row.isDeleted && can('admin:user:delete')" size="small" type="danger" @click="handleDelete(row)" class="admin-btn-secondary col-span-2">
+              删除
+            </el-button>
+          </div>
+        </article>
+      </div>
 
       <!-- 分页 -->
       <div class="px-6 py-4 flex items-center justify-between border-t border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100">
@@ -425,11 +517,13 @@ import { useRouter } from 'vue-router'
 const userStore = useUserStore()
 const router = useRouter()
 const can = (permission) => hasAccess(userStore.userInfo, permission)
+const defaultAvatar = `${import.meta.env.BASE_URL}default-avatar.svg`
 
 // 搜索表单
 const searchForm = reactive({
   keyword: '',
-  isEnabled: ''
+  isEnabled: '',
+  isDeleted: ''
 })
 
 // 分页
@@ -582,6 +676,7 @@ const handleSearch = () => {
 const handleReset = () => {
   searchForm.keyword = ''
   searchForm.isEnabled = ''
+  searchForm.isDeleted = ''
   pagination.currentPage = 1
   loadUserList()
 }
@@ -1066,5 +1161,85 @@ onMounted(() => {
 /* 一般方框样式 */
 :deep(.el-drawer__header) {
   border-bottom: 1px solid #e5e7eb;
+}
+</style>
+
+<style scoped>
+@media (max-width: 768px) {
+  .admin-user-list-page {
+    padding: 1rem !important;
+  }
+
+  .admin-user-list-page .mb-8 h1 {
+    font-size: 1.5rem;
+    line-height: 2rem;
+  }
+
+  .admin-user-list-page .bg-white.rounded-xl {
+    padding: 1rem !important;
+  }
+
+  .admin-user-list-page .flex.flex-col.md\\:flex-row {
+    gap: 0.75rem !important;
+  }
+
+  .admin-user-list-page .flex.flex-col.sm\\:flex-row {
+    width: 100%;
+  }
+
+  .admin-user-list-page .flex.flex-col.sm\\:flex-row > * {
+    width: 100%;
+  }
+
+  .admin-user-list-page .flex.gap-2 {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .admin-user-list-page .flex.gap-2 .el-button {
+    width: 100%;
+  }
+
+  .user-table :deep(.el-table__header th),
+  .user-table :deep(.el-table__body td) {
+    font-size: 12px;
+  }
+
+  .user-table :deep(.el-table__header th:nth-child(1)),
+  .user-table :deep(.el-table__body td:nth-child(1)),
+  .user-table :deep(.el-table__header th:nth-child(2)),
+  .user-table :deep(.el-table__body td:nth-child(2)),
+  .user-table :deep(.el-table__header th:nth-child(5)),
+  .user-table :deep(.el-table__body td:nth-child(5)),
+  .user-table :deep(.el-table__header th:nth-child(8)),
+  .user-table :deep(.el-table__body td:nth-child(8)) {
+    display: none !important;
+  }
+
+  .user-table :deep(.el-table__header th:nth-child(3)),
+  .user-table :deep(.el-table__body td:nth-child(3)),
+  .user-table :deep(.el-table__header th:nth-child(4)),
+  .user-table :deep(.el-table__body td:nth-child(4)),
+  .user-table :deep(.el-table__header th:nth-child(6)),
+  .user-table :deep(.el-table__body td:nth-child(6)),
+  .user-table :deep(.el-table__header th:nth-child(7)),
+  .user-table :deep(.el-table__body td:nth-child(7)),
+  .user-table :deep(.el-table__header th:nth-child(9)),
+  .user-table :deep(.el-table__body td:nth-child(9)) {
+    min-width: 72px;
+  }
+
+  .user-table :deep(.el-table__body td:nth-child(9) .flex) {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .user-table :deep(.el-table__body td:nth-child(9) .el-button) {
+    width: 100%;
+  }
+
+  .admin-user-list-page .el-dialog {
+    width: calc(100vw - 1rem) !important;
+  }
 }
 </style>

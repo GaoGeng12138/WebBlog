@@ -1,5 +1,5 @@
 <template>
-    <div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
+    <div class="admin-list-page admin-article-list-page min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
         <!-- 页面标题 -->
         <div class="mb-8">
             <h1 class="text-3xl font-bold text-gray-900 flex items-center gap-2">
@@ -66,7 +66,7 @@
                 stripe 
                 style="width: 100%" 
                 v-loading="tableLoading"
-                class="article-table"
+                class="article-table hidden md:block"
                 header-cell-class-name="bg-gradient-to-r from-blue-50 to-blue-100 font-semibold text-gray-800 border-b-2 border-blue-200"
             >
                 <el-table-column prop="title" label="文章标题" min-width="250" show-overflow-tooltip>
@@ -157,6 +157,101 @@
                     </template>
                 </el-table-column>
             </el-table>
+
+            <div class="md:hidden px-4 pb-3 pt-1">
+                <div class="rounded-2xl border border-[rgba(149,171,210,0.16)] bg-gradient-to-r from-[#f7fbff] to-[#eef4ff] p-4 shadow-[0_10px_24px_rgba(15,23,42,0.05)]">
+                    <el-button
+                        v-if="can('admin:article:publish')"
+                        type="primary"
+                        @click="goToPublish"
+                        class="admin-btn-primary w-full"
+                    >
+                        <el-icon class="mr-1"><Plus /></el-icon>
+                        发布文章
+                    </el-button>
+                    <div class="mt-3 flex items-center justify-center gap-2 text-sm font-semibold text-slate-700">
+                        <el-icon class="text-blue-500"><DocumentCopy /></el-icon>
+                        共 <span class="text-lg text-blue-600">{{ pagination.total }}</span> 条记录
+                    </div>
+                </div>
+            </div>
+
+            <!-- 手机端卡片列表 -->
+            <div class="md:hidden px-4 pb-4 space-y-3">
+                <article
+                    v-for="row in tableData"
+                    :key="row.id"
+                    class="admin-mobile-card admin-mobile-card--article rounded-2xl border border-[rgba(149,171,210,0.16)] bg-white p-4 shadow-[0_10px_24px_rgba(15,23,42,0.05)]"
+                >
+                    <div class="flex items-start gap-3">
+                        <div class="h-20 w-20 flex-shrink-0 overflow-hidden rounded-xl bg-slate-100">
+                            <img v-if="row.cover" :src="row.cover" alt="文章封面" class="h-full w-full object-cover" />
+                            <div v-else class="flex h-full w-full items-center justify-center text-slate-400">
+                                <el-icon><Picture /></el-icon>
+                            </div>
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <h3 class="mobile-card-title text-sm font-semibold text-slate-900">
+                                {{ row.title }}
+                            </h3>
+                            <p class="mobile-card-summary mt-1 text-xs leading-5 text-slate-500">
+                                {{ row.summary || '暂无摘要' }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="mt-3 flex flex-wrap gap-2 text-[11px]">
+                        <el-tag v-if="row.category" size="small" type="success">{{ row.category }}</el-tag>
+                        <el-tag v-else size="small" type="info">未分类</el-tag>
+                        <el-tag :type="getStatusMeta(row.status).type" size="small">
+                            {{ row.statusLabel || getStatusMeta(row.status).text }}
+                        </el-tag>
+                        <el-tag :type="row.articleSource === 2 ? 'warning' : 'info'" size="small">
+                            {{ row.articleSourceLabel || '后台发布' }}
+                        </el-tag>
+                    </div>
+
+                    <div class="mt-3 flex flex-wrap gap-1">
+                        <el-tag
+                            v-for="(tag, index) in (row.tags || []).slice(0, 3)"
+                            :key="index"
+                            type="success"
+                            size="small"
+                        >
+                            {{ tag }}
+                        </el-tag>
+                        <el-tag v-if="!row.tags || row.tags.length === 0" type="info" size="small">无标签</el-tag>
+                    </div>
+
+                    <div class="mt-3 text-xs text-slate-500">
+                        {{ row.createTime }}
+                    </div>
+
+                    <div class="mt-4 grid grid-cols-2 gap-2">
+                        <el-button
+                            v-if="can('admin:article:update')"
+                            type="primary"
+                            size="small"
+                            @click="goToEdit(row.id)"
+                            class="admin-btn-primary"
+                        >
+                            编辑
+                        </el-button>
+                        <el-button
+                            v-if="can('admin:article:delete')"
+                            type="danger"
+                            size="small"
+                            @click="deleteArticleSubmit(row)"
+                            class="admin-btn-secondary"
+                        >
+                            删除
+                        </el-button>
+                    </div>
+                </article>
+                <div v-if="tableData.length === 0" class="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
+                    暂无文章数据
+                </div>
+            </div>
 
             <!-- 分页组件 -->
             <div class="px-6 py-4 border-t border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100">
@@ -316,9 +411,7 @@ const deleteArticleSubmit = (row) => {
                 showMessage(message, 'error')
             }
         })
-    }).catch(() => {
-        console.log('取消了')
-    })
+    }).catch(() => {})
 }
 </script>
 
@@ -370,5 +463,106 @@ const deleteArticleSubmit = (row) => {
   padding: 4px 8px;
   font-size: 12px;
   font-weight: 500;
+}
+
+.mobile-card-title {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.mobile-card-summary {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+</style>
+
+<style scoped>
+@media (max-width: 768px) {
+  .admin-article-list-page {
+    padding: 1rem !important;
+  }
+
+  .admin-article-list-page .mb-8 h1 {
+    font-size: 1.5rem;
+    line-height: 2rem;
+  }
+
+  .admin-article-list-page .bg-white.rounded-xl {
+    padding: 1rem !important;
+  }
+
+  .admin-article-list-page .flex.flex-wrap.items-center.gap-4 {
+    gap: 0.75rem !important;
+  }
+
+  .admin-article-list-page .flex.flex-wrap.items-center.gap-4 > div,
+  .admin-article-list-page .flex.flex-wrap.items-center.gap-4 .w-52,
+  .admin-article-list-page .flex.flex-wrap.items-center.gap-4 .w-60 {
+    width: 100% !important;
+  }
+
+  .admin-article-list-page .flex.justify-between.items-center {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .admin-article-list-page .flex.justify-between.items-center > div:first-child {
+    width: 100%;
+  }
+
+  .admin-article-list-page .flex.justify-between.items-center .el-button {
+    width: 100%;
+  }
+
+  .admin-article-list-page .el-date-editor {
+    width: 100% !important;
+  }
+
+  .article-table :deep(.el-table__header th),
+  .article-table :deep(.el-table__body td) {
+    font-size: 12px;
+  }
+
+  .article-table :deep(.el-table__header th:nth-child(2)),
+  .article-table :deep(.el-table__body td:nth-child(2)),
+  .article-table :deep(.el-table__header th:nth-child(3)),
+  .article-table :deep(.el-table__body td:nth-child(3)),
+  .article-table :deep(.el-table__header th:nth-child(4)),
+  .article-table :deep(.el-table__body td:nth-child(4)),
+  .article-table :deep(.el-table__header th:nth-child(5)),
+  .article-table :deep(.el-table__body td:nth-child(5)),
+  .article-table :deep(.el-table__header th:nth-child(7)),
+  .article-table :deep(.el-table__body td:nth-child(7)) {
+    display: none !important;
+  }
+
+  .article-table :deep(.el-table__header th:nth-child(1)),
+  .article-table :deep(.el-table__body td:nth-child(1)) {
+    width: auto !important;
+  }
+
+  .article-table :deep(.el-table__body td:nth-child(1) .font-medium) {
+    font-size: 0.95rem;
+  }
+
+  .article-table :deep(.el-table__body td:nth-child(6)),
+  .article-table :deep(.el-table__header th:nth-child(6)) {
+    width: 90px !important;
+  }
+
+  .article-table :deep(.el-table__body td:nth-child(8)),
+  .article-table :deep(.el-table__header th:nth-child(8)) {
+    width: 110px !important;
+  }
+
+  .article-table :deep(.el-button) {
+    min-width: 0;
+    padding-inline: 0.75rem;
+  }
 }
 </style>

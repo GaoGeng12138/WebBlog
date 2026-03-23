@@ -6,22 +6,49 @@ import AdminMenu from './components/AdminMenu.vue';
 import AdminTagList from './components/AdminTagList.vue';
 import { useUserStore } from '@/stores/user'
 import { useMenuStore } from '@/stores/menu'
-import { onMounted } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 const menStore = useMenuStore()
 const userStore = useUserStore()
+const isMobile = ref(false)
+
+const updateViewport = () => {
+    isMobile.value = window.innerWidth < 768
+    if (!isMobile.value) {
+        menStore.closeMobileMenu()
+    }
+}
 
 onMounted(() => {
     userStore.ensureUserInfoReady().catch((error) => {
         console.error('后台用户信息初始化失败:', error)
     })
+
+    updateViewport()
+    window.addEventListener('resize', updateViewport, { passive: true })
+})
+
+onBeforeUnmount(() => {
+    window.removeEventListener('resize', updateViewport)
+})
+
+const drawerVisible = computed({
+    get: () => menStore.mobileMenuOpen,
+    set: (value) => {
+        if (value) {
+            menStore.openMobileMenu()
+        } else {
+            menStore.closeMobileMenu()
+        }
+    }
 })
 </script>
 
 <template>
     <!-- 外部容器 -->
-    <el-container class="admin-shell h-screen">
+    <el-container class="admin-shell h-screen md:h-screen">
         <!-- 左边侧边栏 -->
         <el-aside 
+            v-if="!isMobile"
             :width="menStore.menuWidth" 
             class="transition-all shadow-[0_18px_38px_rgba(120,146,186,0.08)]"
         >
@@ -54,10 +81,24 @@ onMounted(() => {
                 <AdminFooter></AdminFooter>
             </el-footer>
         </el-container>
+
+        <el-drawer
+            v-model="drawerVisible"
+            direction="ltr"
+            size="82vw"
+            :with-header="false"
+            class="admin-mobile-drawer"
+        >
+            <AdminMenu />
+        </el-drawer>
     </el-container>
 </template>
 
 <style scoped>
+.admin-shell {
+    overflow: hidden;
+}
+
 .el-header {
     padding: 0 !important;
     height: auto;
@@ -97,5 +138,19 @@ onMounted(() => {
 /* 进入进行中 */
 .fade-enter-active {
     transition: all 0.3s ease;
+}
+
+@media (max-width: 768px) {
+    .admin-shell :deep(.el-main) {
+        overflow-x: hidden;
+    }
+
+    .admin-mobile-drawer :deep(.el-drawer__body) {
+        padding: 0;
+    }
+
+    .admin-mobile-drawer :deep(.el-drawer__header) {
+        display: none;
+    }
 }
 </style>

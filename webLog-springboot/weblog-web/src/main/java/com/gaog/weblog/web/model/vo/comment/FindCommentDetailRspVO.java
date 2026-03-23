@@ -47,6 +47,9 @@ public class FindCommentDetailRspVO {
     @ApiModelProperty("Commenter avatar")
     private String avatar;
 
+    @ApiModelProperty("Whether commenter account is deleted")
+    private Boolean isUserDeleted;
+
     @ApiModelProperty("Comment content")
     private String content;
 

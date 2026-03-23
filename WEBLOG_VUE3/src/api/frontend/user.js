@@ -12,6 +12,13 @@ export function updateUserProfile(data) {
     })
 }
 
+// 注销当前账号
+export function deleteUserAccount(data) {
+    return axios.post('/user/account/delete', data, {
+        sensitiveFields: ['password']
+    })
+}
+
 // 前台用户注册
 export function registerFrontend(data) {
     return axios.post('/user/register', data, {

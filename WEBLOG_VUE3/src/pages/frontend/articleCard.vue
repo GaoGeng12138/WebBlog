@@ -8,8 +8,11 @@
     <div class="relative h-24 overflow-hidden bg-slate-100 sm:h-full sm:min-h-[92px]">
       <img
         v-if="article.cover"
-        :src="article.cover"
+        :src="coverImageUrl"
         :alt="articleAlt"
+        :loading="imageLoadingAttrs.loading"
+        :fetchpriority="imageLoadingAttrs.fetchpriority"
+        :decoding="imageLoadingAttrs.decoding"
         class="h-full w-full bg-slate-950 object-contain transition-transform duration-500 ease-out group-hover:scale-[1.02]"
       />
       <div v-else class="card-fallback">
@@ -26,8 +29,9 @@
 
     <div class="flex min-w-0 flex-col justify-between p-3 sm:p-3.5">
       <div>
-        <div v-if="displayCategory" class="mb-2">
+        <div v-if="showCategoryTag && displayCategory" class="mb-2">
           <span class="category-chip" :class="categoryToneClass">
+            <span class="category-chip__dot"></span>
             {{ displayCategory }}
           </span>
         </div>
@@ -68,8 +72,11 @@
     <div class="relative min-h-[260px] overflow-hidden bg-slate-100">
       <img
         v-if="article.cover"
-        :src="article.cover"
+        :src="featuredCoverImageUrl"
         :alt="articleAlt"
+        :loading="imageLoadingAttrs.loading"
+        :fetchpriority="imageLoadingAttrs.fetchpriority"
+        :decoding="imageLoadingAttrs.decoding"
         class="h-full w-full bg-slate-950 object-contain transition-transform duration-700 ease-out group-hover:scale-[1.02]"
       />
       <div v-else class="featured-fallback">
@@ -82,7 +89,8 @@
       <div class="absolute inset-0 bg-gradient-to-tr from-slate-950/70 via-slate-900/20 to-transparent"></div>
 
       <div class="absolute left-5 top-5 flex flex-wrap gap-2">
-        <span v-if="displayCategory" class="category-chip" :class="categoryToneClass">
+        <span v-if="showCategoryTag && displayCategory" class="category-chip" :class="categoryToneClass">
+          <span class="category-chip__dot"></span>
           {{ displayCategory }}
         </span>
         <span class="rounded-full bg-white/20 px-3 py-1 text-xs font-medium text-white backdrop-blur">
@@ -129,13 +137,16 @@
     v-else
     :to="articleLink"
     class="home-card group block overflow-hidden rounded-[16px] border border-white/80 bg-white shadow-[0_12px_26px_rgba(15,23,42,0.07)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_18px_32px_rgba(15,23,42,0.12)]"
-    :class="{ 'article-card-active': isCurrentArticle }"
+    :class="{ 'article-card-active': isCurrentArticle, 'home-card--compact': compact }"
   >
-    <div class="relative h-36 overflow-hidden bg-slate-100 sm:h-38">
+    <div class="relative h-36 overflow-hidden bg-slate-100 sm:h-38 home-card__media">
       <img
         v-if="article.cover"
-        :src="article.cover"
+        :src="coverImageUrl"
         :alt="articleAlt"
+        :loading="imageLoadingAttrs.loading"
+        :fetchpriority="imageLoadingAttrs.fetchpriority"
+        :decoding="imageLoadingAttrs.decoding"
         class="h-full w-full bg-slate-950 object-contain transition-transform duration-500 ease-out group-hover:scale-[1.02]"
       />
       <div v-else class="card-fallback">
@@ -149,12 +160,18 @@
       <div class="absolute inset-0 bg-gradient-to-t from-slate-950/30 via-transparent to-transparent opacity-80"></div>
     </div>
 
-    <div class="px-3.5 py-3">
-      <h3 v-if="hasTitle" class="line-clamp-2 min-h-[2.7rem] text-[15px] font-bold leading-5 text-slate-900">
+    <div class="px-3.5 py-3 home-card__body">
+      <div v-if="showCategoryTag && displayCategory" class="mb-2">
+        <span class="category-chip" :class="categoryToneClass">
+          <span class="category-chip__dot"></span>
+          {{ displayCategory }}
+        </span>
+      </div>
+      <h3 v-if="hasTitle" class="line-clamp-2 min-h-[2.7rem] text-[15px] font-bold leading-5 text-slate-900 home-card__title">
         {{ displayTitle }}
       </h3>
       <p
-        class="line-clamp-2 text-[13px] leading-5 text-slate-600/95"
+        class="line-clamp-2 text-[13px] leading-5 text-slate-600/95 home-card__summary"
         :class="[
           hasTitle ? 'mt-1.5 min-h-[2.8rem]' : 'mt-0 min-h-[3.4rem]'
         ]"
@@ -184,6 +201,7 @@
 import { computed, toRefs } from 'vue'
 import { useRoute } from 'vue-router'
 import moment from 'moment'
+import { getImageLoadingAttrs, getOptimizedImageUrl } from '@/utils/image'
 
 const props = defineProps({
   article: {
@@ -205,6 +223,14 @@ const props = defineProps({
   featured: {
     type: Boolean,
     default: false
+  },
+  showCategoryTag: {
+    type: Boolean,
+    default: true
+  },
+  imageIndex: {
+    type: Number,
+    default: 99
   }
 })
 
@@ -252,6 +278,20 @@ const articleAlt = computed(() => {
   return displayTitle.value || article.value.summary || '文章封面'
 })
 
+const imageLoadingAttrs = computed(() => getImageLoadingAttrs(props.imageIndex))
+
+const coverImageUrl = computed(() => getOptimizedImageUrl(article.value?.cover, {
+  width: props.variant === 'list' ? 360 : 420,
+  height: props.variant === 'list' ? 220 : 260,
+  fit: 'contain'
+}))
+
+const featuredCoverImageUrl = computed(() => getOptimizedImageUrl(article.value?.cover, {
+  width: 960,
+  height: 540,
+  fit: 'contain'
+}))
+
 const readTimeText = computed(() => {
   const source = `${displayTitle.value || ''} ${article.value.summary || ''} ${trimContent(article.value.content || '')}`
   const plainText = source.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim()
@@ -294,6 +334,31 @@ function formatDate(ts) {
 .article-card-active {
   border-color: rgba(245, 158, 11, 0.55) !important;
   box-shadow: 0 0 0 1px rgba(251, 191, 36, 0.2), 0 18px 36px rgba(245, 158, 11, 0.14) !important;
+}
+
+.home-card--compact {
+  border-radius: 18px;
+}
+
+.home-card--compact .home-card__media {
+  height: 8.4rem;
+}
+
+.home-card--compact .home-card__body {
+  padding: 0.8rem 0.8rem 0.85rem;
+}
+
+.home-card--compact .home-card__title {
+  min-height: 2.5rem;
+  font-size: 0.94rem;
+  line-height: 1.4rem;
+}
+
+.home-card--compact .home-card__summary {
+  -webkit-line-clamp: 2;
+  min-height: 2.55rem;
+  font-size: 0.8rem;
+  line-height: 1.35rem;
 }
 
 .featured-fallback,
@@ -341,31 +406,60 @@ function formatDate(ts) {
 .category-chip {
   display: inline-flex;
   align-items: center;
+  gap: 0.42rem;
   border-radius: 9999px;
-  padding: 0.45rem 0.9rem;
-  font-size: 0.75rem;
-  font-weight: 500;
-  backdrop-filter: blur(12px);
+  padding: 0.34rem 0.75rem 0.34rem 0.66rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.05);
+  backdrop-filter: blur(14px);
+}
+
+.category-chip__dot {
+  width: 0.42rem;
+  height: 0.42rem;
+  flex: none;
+  border-radius: 9999px;
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.22);
 }
 
 .category-chip--blue {
-  background: rgba(239, 246, 255, 0.88);
-  color: #2563eb;
+  background: rgba(245, 250, 255, 0.9);
+  color: #3564d4;
 }
 
 .category-chip--emerald {
-  background: rgba(236, 253, 245, 0.88);
-  color: #059669;
+  background: rgba(240, 252, 246, 0.9);
+  color: #0f8a62;
 }
 
 .category-chip--amber {
-  background: rgba(255, 251, 235, 0.9);
-  color: #d97706;
+  background: rgba(255, 250, 239, 0.92);
+  color: #c86e06;
 }
 
 .category-chip--violet {
-  background: rgba(245, 243, 255, 0.9);
-  color: #7c3aed;
+  background: rgba(248, 245, 255, 0.92);
+  color: #6d4be8;
+}
+
+.category-chip--blue .category-chip__dot {
+  background: #5b87f0;
+}
+
+.category-chip--emerald .category-chip__dot {
+  background: #20b889;
+}
+
+.category-chip--amber .category-chip__dot {
+  background: #f59e0b;
+}
+
+.category-chip--violet .category-chip__dot {
+  background: #8b5cf6;
 }
 
 .line-clamp-2,
@@ -386,6 +480,31 @@ function formatDate(ts) {
 
 .line-clamp-4 {
   -webkit-line-clamp: 4;
+}
+
+@media (max-width: 640px) {
+  .home-card {
+    border-radius: 18px;
+  }
+
+  .home-card__media {
+    height: 8.6rem;
+  }
+
+  .home-card__body {
+    padding: 0.84rem 0.84rem 0.9rem;
+  }
+
+  .home-card__title {
+    min-height: 2.45rem;
+    font-size: 0.95rem;
+    line-height: 1.45rem;
+  }
+
+  .home-card__summary {
+    font-size: 0.8rem;
+    line-height: 1.35rem;
+  }
 }
 
 </style>
