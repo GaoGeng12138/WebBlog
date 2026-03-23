@@ -291,12 +291,12 @@ function getTypingOrigin(field, value) {
     const textWidth = measureTextWidth(inputElement, value.slice(0, selectionStart))
     const paddingLeft = Number.parseFloat(computedStyle.paddingLeft || '0')
     const paddingTop = Number.parseFloat(computedStyle.paddingTop || '0')
-    const x = inputRect.left - shellRect.left + paddingLeft + textWidth - inputElement.scrollLeft - randomBetween(2, 8)
-    const y = inputRect.top - shellRect.top + paddingTop + inputRect.height / 2 + randomBetween(-8, 8)
+    const x = inputRect.left - shellRect.left + paddingLeft + textWidth - inputElement.scrollLeft
+    const y = inputRect.top - shellRect.top + paddingTop + inputRect.height / 2
 
     return {
-        x: Math.max(20, Math.min(shellRect.width - 20, x)),
-        y: Math.max(16, Math.min(shellRect.height - 16, y))
+        x: Math.max(20, Math.min(shellRect.width - 20, Math.round(x))),
+        y: Math.max(16, Math.min(shellRect.height - 16, Math.round(y)))
     }
 }
 
