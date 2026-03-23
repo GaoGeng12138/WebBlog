@@ -118,7 +118,7 @@
                                     <span class="login-cyber-input__pixel login-cyber-input__pixel--b"></span>
                                     <span class="login-cyber-input__pixel login-cyber-input__pixel--c"></span>
                                     <span class="login-cyber-input__pixel login-cyber-input__pixel--d"></span>
-                                    <el-input size="large" v-model="form.username" placeholder="请输入用户名" :prefix-icon="User"
+                                    <el-input ref="usernameInputRef" size="large" v-model="form.username" placeholder="请输入用户名" :prefix-icon="User"
                                         clearable @input="triggerTypingEffect('username')" />
                                 </div>
                             </el-form-item>
@@ -137,7 +137,7 @@
                                     <span class="login-cyber-input__pixel login-cyber-input__pixel--b"></span>
                                     <span class="login-cyber-input__pixel login-cyber-input__pixel--c"></span>
                                     <span class="login-cyber-input__pixel login-cyber-input__pixel--d"></span>
-                                    <el-input size="large" type="password" v-model="form.password" placeholder="请输入密码"
+                                    <el-input ref="passwordInputRef" size="large" type="password" v-model="form.password" placeholder="请输入密码"
                                         :prefix-icon="Lock" clearable show-password @input="triggerTypingEffect('password')" />
                                 </div>
                             </el-form-item>
@@ -228,10 +228,13 @@ const typingField = ref('')
 let typingEffectTimer = null
 const usernameShellRef = ref(null)
 const passwordShellRef = ref(null)
+const usernameInputRef = ref(null)
+const passwordInputRef = ref(null)
 const usernameBurstParticles = ref([])
 const passwordBurstParticles = ref([])
 const burstCleanupTimers = []
 let burstSeed = 0
+let typingMeasureContext = null
 
 function randomBetween(min, max) {
     return min + Math.random() * (max - min)
@@ -243,6 +246,58 @@ function getBurstShell(field) {
 
 function getBurstBucket(field) {
     return field === 'password' ? passwordBurstParticles : usernameBurstParticles
+}
+
+function getInputInstance(field) {
+    return field === 'password' ? passwordInputRef.value : usernameInputRef.value
+}
+
+function getNativeInputElement(field) {
+    const inputInstance = getInputInstance(field)
+    return inputInstance?.input || inputInstance?.$el?.querySelector('input') || null
+}
+
+function measureTextWidth(inputElement, text) {
+    if (!inputElement || !text || typeof document === 'undefined') {
+        return 0
+    }
+
+    if (!typingMeasureContext) {
+        const canvas = document.createElement('canvas')
+        typingMeasureContext = canvas.getContext('2d')
+    }
+
+    if (!typingMeasureContext) {
+        return 0
+    }
+
+    const style = window.getComputedStyle(inputElement)
+    typingMeasureContext.font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`
+    return typingMeasureContext.measureText(text).width
+}
+
+function getTypingOrigin(field, value) {
+    const shell = getBurstShell(field)
+    const inputElement = getNativeInputElement(field)
+
+    if (!shell || !inputElement) {
+        return { x: 20, y: 20 }
+    }
+
+    const shellRect = shell.getBoundingClientRect()
+    const inputRect = inputElement.getBoundingClientRect()
+    const computedStyle = window.getComputedStyle(inputElement)
+    const selectionStart = typeof inputElement.selectionStart === 'number' ? inputElement.selectionStart : value.length
+    const textWidth = measureTextWidth(inputElement, value.slice(0, selectionStart))
+    const paddingLeft = Number.parseFloat(computedStyle.paddingLeft || '0')
+    const paddingTop = Number.parseFloat(computedStyle.paddingTop || '0')
+    const x = inputRect.left - shellRect.left + paddingLeft + textWidth - inputElement.scrollLeft - randomBetween(2, 8)
+    const y = inputRect.top - shellRect.top + paddingTop + inputRect.height / 2 + randomBetween(-8, 8)
+
+    return {
+        x: Math.max(20, Math.min(shellRect.width - 20, x)),
+        y: Math.max(16, Math.min(shellRect.height - 16, y))
+    }
 }
 
 function createTypingBurstParticle(field, index, originX, originY) {
@@ -274,16 +329,14 @@ function createTypingBurstParticle(field, index, originX, originY) {
     }
 }
 
-function spawnTypingBurst(field) {
+function spawnTypingBurst(field, value) {
     const shell = getBurstShell(field)
 
     if (!shell) {
         return
     }
 
-    const rect = shell.getBoundingClientRect()
-    const originX = Math.max(22, rect.width - randomBetween(34, 54))
-    const originY = rect.height / 2 + randomBetween(-10, 10)
+    const { x: originX, y: originY } = getTypingOrigin(field, value)
     const count = field === 'password' ? 14 : 12
     const bucket = getBurstBucket(field)
     const particles = Array.from({ length: count }, (_, index) => createTypingBurstParticle(field, index, originX, originY))
@@ -357,7 +410,7 @@ const { userInfo } = storeToRefs(userStore);
 
 function triggerTypingEffect(field) {
     typingField.value = field
-    spawnTypingBurst(field)
+    spawnTypingBurst(field, form[field])
     if (typingEffectTimer) {
         clearTimeout(typingEffectTimer)
     }
@@ -558,6 +611,11 @@ const onSubmit = () => {
     transition: box-shadow 0.3s ease, transform 0.3s ease, background 0.3s ease, border-color 0.3s ease;
 }
 
+.login-cyber-input :deep(.el-input) {
+    position: relative;
+    z-index: 1;
+}
+
 .login-form :deep(.el-input__wrapper:hover) {
     background: white;
     box-shadow: 0 0 0 1px rgba(116, 149, 195, 0.22);
@@ -673,7 +731,7 @@ const onSubmit = () => {
     position: absolute;
     inset: 0;
     pointer-events: none;
-    z-index: 2;
+    z-index: 0;
     overflow: hidden;
     border-radius: inherit;
     mix-blend-mode: screen;
