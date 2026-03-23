@@ -86,16 +86,20 @@
                     <div class="admin-editor-shell">
                         <div class="admin-editor-shell__meta">
                             <div>
-                                <p class="admin-editor-shell__eyebrow">Markdown Workspace</p>
+                                <p class="admin-editor-shell__eyebrow">Backend Writing Desk</p>
                                 <h3 class="admin-editor-shell__title">正文编辑器</h3>
+                                <p class="admin-editor-shell__desc">{{ editorModeDetails.desc }}</p>
                             </div>
                             <span class="admin-editor-shell__badge">后台发布</span>
                         </div>
-                        <MarkdownEditorSurface
+                        <ArticleDualModeEditor
                             v-model="form.content"
+                            v-model:editorType="form.editorType"
+                            variant="admin"
+                            eyebrow="Backend Writing Desk"
                             editor-id="publishArticleEditor"
                             height="760px"
-                            placeholder="请输入文章正文，建议用标题层级把内容结构整理清楚。"
+                            markdown-placeholder="请输入文章正文，建议用标题层级把内容结构整理清楚。"
                             :upload-handler="onUploadImg"
                         />
                     </div>
@@ -125,9 +129,13 @@ import { getUserSelectList } from '@/api/admin/user'
 import { useTagList } from '@/composables/useTagList'
 import { showMessage } from '@/composables/util'
 import { ArrowLeft, Loading, Plus } from '@element-plus/icons-vue'
-import { nextTick, onBeforeUnmount, onMounted, reactive, ref, shallowRef, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, shallowRef, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import MarkdownEditorSurface from '@/components/article/MarkdownEditorSurface.vue'
+import ArticleDualModeEditor from '@/components/article/ArticleDualModeEditor.vue'
+import MarkdownIt from 'markdown-it'
+import '@wangeditor/editor/dist/css/style.css'
+import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
 import { useUserStore } from '@/stores/user'
 
 const router = useRouter()
@@ -141,7 +149,6 @@ const canConfigureVisibility = () => ['ROLE_ADMIN', 'ROLE_EDITOR'].some(role => 
 const isEdit = ref(false)
 const articleId = ref(null)
 
-// 富文本编辑器实例
 const editorRef = shallowRef()
 const coverUploading = ref(false)
 const localCoverPreviewUrl = ref('')
@@ -154,6 +161,7 @@ const form = reactive({
     tagIds: [],
     summary: '',
     content: '',
+    editorType: 'markdown',
     articleSource: 1,
     articleSourceLabel: '后台发布',
     status: 4,
@@ -168,6 +176,7 @@ const getDefaultFormState = () => ({
     tagIds: [],
     summary: '',
     content: '',
+    editorType: 'markdown',
     articleSource: 1,
     articleSourceLabel: '后台发布',
     status: 4,
@@ -188,6 +197,136 @@ const rules = {
     ],
 }
 
+const editorModeLabel = computed(() => (form.editorType === 'markdown' ? 'Markdown' : '富文本'))
+const editorModeDetails = computed(() => editorModeMap[form.editorType] || editorModeMap.markdown)
+
+const markdownToHtml = (markdown) => markdownRenderer.render(String(markdown || ''))
+
+const convertNodeToMarkdown = (node, context = {}) => {
+    const { listDepth = 0, inPre = false } = context
+
+    if (node.nodeType === Node.TEXT_NODE) {
+        const text = node.nodeValue || ''
+        return inPre ? text : text.replace(/\s+/g, ' ')
+    }
+
+    if (node.nodeType !== Node.ELEMENT_NODE) return ''
+
+    const tag = node.tagName.toLowerCase()
+    const children = Array.from(node.childNodes || [])
+    const renderChildren = (nextContext = context) => children.map((child) => convertNodeToMarkdown(child, nextContext)).join('')
+
+    switch (tag) {
+        case 'br':
+            return '  \n'
+        case 'strong':
+        case 'b':
+            return `**${renderChildren(context).trim()}**`
+        case 'em':
+        case 'i':
+            return `*${renderChildren(context).trim()}*`
+        case 'code':
+            return inPre ? (node.textContent || '') : `\`${(node.textContent || '').trim()}\``
+        case 'a': {
+            const text = renderChildren(context).trim() || node.textContent || ''
+            const href = node.getAttribute('href') || '#'
+            return `[${text}](${href})`
+        }
+        case 'img': {
+            const alt = node.getAttribute('alt') || ''
+            const src = node.getAttribute('src') || ''
+            return `![${alt}](${src})`
+        }
+        case 'h1':
+        case 'h2':
+        case 'h3':
+        case 'h4':
+        case 'h5':
+        case 'h6': {
+            const level = Number(tag.slice(1))
+            return `${'#'.repeat(level)} ${renderChildren(context).trim()}\n\n`
+        }
+        case 'p':
+            return `${renderChildren(context).trim()}\n\n`
+        case 'blockquote': {
+            const block = renderChildren(context).trim().split('\n').filter(Boolean).map((line) => `> ${line}`).join('\n')
+            return `${block}\n\n`
+        }
+        case 'ul': {
+            const prefix = '  '.repeat(listDepth)
+            const items = Array.from(node.children || []).map((child) => convertNodeToMarkdown(child, { ...context, listDepth: listDepth + 1 })).filter(Boolean)
+            return `${items.map((item) => `${prefix}${item}`).join('\n')}\n\n`
+        }
+        case 'ol': {
+            const prefix = '  '.repeat(listDepth)
+            const items = Array.from(node.children || []).map((child, index) => {
+                const content = convertNodeToMarkdown(child, { ...context, listDepth: listDepth + 1 }).replace(/^\s*[-*]\s*/, '').trim()
+                return `${prefix}${index + 1}. ${content}`
+            })
+            return `${items.join('\n')}\n\n`
+        }
+        case 'li': {
+            const text = renderChildren({ ...context, listDepth }).trim().replace(/\n+/g, ' ')
+            return `- ${text}`
+        }
+        case 'pre': {
+            const code = node.querySelector('code')?.textContent || node.textContent || ''
+            return `\`\`\`\n${code.replace(/\n+$/, '')}\n\`\`\`\n\n`
+        }
+        case 'hr':
+            return `---\n\n`
+        case 'table': {
+            const rows = Array.from(node.querySelectorAll('tr'))
+            if (!rows.length) return ''
+            const matrix = rows.map((tr) => Array.from(tr.children).map((cell) => (cell.textContent || '').trim()))
+            const header = matrix[0] || []
+            const separator = header.map(() => '---')
+            const body = matrix.slice(1)
+            return [header, separator, ...body].map((row) => `| ${row.join(' | ')} |`).join('\n') + '\n\n'
+        }
+        case 'div':
+        case 'section':
+        case 'article':
+        case 'span':
+        case 'tbody':
+        case 'thead':
+        case 'tr':
+        case 'td':
+        case 'th':
+            return renderChildren(context)
+        default:
+            return renderChildren(context)
+    }
+}
+
+const htmlToMarkdown = (html) => {
+    const value = String(html || '').trim()
+    if (!value) return ''
+
+    if (typeof window === 'undefined' || typeof DOMParser === 'undefined') {
+        return value
+    }
+
+    try {
+        const doc = new DOMParser().parseFromString(`<div id="markdown-root">${value}</div>`, 'text/html')
+        const root = doc.getElementById('markdown-root')
+        if (!root) return value
+        return Array.from(root.childNodes).map((node) => convertNodeToMarkdown(node)).join('').replace(/\n{3,}/g, '\n\n').trim()
+    } catch (error) {
+        console.warn('HTML 转 Markdown 失败，保留原始内容:', error)
+        return value
+    }
+}
+
+const cloneContentForMode = (sourceType, sourceContent, targetType) => {
+    if (sourceType === targetType) return String(sourceContent || '')
+    return targetType === 'markdown'
+        ? htmlToMarkdown(sourceContent)
+        : markdownToHtml(sourceContent)
+}
+
+const editorModeCacheKey = (type) => (type === 'markdown' ? 'markdown' : 'richtext')
+
 // 分类列表
 const categories = ref([])
 // 标签列表
@@ -196,6 +335,56 @@ const tags = ref([])
 const users = ref([])
 // 标签搜索加载状态
 const tagsLoading = ref(false)
+const editorContentCache = reactive({
+    markdown: '',
+    richtext: ''
+})
+const toolbarConfig = {}
+const editorConfig = {
+    placeholder: '请输入文章正文...',
+    MENU_CONF: {
+        uploadImage: {
+            async customUpload(file, insertFn) {
+                const url = await uploadSingleEditorImage(file)
+                insertFn(url, 'image', url)
+            }
+        }
+    }
+}
+
+const markdownRenderer = new MarkdownIt({
+    html: true,
+    breaks: true,
+    linkify: true,
+    typographer: true
+})
+
+const editorModeMap = {
+    markdown: {
+        title: 'Markdown 快写模式',
+        desc: '适合后台写长文、教程和结构化内容，输入效率最高。',
+        hint: '适合技术类文章或需要快速排版的内容。切到富文本时，系统会尽量保留当前结构。',
+        chips: ['标题层级', '代码块', '表格', '图片链接']
+    },
+    richtext: {
+        title: '富文本可视化模式',
+        desc: '适合后台协作编辑、图文混排和不想手敲语法的场景。',
+        hint: '适合需要所见即所得的内容。切回 Markdown 时，系统会尽量保留标题和列表结构。',
+        chips: ['所见即所得', '点击排版', '图片拖拽', '后台协作']
+    }
+}
+
+const handleCreated = (editor) => {
+    editorRef.value = editor
+}
+
+watch(
+    () => [form.editorType, form.content],
+    ([type, content]) => {
+        editorContentCache[editorModeCacheKey(type)] = String(content || '')
+    },
+    { immediate: true }
+)
 
 // 获取分类列表
 const getCategories = () => {
@@ -258,12 +447,36 @@ const getUsers = () => {
     })
 }
 
+const handleManualTypeChange = (type) => {
+    if (form.editorType === type) return
+
+    const sourceType = form.editorType
+    const sourceContent = String(form.content || '')
+    const hasContent = sourceContent.trim() && sourceContent !== '<p><br></p>'
+    const nextContent = editorContentCache[editorModeCacheKey(type)] || cloneContentForMode(sourceType, sourceContent, type)
+
+    if (hasContent) {
+        showMessage('切换编辑器时会尽量保留内容，复杂排版可能有轻微差异', 'warning')
+    }
+
+    if (sourceType === 'richtext' && editorRef.value) {
+        editorRef.value.destroy()
+        editorRef.value = null
+    }
+
+    editorContentCache[editorModeCacheKey(sourceType)] = sourceContent
+    form.editorType = type
+    form.content = nextContent
+    editorContentCache[editorModeCacheKey(type)] = nextContent
+}
+
 
 // 组件销毁时，销毁编辑器
 onBeforeUnmount(() => {
     const editor = editorRef.value
-    if (editor == null) return
-    editor.destroy()
+    if (editor != null) {
+        editor.destroy()
+    }
 
     if (localCoverPreviewUrl.value) {
         URL.revokeObjectURL(localCoverPreviewUrl.value)
@@ -349,6 +562,12 @@ const getStatusMeta = (status) => {
 
 const resetFormState = async () => {
     Object.assign(form, getDefaultFormState())
+    editorContentCache.markdown = ''
+    editorContentCache.richtext = ''
+    if (editorRef.value) {
+        editorRef.value.destroy()
+        editorRef.value = null
+    }
 
     await nextTick()
     formRef.value?.clearValidate()
@@ -376,6 +595,7 @@ const buildSubmitData = (action) => ({
     summary: form.summary,
     content: form.content,
     tags: form.tagIds,
+    editorType: form.editorType,
     submitAction: action,
     visibilityScope: canConfigureVisibility() ? form.visibilityScope : 1,
     visibleUserIds: canConfigureVisibility() && form.visibilityScope === 2 ? form.visibleUserIds : []
@@ -416,6 +636,10 @@ const onSubmit = (action = 'publish') => {
         if (!valid) {
             return false
         }
+        if (form.editorType === 'richtext' && editorRef.value?.isEmpty?.()) {
+            showMessage('请输入文章内容', 'warning')
+            return false
+        }
         executeSubmit(action)
     })
 }
@@ -453,18 +677,23 @@ const loadArticleDetail = (id = articleId.value) => {
 
         if (res.success) {
             const article = res.data
+            const editorType = article.editorType || 'markdown'
+            const articleContent = article.content || ''
             form.title = article.title || ''
             form.cover = article.cover
             form.categoryId = article.categoryId
             // 将标签 ID 数组转换为标签名称数组
             form.tagIds = article.tags ? article.tags.map(tag => tag.value) : []
             form.summary = article.summary
-            form.content = article.content
+            form.content = articleContent
+            form.editorType = editorType
             form.articleSource = article.articleSource || 1
             form.articleSourceLabel = article.articleSourceLabel || '后台发布'
             form.status = article.status ?? 4
             form.visibilityScope = article.visibilityScope || 1
             form.visibleUserIds = article.visibleUserIds || []
+            editorContentCache[editorType] = articleContent
+            editorContentCache[editorModeCacheKey(editorType === 'markdown' ? 'richtext' : 'markdown')] = cloneContentForMode(editorType, articleContent, editorType === 'markdown' ? 'richtext' : 'markdown')
         } else {
             showMessage('加载文章详情失败', 'error')
         }
@@ -548,6 +777,14 @@ const loadArticleDetail = (id = articleId.value) => {
     color: #0f172a;
 }
 
+.admin-editor-shell__desc {
+    margin-top: 6px;
+    max-width: 56rem;
+    font-size: 13px;
+    line-height: 1.7;
+    color: #64748b;
+}
+
 .admin-editor-shell__badge {
     display: inline-flex;
     align-items: center;
@@ -559,6 +796,134 @@ const loadArticleDetail = (id = articleId.value) => {
     font-weight: 700;
     letter-spacing: 0.08em;
     text-transform: uppercase;
+}
+
+.admin-editor-shell__body {
+    display: grid;
+    gap: 1rem;
+    padding: 1rem;
+}
+
+.admin-mode-switch {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+}
+
+.admin-mode-switch__button {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.2rem;
+    min-height: 64px;
+    border: 1px solid rgba(226, 232, 240, 0.95);
+    border-radius: 18px;
+    background: rgba(248, 250, 252, 0.96);
+    color: #64748b;
+    font-size: 0.92rem;
+    font-weight: 700;
+    transition: all 0.25s ease;
+}
+
+.admin-mode-switch__button--active {
+    border-color: rgba(37, 99, 235, 0.3);
+    background: linear-gradient(135deg, #eff6ff, #ffffff);
+    color: #2563eb;
+    box-shadow: 0 10px 24px rgba(37, 99, 235, 0.12);
+}
+
+.admin-mode-switch__button-title {
+    font-size: 0.94rem;
+    font-weight: 800;
+}
+
+.admin-mode-switch__button-subtitle {
+    font-size: 0.72rem;
+    line-height: 1.2;
+    color: inherit;
+    opacity: 0.82;
+}
+
+.admin-editor-shell__notice {
+    border-radius: 20px;
+    border: 1px solid rgba(226, 232, 240, 0.95);
+    background:
+        radial-gradient(circle at top right, rgba(239, 246, 255, 0.95), transparent 42%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(248, 250, 252, 0.98));
+    padding: 1rem 1.1rem;
+}
+
+.admin-editor-shell__notice-label {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    background: rgba(15, 23, 42, 0.05);
+    color: #64748b;
+    padding: 0.28rem 0.6rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}
+
+.admin-editor-shell__notice-title {
+    display: block;
+    margin-top: 0.55rem;
+    font-size: 1.02rem;
+    font-weight: 900;
+    color: #0f172a;
+}
+
+.admin-editor-shell__notice-desc {
+    margin-top: 0.35rem;
+    font-size: 0.92rem;
+    line-height: 1.7;
+    color: #64748b;
+}
+
+.admin-rich-editor-shell {
+    border-radius: 24px;
+    border: 1px solid rgba(226, 232, 240, 0.95);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.98));
+    overflow: hidden;
+    box-shadow: 0 18px 38px rgba(15, 23, 42, 0.06);
+}
+
+.admin-rich-editor-shell__meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 1.15rem;
+    border-bottom: 1px solid rgba(226, 232, 240, 0.92);
+}
+
+.admin-rich-editor-shell__badge {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #2563eb, #0ea5e9);
+    color: #fff;
+    padding: 0.42rem 0.8rem;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.admin-rich-editor-shell__hint {
+    font-size: 12px;
+    color: #64748b;
+}
+
+.admin-rich-editor-shell__toolbar {
+    border-bottom: 1px solid rgba(226, 232, 240, 0.92);
+}
+
+.admin-rich-editor-shell__content {
+    height: 760px;
+    overflow: hidden;
 }
 
 @media (max-width: 768px) {
