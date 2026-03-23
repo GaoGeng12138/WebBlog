@@ -74,8 +74,8 @@
         </div>
       </section>
 
-      <div class="mt-10 flex flex-col gap-10 2xl:flex-row 2xl:items-start 2xl:gap-8">
-        <aside class="hidden 2xl:block 2xl:w-[230px] 2xl:shrink-0">
+      <div class="mt-10 flex flex-col gap-10 xl:flex-row xl:items-start xl:gap-8">
+        <aside class="hidden xl:block xl:w-[230px] xl:shrink-0">
           <DailyNoteSidebar />
         </aside>
 
@@ -167,7 +167,7 @@
           </div>
         </section>
 
-        <aside class="w-full shrink-0 lg:w-[320px] 2xl:w-[320px]">
+        <aside class="w-full shrink-0 lg:w-[320px] xl:w-[320px]">
           <HomeSidebar />
         </aside>
       </div>

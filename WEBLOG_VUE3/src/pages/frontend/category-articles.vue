@@ -3,12 +3,12 @@
     <AppHeader :keyword="keyword" @update:keyword="keyword = $event" @search="searchArticles" />
 
     <div class="flex-1 w-full max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8">
-    <main class="flex flex-col gap-6 py-6 2xl:flex-row">
-      <aside class="hidden 2xl:block 2xl:w-[230px] 2xl:shrink-0">
+    <main class="flex flex-col gap-6 py-6 xl:flex-row xl:items-start">
+      <aside class="hidden xl:block xl:w-[230px] xl:shrink-0">
         <DailyNoteSidebar />
       </aside>
 
-      <section class="w-full 2xl:flex-1">
+      <section class="w-full xl:flex-1">
         <div class="mb-4 overflow-hidden rounded-[22px] border border-[rgba(149,171,210,0.16)] bg-[rgba(255,255,255,0.78)] p-4 shadow-[0_16px_30px_rgba(120,146,186,0.08)] backdrop-blur-xl sm:p-5">
           <p class="text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--cosmic-muted)]">
             Category Articles
@@ -104,7 +104,7 @@
       </section>
 
       <!-- Sidebar -->
-      <aside class="hidden xl:block w-full lg:w-[320px] 2xl:w-[320px] 2xl:shrink-0">
+      <aside class="hidden xl:block w-full lg:w-[320px] xl:w-[320px] xl:shrink-0">
         <HomeSidebar />
       </aside>
     </main>
