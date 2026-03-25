@@ -5,6 +5,7 @@ import com.gaog.weblog.common.domain.dos.BlogSettingDO;
 import com.gaog.weblog.common.domain.mapper.SiteSettingMapper;
 import com.gaog.weblog.common.utils.Response;
 import com.gaog.weblog.web.model.vo.setting.FindBasicSettingRspVO;
+import com.gaog.weblog.web.model.vo.setting.FindSiteInfoRspVO;
 import com.gaog.weblog.web.model.vo.setting.FindPermissionSettingRspVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -23,9 +24,9 @@ public class SiteController {
     @GetMapping("/site/info")
     @ApiOperation(value = "获取站点信息")
     @ApiOperationLog(description = "获取站点信息")
-    public Response<BlogSettingDO> getSiteInfo() {
+    public Response<FindSiteInfoRspVO> getSiteInfo() {
         BlogSettingDO setting = siteSettingMapper.findSingleton();
-        return Response.success(setting);
+        return Response.success(FindSiteInfoRspVO.fromDO(setting));
     }
 
     @PostMapping("/site/permissions")

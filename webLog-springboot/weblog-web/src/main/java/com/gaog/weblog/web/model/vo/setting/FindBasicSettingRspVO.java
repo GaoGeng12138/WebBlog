@@ -1,5 +1,6 @@
 package com.gaog.weblog.web.model.vo.setting;
 
+import com.gaog.weblog.common.annotation.SensitiveField;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
@@ -18,12 +19,15 @@ import lombok.NoArgsConstructor;
 public class FindBasicSettingRspVO {
 
     @ApiModelProperty("网站标题")
+    @SensitiveField(request = false)
     private String title;
 
     @ApiModelProperty("网站描述")
+    @SensitiveField(request = false)
     private String description;
 
     @ApiModelProperty("网站图标URL")
+    @SensitiveField(request = false)
     private String logoUrl;
 
     @ApiModelProperty("是否启用GitHub功能")
