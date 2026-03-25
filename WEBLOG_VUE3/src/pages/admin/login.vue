@@ -104,22 +104,40 @@
 
                         <el-form class="login-form mt-6 sm:mt-8" ref="formRef" :rules="rules" :model="form">
                             <el-form-item prop="username">
-                                <div class="login-cyber-input" :class="{ 'is-typing': typingField === 'username' }">
+                                <div ref="usernameShellRef" class="login-cyber-input" :class="{ 'is-typing': typingField === 'username' }">
+                                    <div class="login-cyber-input__burst-layer" aria-hidden="true">
+                                        <span
+                                            v-for="particle in usernameBurstParticles"
+                                            :key="particle.id"
+                                            class="login-cyber-input__burst-particle"
+                                            :class="particle.className"
+                                            :style="particle.style"
+                                        ></span>
+                                    </div>
                                     <span class="login-cyber-input__pixel login-cyber-input__pixel--a"></span>
                                     <span class="login-cyber-input__pixel login-cyber-input__pixel--b"></span>
                                     <span class="login-cyber-input__pixel login-cyber-input__pixel--c"></span>
                                     <span class="login-cyber-input__pixel login-cyber-input__pixel--d"></span>
-                                    <el-input size="large" v-model="form.username" placeholder="请输入用户名" :prefix-icon="User"
+                                    <el-input ref="usernameInputRef" size="large" v-model="form.username" placeholder="请输入用户名" :prefix-icon="User"
                                         clearable @input="triggerTypingEffect('username')" />
                                 </div>
                             </el-form-item>
                             <el-form-item prop="password">
-                                <div class="login-cyber-input" :class="{ 'is-typing': typingField === 'password' }">
+                                <div ref="passwordShellRef" class="login-cyber-input" :class="{ 'is-typing': typingField === 'password' }">
+                                    <div class="login-cyber-input__burst-layer" aria-hidden="true">
+                                        <span
+                                            v-for="particle in passwordBurstParticles"
+                                            :key="particle.id"
+                                            class="login-cyber-input__burst-particle"
+                                            :class="particle.className"
+                                            :style="particle.style"
+                                        ></span>
+                                    </div>
                                     <span class="login-cyber-input__pixel login-cyber-input__pixel--a"></span>
                                     <span class="login-cyber-input__pixel login-cyber-input__pixel--b"></span>
                                     <span class="login-cyber-input__pixel login-cyber-input__pixel--c"></span>
                                     <span class="login-cyber-input__pixel login-cyber-input__pixel--d"></span>
-                                    <el-input size="large" type="password" v-model="form.password" placeholder="请输入密码"
+                                    <el-input ref="passwordInputRef" size="large" type="password" v-model="form.password" placeholder="请输入密码"
                                         :prefix-icon="Lock" clearable show-password @input="triggerTypingEffect('password')" />
                                 </div>
                             </el-form-item>
@@ -208,6 +226,134 @@ const loginHighlights = [
 
 const typingField = ref('')
 let typingEffectTimer = null
+const usernameShellRef = ref(null)
+const passwordShellRef = ref(null)
+const usernameInputRef = ref(null)
+const passwordInputRef = ref(null)
+const usernameBurstParticles = ref([])
+const passwordBurstParticles = ref([])
+const burstCleanupTimers = []
+let burstSeed = 0
+let typingMeasureContext = null
+
+function randomBetween(min, max) {
+    return min + Math.random() * (max - min)
+}
+
+function getBurstShell(field) {
+    return field === 'password' ? passwordShellRef.value : usernameShellRef.value
+}
+
+function getBurstBucket(field) {
+    return field === 'password' ? passwordBurstParticles : usernameBurstParticles
+}
+
+function getInputInstance(field) {
+    return field === 'password' ? passwordInputRef.value : usernameInputRef.value
+}
+
+function getNativeInputElement(field) {
+    const inputInstance = getInputInstance(field)
+    return inputInstance?.input || inputInstance?.$el?.querySelector('input') || null
+}
+
+function measureTextWidth(inputElement, text) {
+    if (!inputElement || !text || typeof document === 'undefined') {
+        return 0
+    }
+
+    if (!typingMeasureContext) {
+        const canvas = document.createElement('canvas')
+        typingMeasureContext = canvas.getContext('2d')
+    }
+
+    if (!typingMeasureContext) {
+        return 0
+    }
+
+    const style = window.getComputedStyle(inputElement)
+    typingMeasureContext.font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`
+    return typingMeasureContext.measureText(text).width
+}
+
+function getTypingOrigin(field, value) {
+    const shell = getBurstShell(field)
+    const inputElement = getNativeInputElement(field)
+
+    if (!shell || !inputElement) {
+        return { x: 20, y: 20 }
+    }
+
+    const shellRect = shell.getBoundingClientRect()
+    const inputRect = inputElement.getBoundingClientRect()
+    const computedStyle = window.getComputedStyle(inputElement)
+    const selectionStart = typeof inputElement.selectionStart === 'number' ? inputElement.selectionStart : value.length
+    const textWidth = measureTextWidth(inputElement, value.slice(0, selectionStart))
+    const paddingLeft = Number.parseFloat(computedStyle.paddingLeft || '0')
+    const paddingTop = Number.parseFloat(computedStyle.paddingTop || '0')
+    const x = inputRect.left - shellRect.left + paddingLeft + textWidth - inputElement.scrollLeft
+    const y = inputRect.top - shellRect.top + paddingTop + inputRect.height / 2
+
+    return {
+        x: Math.max(20, Math.min(shellRect.width - 20, Math.round(x))),
+        y: Math.max(16, Math.min(shellRect.height - 16, Math.round(y)))
+    }
+}
+
+function createTypingBurstParticle(field, index, originX, originY) {
+    const spreadAngle = randomBetween(-1.2, 1.2) + (index % 2 === 0 ? 0.35 : -0.35)
+    const distance = randomBetween(18, 72) + index * 1.8
+    const dx = Math.cos(spreadAngle) * distance * (index % 3 === 0 ? 1.08 : 0.9)
+    const dy = Math.sin(spreadAngle) * distance - randomBetween(8, 24)
+    const size = randomBetween(3, 7) + (index % 4 === 0 ? 1.2 : 0)
+    const duration = randomBetween(480, 760)
+    const delay = randomBetween(0, 95)
+    const opacity = randomBetween(0.58, 0.96)
+    const huePalette = ['#7aa8ff', '#88f0ff', '#ff8fd8', '#b6c7ff', '#f8fcff']
+    const palette = huePalette[index % huePalette.length]
+
+    return {
+        id: `burst-${field}-${Date.now()}-${burstSeed++}-${index}`,
+        className: index % 3 === 0 ? 'is-line' : index % 5 === 0 ? 'is-glow' : 'is-square',
+        style: `
+            left: ${originX}px;
+            top: ${originY}px;
+            --dx: ${dx.toFixed(2)}px;
+            --dy: ${dy.toFixed(2)}px;
+            --size: ${size.toFixed(2)}px;
+            --duration: ${duration.toFixed(0)}ms;
+            --delay: ${delay.toFixed(0)}ms;
+            --opacity: ${opacity.toFixed(2)};
+            --particle-color: ${palette};
+        `
+    }
+}
+
+function spawnTypingBurst(field, value) {
+    const shell = getBurstShell(field)
+
+    if (!shell) {
+        return
+    }
+
+    const { x: originX, y: originY } = getTypingOrigin(field, value)
+    const count = field === 'password' ? 14 : 12
+    const bucket = getBurstBucket(field)
+    const particles = Array.from({ length: count }, (_, index) => createTypingBurstParticle(field, index, originX, originY))
+
+    bucket.value = [...bucket.value, ...particles]
+
+    const cleanupTimer = setTimeout(() => {
+        const ids = new Set(particles.map((item) => item.id))
+        bucket.value = bucket.value.filter((item) => !ids.has(item.id))
+        const timerIndex = burstCleanupTimers.indexOf(cleanupTimer)
+        if (timerIndex !== -1) {
+            burstCleanupTimers.splice(timerIndex, 1)
+        }
+    }, 900)
+
+    burstCleanupTimers.push(cleanupTimer)
+}
 
 
 
@@ -249,6 +395,8 @@ onBeforeUnmount(() => {
         clearTimeout(typingEffectTimer)
         typingEffectTimer = null
     }
+    burstCleanupTimers.forEach((timer) => clearTimeout(timer))
+    burstCleanupTimers.length = 0
 })
 
 //表单引用
@@ -262,6 +410,7 @@ const { userInfo } = storeToRefs(userStore);
 
 function triggerTypingEffect(field) {
     typingField.value = field
+    spawnTypingBurst(field, form[field])
     if (typingEffectTimer) {
         clearTimeout(typingEffectTimer)
     }
@@ -462,6 +611,11 @@ const onSubmit = () => {
     transition: box-shadow 0.3s ease, transform 0.3s ease, background 0.3s ease, border-color 0.3s ease;
 }
 
+.login-cyber-input :deep(.el-input) {
+    position: relative;
+    z-index: 1;
+}
+
 .login-form :deep(.el-input__wrapper:hover) {
     background: white;
     box-shadow: 0 0 0 1px rgba(116, 149, 195, 0.22);
@@ -491,6 +645,7 @@ const onSubmit = () => {
     position: relative;
     width: 100%;
     border-radius: 18px;
+    overflow: hidden;
 }
 
 .login-cyber-input::before {
@@ -538,6 +693,7 @@ const onSubmit = () => {
     opacity: 0;
     pointer-events: none;
     transform: translate3d(-4px, -50%, 0) scale(0.7);
+    z-index: 2;
 }
 
 .login-cyber-input__pixel--a {
@@ -569,6 +725,52 @@ const onSubmit = () => {
 .login-cyber-input.is-typing::after {
     opacity: 1;
     animation: typingBorderSweep 0.24s ease-out;
+}
+
+.login-cyber-input__burst-layer {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+    border-radius: inherit;
+    mix-blend-mode: screen;
+}
+
+.login-cyber-input__burst-particle {
+    position: absolute;
+    width: var(--size);
+    height: var(--size);
+    opacity: 0;
+    transform: translate3d(0, 0, 0) scale(0.6);
+    animation: typingBurstFly var(--duration) cubic-bezier(0.12, 0.78, 0.22, 1) both;
+    animation-delay: var(--delay);
+    will-change: transform, opacity, filter;
+}
+
+.login-cyber-input__burst-particle.is-square {
+    border-radius: 2px;
+    background: linear-gradient(135deg, var(--particle-color), rgba(255, 255, 255, 0.92));
+    box-shadow:
+        0 0 8px rgba(122, 168, 255, 0.35),
+        0 0 14px rgba(122, 168, 255, 0.2);
+}
+
+.login-cyber-input__burst-particle.is-line {
+    width: calc(var(--size) * 1.9);
+    height: calc(var(--size) * 0.65);
+    border-radius: 999px;
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0), var(--particle-color), rgba(255, 255, 255, 0));
+    box-shadow: 0 0 10px rgba(122, 168, 255, 0.25);
+}
+
+.login-cyber-input__burst-particle.is-glow {
+    border-radius: 999px;
+    background: radial-gradient(circle, var(--particle-color) 0%, rgba(255, 255, 255, 0.16) 62%, rgba(255, 255, 255, 0) 72%);
+    filter: blur(0.3px);
+    box-shadow:
+        0 0 12px rgba(122, 168, 255, 0.28),
+        0 0 18px rgba(255, 143, 216, 0.16);
 }
 
 .login-cyber-input.is-typing .login-cyber-input__pixel--a {
@@ -648,6 +850,28 @@ const onSubmit = () => {
     100% {
         opacity: 0;
         filter: blur(0);
+    }
+}
+
+@keyframes typingBurstFly {
+    0% {
+        opacity: 0;
+        transform: translate3d(0, 0, 0) scale(0.5) rotate(0deg);
+        filter: blur(0);
+    }
+
+    12% {
+        opacity: var(--opacity);
+    }
+
+    45% {
+        opacity: calc(var(--opacity) * 0.96);
+    }
+
+    100% {
+        opacity: 0;
+        transform: translate3d(var(--dx), var(--dy), 0) scale(1.12) rotate(28deg);
+        filter: blur(0.25px);
     }
 }
 
@@ -797,6 +1021,22 @@ const onSubmit = () => {
 
     .login-highlight-chip {
         padding: 0.48rem 0.72rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .login-orb,
+    .login-float-card,
+    .login-cyber-input::before,
+    .login-cyber-input::after,
+    .login-cyber-input__pixel,
+    .login-cyber-input__burst-particle {
+        animation: none !important;
+        transition: none !important;
+    }
+
+    .login-cyber-input__burst-particle {
+        display: none;
     }
 }
 </style>

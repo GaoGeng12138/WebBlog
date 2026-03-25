@@ -22,7 +22,7 @@
               {{ isEdit ? '打磨这篇文章' : '开始一篇新作品' }}
             </h1>
             <p class="mt-1 text-sm text-slate-500">
-              先存草稿，确认内容完整后再提交发布。前台与后台的 Markdown 体验现在保持一致。
+              先存草稿，确认内容完整后再提交发布。Markdown 和富文本可以自由切换，系统会尽量帮你保留内容。
             </p>
           </div>
         </div>
@@ -126,17 +126,32 @@
               </div>
             </div>
 
-            <div class="mobile-mode-switch">
-              <button
-                v-for="type in ['markdown', 'richtext']"
-                :key="type"
-                type="button"
-                class="editor-mode-button"
-                :class="{ 'editor-mode-button--active': form.editorType === type }"
-                @click="handleManualTypeChange(type)"
-              >
-                {{ type === 'markdown' ? 'Markdown' : '富文本' }}
-              </button>
+            <div class="mode-switch-card mode-switch-card--mobile">
+              <div class="mode-switch-card__head">
+                <div>
+                  <p class="editor-panel__eyebrow">编辑模式</p>
+                  <h3 class="mode-switch-card__title">{{ editorModeDetails.title }}</h3>
+                </div>
+                <span class="mode-switch-card__badge">{{ editorModeLabel }}</span>
+              </div>
+
+              <div class="mobile-mode-switch">
+                <button
+                  v-for="type in ['markdown', 'richtext']"
+                  :key="type"
+                  type="button"
+                  class="editor-mode-button"
+                  :class="{ 'editor-mode-button--active': form.editorType === type }"
+                  @click="handleManualTypeChange(type)"
+                >
+                  <span class="editor-mode-button__title">{{ type === 'markdown' ? 'Markdown' : '富文本' }}</span>
+                  <span class="editor-mode-button__subtitle">
+                    {{ type === 'markdown' ? '适合技术文章' : '适合图文排版' }}
+                  </span>
+                </button>
+              </div>
+
+              <p class="mode-switch-card__hint">{{ editorModeDetails.hint }}</p>
             </div>
 
             <el-form-item label="文章摘要" prop="summary" class="mb-0">
@@ -192,57 +207,46 @@
               <span class="editor-outline-chip">{{ contentWordCount }} 字</span>
             </div>
 
-            <div class="mobile-mode-switch">
-              <button
-                v-for="type in ['markdown', 'richtext']"
-                :key="`content-${type}`"
-                type="button"
-                class="editor-mode-button"
-                :class="{ 'editor-mode-button--active': form.editorType === type }"
-                @click="handleManualTypeChange(type)"
-              >
-                {{ type === 'markdown' ? 'Markdown' : '富文本' }}
-              </button>
+            <div class="mode-switch-card mode-switch-card--content">
+              <div class="mode-switch-card__head">
+                <div>
+                  <p class="editor-panel__eyebrow">编辑模式</p>
+                  <h3 class="mode-switch-card__title">{{ editorModeDetails.title }}</h3>
+                </div>
+                <span class="mode-switch-card__badge">{{ editorModeLabel }}</span>
+              </div>
+
+              <div class="mobile-mode-switch">
+                <button
+                  v-for="type in ['markdown', 'richtext']"
+                  :key="`content-${type}`"
+                  type="button"
+                  class="editor-mode-button"
+                  :class="{ 'editor-mode-button--active': form.editorType === type }"
+                  @click="handleManualTypeChange(type)"
+                >
+                  <span class="editor-mode-button__title">{{ type === 'markdown' ? 'Markdown' : '富文本' }}</span>
+                  <span class="editor-mode-button__subtitle">
+                    {{ type === 'markdown' ? '适合技术文章' : '适合图文排版' }}
+                  </span>
+                </button>
+              </div>
+
+              <p class="mode-switch-card__hint">{{ editorModeDetails.hint }}</p>
             </div>
 
             <el-form-item label="正文内容" prop="content" class="mb-0">
-              <div class="w-full">
-                <MarkdownEditorSurface
-                  v-if="form.editorType === 'markdown'"
-                  v-model="form.content"
-                  editor-id="frontend-article-editor-mobile"
-                  height="560px"
-                  placeholder="从问题、方案、步骤和结果开始写。手机端建议先写结构，再补图和代码。"
-                  :compact-mode="isMobileLayout"
-                  :upload-handler="onMdUploadImg"
-                />
-
-                <div v-else class="rich-editor-shell mobile-rich-editor-shell">
-                  <div class="rich-editor-shell__meta">
-                    <div>
-                      <p class="editor-panel__eyebrow">可视化排版</p>
-                      <h3 class="text-lg font-bold text-slate-900">富文本编辑器</h3>
-                    </div>
-                    <span class="editor-pill editor-pill--soft">适合轻量图文</span>
-                  </div>
-
-                  <Toolbar
-                    :editor="editorRef"
-                    :defaultConfig="toolbarConfig"
-                    mode="default"
-                    class="rich-editor-shell__toolbar"
-                  />
-                  <div class="rich-editor-shell__content">
-                    <Editor
-                      v-model="form.content"
-                      :defaultConfig="editorConfig"
-                      mode="default"
-                      style="height: 100%; overflow-y: hidden;"
-                      @onCreated="handleCreated"
-                    />
-                  </div>
-                </div>
-              </div>
+              <ArticleDualModeEditor
+                v-model="form.content"
+                v-model:editorType="form.editorType"
+                variant="frontend"
+                eyebrow="正文创作"
+                editor-id="frontend-article-editor-mobile"
+                height="560px"
+                markdown-placeholder="从问题、方案、步骤和结果开始写。手机端建议先写结构，再补图和代码。"
+                :compact-mode="isMobileLayout"
+                :upload-handler="onMdUploadImg"
+              />
             </el-form-item>
 
             <div class="mobile-step-actions mobile-step-actions--split">
@@ -363,18 +367,24 @@
 
               <div class="rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
                 <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">编辑器模式</p>
-                <div class="mt-3 flex rounded-2xl bg-white p-1 shadow-sm">
-                  <button
-                    v-for="type in ['markdown', 'richtext']"
-                    :key="type"
-                    type="button"
-                    class="editor-mode-button"
-                    :class="{ 'editor-mode-button--active': form.editorType === type }"
-                    @click="handleManualTypeChange(type)"
-                  >
-                    {{ type === 'markdown' ? 'Markdown' : '富文本' }}
-                  </button>
+                <div class="mt-3 rounded-2xl bg-white p-1 shadow-sm">
+                  <div class="grid grid-cols-2 gap-2">
+                    <button
+                      v-for="type in ['markdown', 'richtext']"
+                      :key="type"
+                      type="button"
+                      class="editor-mode-button"
+                      :class="{ 'editor-mode-button--active': form.editorType === type }"
+                      @click="handleManualTypeChange(type)"
+                    >
+                      <span class="editor-mode-button__title">{{ type === 'markdown' ? 'Markdown' : '富文本' }}</span>
+                      <span class="editor-mode-button__subtitle">
+                        {{ type === 'markdown' ? '适合技术文章' : '适合图文排版' }}
+                      </span>
+                    </button>
+                  </div>
                 </div>
+                <p class="mt-3 text-sm leading-6 text-slate-500">{{ editorModeDetails.hint }}</p>
               </div>
             </div>
 
@@ -465,6 +475,19 @@
               </div>
             </div>
 
+            <div class="editor-mode-banner">
+              <div class="editor-mode-banner__copy">
+                <span class="editor-mode-banner__label">当前模式</span>
+                <strong class="editor-mode-banner__title">{{ editorModeDetails.title }}</strong>
+                <p class="editor-mode-banner__desc">{{ editorModeDetails.desc }}</p>
+              </div>
+              <div class="editor-mode-banner__chips">
+                <span v-for="chip in editorModeDetails.chips" :key="`desktop-${chip}`" class="editor-mode-banner__chip">
+                  {{ chip }}
+                </span>
+              </div>
+            </div>
+
             <div class="mb-6 grid gap-4 md:grid-cols-3">
               <div class="editor-metric-card">
                 <span class="editor-metric-card__label">正文字符</span>
@@ -481,42 +504,16 @@
             </div>
 
             <el-form-item label="正文内容" prop="content" class="mb-0">
-              <div class="w-full">
-                <MarkdownEditorSurface
-                  v-if="form.editorType === 'markdown'"
-                  v-model="form.content"
-                  editor-id="frontend-article-editor"
-                  height="780px"
-                  placeholder="从场景、问题、步骤、结果开始写。支持粘贴截图、代码块、表格和标题结构。"
-                  :upload-handler="onMdUploadImg"
-                />
-
-                <div v-else class="rich-editor-shell">
-                  <div class="rich-editor-shell__meta">
-                    <div>
-                      <p class="editor-panel__eyebrow">可视化排版</p>
-                      <h3 class="text-lg font-bold text-slate-900">富文本编辑器</h3>
-                    </div>
-                    <span class="editor-pill editor-pill--soft">适合轻量图文</span>
-                  </div>
-
-                  <Toolbar
-                    :editor="editorRef"
-                    :defaultConfig="toolbarConfig"
-                    mode="default"
-                    class="rich-editor-shell__toolbar"
-                  />
-                  <div class="rich-editor-shell__content">
-                    <Editor
-                      v-model="form.content"
-                      :defaultConfig="editorConfig"
-                      mode="default"
-                      style="height: 100%; overflow-y: hidden;"
-                      @onCreated="handleCreated"
-                    />
-                  </div>
-                </div>
-              </div>
+              <ArticleDualModeEditor
+                v-model="form.content"
+                v-model:editorType="form.editorType"
+                variant="frontend"
+                eyebrow="正文创作"
+                editor-id="frontend-article-editor"
+                height="780px"
+                markdown-placeholder="从场景、问题、步骤、结果开始写。支持粘贴截图、代码块、表格和标题结构。"
+                :upload-handler="onMdUploadImg"
+              />
             </el-form-item>
           </div>
 
@@ -561,6 +558,7 @@ import { computed, onBeforeUnmount, onMounted, reactive, ref, shallowRef } from 
 import { useRoute, useRouter } from 'vue-router'
 import { ArrowLeft, Picture } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import MarkdownIt from 'markdown-it'
 import '@wangeditor/editor/dist/css/style.css'
 import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
 
@@ -570,6 +568,7 @@ import { getAllTagList } from '@/api/frontend/tag'
 import { uploadFile } from '@/api/frontend/file'
 import { useUserStore } from '@/stores/user'
 import { useSiteConfigStore } from '@/stores/siteConfig'
+import ArticleDualModeEditor from '@/components/article/ArticleDualModeEditor.vue'
 import MarkdownEditorSurface from '@/components/article/MarkdownEditorSurface.vue'
 
 const userStore = useUserStore()
@@ -613,6 +612,10 @@ const createDefaultForm = () => ({
 })
 
 const form = reactive(createDefaultForm())
+const editorContentCache = reactive({
+  markdown: '',
+  richtext: ''
+})
 
 const editorRef = shallowRef()
 const toolbarConfig = {}
@@ -634,7 +637,30 @@ const rules = {
   content: [{ required: true, message: '文章内容不能为空', trigger: 'blur' }]
 }
 
+const markdownRenderer = new MarkdownIt({
+  html: true,
+  breaks: true,
+  linkify: true,
+  typographer: true
+})
+
+const editorModeMap = {
+  markdown: {
+    title: 'Markdown 快写模式',
+    desc: '适合技术文章、教程和长内容，键盘输入效率最高。',
+    hint: '如果你习惯先写结构再补细节，Markdown 会更顺手。切到富文本时，系统会尽量把当前内容转成可视化排版。',
+    chips: ['标题层级', '代码块', '表格', '图片链接']
+  },
+  richtext: {
+    title: '富文本可视化模式',
+    desc: '适合图文混排、活动稿和不想记语法的普通创作者。',
+    hint: '如果你更希望像写 Word 一样排版，可以直接用富文本。切回 Markdown 时，系统会尽量保留标题和列表结构。',
+    chips: ['所见即所得', '点击式排版', '图片拖拽', '新手友好']
+  }
+}
+
 const editorModeLabel = computed(() => (form.editorType === 'markdown' ? 'Markdown' : '富文本'))
+const editorModeDetails = computed(() => editorModeMap[form.editorType] || editorModeMap.markdown)
 const mobilePublishStepIndex = computed(() => {
   const index = mobilePublishSteps.findIndex((step) => step.key === mobilePublishStep.value)
   return index >= 0 ? index : 0
@@ -661,6 +687,131 @@ const contentWordCount = computed(() => {
 const summaryWordCount = computed(() => String(form.summary || '').trim().length)
 
 const estimatedReadMinutes = computed(() => Math.max(1, Math.ceil(contentWordCount.value / 450)))
+
+const markdownToHtml = (markdown) => markdownRenderer.render(String(markdown || ''))
+
+const convertNodeToMarkdown = (node, context = {}) => {
+  const { listDepth = 0, inPre = false } = context
+
+  if (node.nodeType === Node.TEXT_NODE) {
+    const text = node.nodeValue || ''
+    return inPre ? text : text.replace(/\s+/g, ' ')
+  }
+
+  if (node.nodeType !== Node.ELEMENT_NODE) return ''
+
+  const tag = node.tagName.toLowerCase()
+  const children = Array.from(node.childNodes || [])
+  const renderChildren = (nextContext = context) => children.map((child) => convertNodeToMarkdown(child, nextContext)).join('')
+
+  switch (tag) {
+    case 'br':
+      return '  \n'
+    case 'strong':
+    case 'b':
+      return `**${renderChildren(context).trim()}**`
+    case 'em':
+    case 'i':
+      return `*${renderChildren(context).trim()}*`
+    case 'code':
+      return inPre ? (node.textContent || '') : `\`${(node.textContent || '').trim()}\``
+    case 'a': {
+      const text = renderChildren(context).trim() || node.textContent || ''
+      const href = node.getAttribute('href') || '#'
+      return `[${text}](${href})`
+    }
+    case 'img': {
+      const alt = node.getAttribute('alt') || ''
+      const src = node.getAttribute('src') || ''
+      return `![${alt}](${src})`
+    }
+    case 'h1':
+    case 'h2':
+    case 'h3':
+    case 'h4':
+    case 'h5':
+    case 'h6': {
+      const level = Number(tag.slice(1))
+      return `${'#'.repeat(level)} ${renderChildren(context).trim()}\n\n`
+    }
+    case 'p':
+      return `${renderChildren(context).trim()}\n\n`
+    case 'blockquote': {
+      const block = renderChildren(context).trim().split('\n').filter(Boolean).map((line) => `> ${line}`).join('\n')
+      return `${block}\n\n`
+    }
+    case 'ul': {
+      const prefix = '  '.repeat(listDepth)
+      const items = Array.from(node.children || []).map((child) => convertNodeToMarkdown(child, { ...context, listDepth: listDepth + 1 })).filter(Boolean)
+      return `${items.map((item) => `${prefix}${item}`).join('\n')}\n\n`
+    }
+    case 'ol': {
+      const prefix = '  '.repeat(listDepth)
+      const items = Array.from(node.children || []).map((child, index) => {
+        const content = convertNodeToMarkdown(child, { ...context, listDepth: listDepth + 1 }).replace(/^\s*[-*]\s*/, '').trim()
+        return `${prefix}${index + 1}. ${content}`
+      })
+      return `${items.join('\n')}\n\n`
+    }
+    case 'li': {
+      const text = renderChildren({ ...context, listDepth }).trim().replace(/\n+/g, ' ')
+      return `- ${text}`
+    }
+    case 'pre': {
+      const code = node.querySelector('code')?.textContent || node.textContent || ''
+      return `\`\`\`\n${code.replace(/\n+$/, '')}\n\`\`\`\n\n`
+    }
+    case 'hr':
+      return `---\n\n`
+    case 'table': {
+      const rows = Array.from(node.querySelectorAll('tr'))
+      if (!rows.length) return ''
+      const matrix = rows.map((tr) => Array.from(tr.children).map((cell) => (cell.textContent || '').trim()))
+      const header = matrix[0] || []
+      const separator = header.map(() => '---')
+      const body = matrix.slice(1)
+      return [header, separator, ...body].map((row) => `| ${row.join(' | ')} |`).join('\n') + '\n\n'
+    }
+    case 'div':
+    case 'section':
+    case 'article':
+    case 'span':
+    case 'tbody':
+    case 'thead':
+    case 'tr':
+    case 'td':
+    case 'th':
+      return renderChildren(context)
+    default:
+      return renderChildren(context)
+  }
+}
+
+const htmlToMarkdown = (html) => {
+  const value = String(html || '').trim()
+  if (!value) return ''
+
+  if (typeof window === 'undefined' || typeof DOMParser === 'undefined') {
+    return value
+  }
+
+  try {
+    const doc = new DOMParser().parseFromString(`<div id="markdown-root">${value}</div>`, 'text/html')
+    const root = doc.getElementById('markdown-root')
+    if (!root) return value
+    return Array.from(root.childNodes).map((node) => convertNodeToMarkdown(node)).join('').replace(/\n{3,}/g, '\n\n').trim()
+  } catch (error) {
+    console.warn('HTML 转 Markdown 失败，保留原始内容:', error)
+    return value
+  }
+}
+
+const cloneContentForMode = (sourceType, sourceContent, targetType) => {
+  if (sourceType === targetType) return String(sourceContent || '')
+  return targetType === 'markdown'
+    ? htmlToMarkdown(sourceContent)
+    : markdownToHtml(sourceContent)
+}
 
 const publishHint = computed(() => {
   if (!form.cover) return '先补一个封面图，哪怕先存草稿，后面回来看也更容易进入状态。'
@@ -697,6 +848,14 @@ const handleCreated = (editor) => {
   editorRef.value = editor
 }
 
+watch(
+  () => [form.editorType, form.content],
+  ([type, content]) => {
+    editorContentCache[type] = String(content || '')
+  },
+  { immediate: true }
+)
+
 const syncPublishLayout = () => {
   if (typeof window === 'undefined') return
   isMobileLayout.value = window.innerWidth < 768
@@ -730,11 +889,14 @@ const onMdUploadImg = async (files, callback) => {
 const handleManualTypeChange = (type) => {
   if (form.editorType === type) return
 
-  const hasContent = String(form.content || '').trim() && form.content !== '<p><br></p>'
+  const sourceType = form.editorType
+  const sourceContent = String(form.content || '')
+  const hasContent = sourceContent.trim() && sourceContent !== '<p><br></p>'
+  const nextContent = editorContentCache[type] || cloneContentForMode(sourceType, sourceContent, type)
 
   if (hasContent) {
     ElMessageBox.confirm(
-      '切换编辑器可能会造成部分排版格式丢失，确认继续切换吗？',
+      '切换编辑器时，系统会尽量保留当前内容，但复杂排版仍可能出现轻微差异。确认继续切换吗？',
       '切换编辑器',
       {
         confirmButtonText: '继续切换',
@@ -742,12 +904,27 @@ const handleManualTypeChange = (type) => {
         type: 'warning'
       }
     ).then(() => {
+      if (sourceType === 'richtext' && editorRef.value) {
+        editorRef.value.destroy()
+        editorRef.value = null
+      }
+      editorContentCache[sourceType] = sourceContent
       form.editorType = type
+      form.content = nextContent
+      editorContentCache[type] = nextContent
     }).catch(() => {})
     return
   }
 
+  if (sourceType === 'richtext' && editorRef.value) {
+    editorRef.value.destroy()
+    editorRef.value = null
+  }
+
+  editorContentCache[sourceType] = sourceContent
   form.editorType = type
+  form.content = nextContent
+  editorContentCache[type] = nextContent
 }
 
 const loadCategoriesAndTags = async () => {
@@ -765,6 +942,8 @@ const loadArticle = async (id) => {
     const res = await getArticleDetail(Number(id), { editable: true })
     if (res?.success && res.data) {
       const article = res.data
+      const editorType = article.editorType || 'markdown'
+      const articleContent = String(article.content || '')
       Object.assign(form, {
         title: article.title || '',
         cover: article.cover || '',
@@ -773,15 +952,18 @@ const loadArticle = async (id) => {
           ? article.tags.map((tag) => tag.id || tag.tagId || tag)
           : [],
         summary: article.summary || '',
-        content: article.content || '',
+        content: articleContent,
         userId: article.userId || user.value?.userId || null,
-        editorType: article.editorType || 'markdown',
+        editorType,
         articleSource: article.articleSource || 2,
         articleSourceLabel: article.articleSourceLabel || '前台发布',
         status: article.status ?? 3,
         visibilityScope: article.visibilityScope || 1,
         visibleUserIds: article.visibleUserIds || []
       })
+
+      editorContentCache[editorType] = articleContent
+      editorContentCache[editorType === 'markdown' ? 'richtext' : 'markdown'] = cloneContentForMode(editorType, articleContent, editorType === 'markdown' ? 'richtext' : 'markdown')
     }
   } catch (error) {
     console.error('加载文章失败:', error)
@@ -877,6 +1059,8 @@ const goBack = () => router.back()
 const resetForm = () => {
   const nextState = createDefaultForm()
   Object.assign(form, nextState)
+  editorContentCache.markdown = ''
+  editorContentCache.richtext = ''
 
   if (isEdit.value && route.params.id) {
     loadArticle(route.params.id)
@@ -980,6 +1164,112 @@ onBeforeUnmount(() => {
   color: #0f172a;
 }
 
+.mode-switch-card {
+  border-radius: 24px;
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  background: linear-gradient(180deg, rgba(248, 250, 252, 0.94), rgba(255, 255, 255, 0.98));
+  padding: 1rem;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.92);
+}
+
+.mode-switch-card__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.mode-switch-card__title {
+  margin-top: 0.35rem;
+  font-size: 1rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.mode-switch-card__badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.08);
+  color: #2563eb;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.mode-switch-card__hint {
+  margin-top: 0.85rem;
+  font-size: 0.9rem;
+  line-height: 1.7;
+  color: #64748b;
+}
+
+.editor-mode-banner {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  border-radius: 24px;
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  background:
+    radial-gradient(circle at top right, rgba(239, 246, 255, 0.95), transparent 42%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(248, 250, 252, 0.98));
+  padding: 1rem 1.1rem;
+}
+
+.editor-mode-banner__copy {
+  min-width: 0;
+}
+
+.editor-mode-banner__label {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.05);
+  color: #64748b;
+  padding: 0.28rem 0.6rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.editor-mode-banner__title {
+  display: block;
+  margin-top: 0.55rem;
+  font-size: 1.05rem;
+  font-weight: 900;
+  color: #0f172a;
+}
+
+.editor-mode-banner__desc {
+  margin-top: 0.35rem;
+  max-width: 52rem;
+  font-size: 0.92rem;
+  line-height: 1.7;
+  color: #64748b;
+}
+
+.editor-mode-banner__chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.editor-mode-banner__chip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  border: 1px solid rgba(191, 219, 254, 0.95);
+  background: rgba(239, 246, 255, 0.95);
+  color: #1d4ed8;
+  padding: 0.32rem 0.7rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
 .editor-pill {
   display: inline-flex;
   align-items: center;
@@ -1026,18 +1316,36 @@ onBeforeUnmount(() => {
   flex: 1;
   border: none;
   background: transparent;
-  padding: 0.7rem 0.9rem;
+  padding: 0.72rem 0.9rem;
   border-radius: 1rem;
   color: #64748b;
   font-size: 0.92rem;
   font-weight: 700;
   transition: all 0.25s ease;
+  min-height: 60px;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
 }
 
 .editor-mode-button--active {
   background: linear-gradient(135deg, #eff6ff, #ffffff);
   color: #2563eb;
   box-shadow: 0 10px 24px rgba(37, 99, 235, 0.12);
+}
+
+.editor-mode-button__title {
+  font-size: 0.92rem;
+  font-weight: 800;
+}
+
+.editor-mode-button__subtitle {
+  font-size: 0.72rem;
+  line-height: 1.2;
+  color: inherit;
+  opacity: 0.82;
 }
 
 .cover-uploader {
@@ -1451,6 +1759,10 @@ onBeforeUnmount(() => {
     font-size: 0.86rem;
   }
 
+  .article-publish-page .editor-mode-button__subtitle {
+    font-size: 0.68rem;
+  }
+
   .article-publish-page .editor-title-input {
     font-size: clamp(1.4rem, 7vw, 2rem);
   }
@@ -1513,6 +1825,18 @@ onBeforeUnmount(() => {
 
   .mobile-step-actions--stack {
     padding-top: 0.25rem;
+  }
+
+  .editor-mode-banner {
+    flex-direction: column;
+  }
+
+  .editor-mode-banner__chips {
+    justify-content: flex-start;
+  }
+
+  .mode-switch-card {
+    padding: 0.9rem;
   }
 
   .article-publish-page .mobile-workspace-shell {

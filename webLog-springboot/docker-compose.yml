@@ -18,7 +18,7 @@ services:
     volumes:
       - ${MYSQL_DATA_HOST_PATH:-/opt/mysql}:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-p${MYSQL_ROOT_PASSWORD:-95833414}"]
+      test: [ "CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-p${MYSQL_ROOT_PASSWORD:-95833414}" ]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -77,7 +77,7 @@ services:
       JAVA_OPTS: -Xms256m -Xmx512m --add-opens=java.base/java.lang.invoke=ALL-UNNAMED
       LOG_PATH: ${LOG_CONTAINER_PATH:-/app/logs}
     volumes:
-      - ${LOG_HOST_PATH:-/opt/deploy/logs}:${LOG_CONTAINER_PATH:-/app/logs}
+      - ${LOG_HOST_PATH:-/data/logs}:${LOG_CONTAINER_PATH:-/app/logs}
     networks:
       - weblog-network
 
