@@ -52,6 +52,7 @@
         <minio.version>8.2.1</minio.version>
         <mapstruct.version>1.5.2.Final</mapstruct.version>
         <commonmark.version>0.20.0</commonmark.version>
+        <poi.version>5.2.5</poi.version>
 
     </properties>
 
@@ -148,6 +149,23 @@
                 <groupId>org.mapstruct</groupId>
                 <artifactId>mapstruct</artifactId>
                 <version>${mapstruct.version}</version>
+            </dependency>
+
+            <!-- Word 文档解析 -->
+            <dependency>
+                <groupId>org.apache.poi</groupId>
+                <artifactId>poi</artifactId>
+                <version>${poi.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.poi</groupId>
+                <artifactId>poi-ooxml</artifactId>
+                <version>${poi.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.poi</groupId>
+                <artifactId>poi-scratchpad</artifactId>
+                <version>${poi.version}</version>
             </dependency>
 
 

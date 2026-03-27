@@ -74,6 +74,13 @@
                     </template>
                 </el-table-column>
 
+                <el-table-column prop="parentName" label="父级分类" width="180" align="center">
+                    <template #default="{ row }">
+                        <el-tag v-if="row.parentName" type="info" size="small">{{ row.parentName }}</el-tag>
+                        <el-text v-else type="info">一级分类</el-text>
+                    </template>
+                </el-table-column>
+
                 <el-table-column prop="showOnFront" label="前台导航展示" width="160" align="center">
                     <template #default="{ row }">
                         <el-switch
@@ -158,6 +165,10 @@
                     </div>
 
                     <div class="mt-3 flex flex-wrap gap-2 text-xs">
+                        <el-tag v-if="row.parentName" type="info" size="small">
+                            {{ row.parentName }}
+                        </el-tag>
+                        <el-tag v-else type="info" size="small">一级分类</el-tag>
                         <el-tag :type="row.visibilityScope === 2 ? 'warning' : 'success'" size="small">
                             {{ row.visibilityScope === 2 ? '指定用户' : '公开' }}
                         </el-tag>
@@ -213,6 +224,11 @@
                         maxlength="50"
                         show-word-limit
                     />
+                </el-form-item>
+                <el-form-item label="父级分类" size="large">
+                    <el-select v-model="form.parentId" placeholder="不选择则为一级分类" clearable style="width: 100%">
+                        <el-option v-for="item in categoryOptions" :key="item.value" :label="item.label" :value="item.value" />
+                    </el-select>
                 </el-form-item>
                 <el-form-item label="前台展示" prop="showOnFront" size="large">
                     <el-switch v-model="form.showOnFront" inline-prompt active-text="显示" inactive-text="隐藏" />
@@ -276,7 +292,7 @@
 </template>
 
 <script setup>
-import { addCategory, deleteCategory, getCategoryPageList, updateCategoryShowOnFront, updateCategoryVisibility } from '@/api/admin/category'
+import { addCategory, deleteCategory, getCategoryPageList, getCategorySelectList, updateCategoryShowOnFront, updateCategoryVisibility } from '@/api/admin/category'
 import { getUserSelectList } from '@/api/admin/user'
 import { hasAccess } from '@/composables/permission'
 import { RefreshRight, Search, Plus, Delete, FolderOpened, DocumentCopy } from '@element-plus/icons-vue'
@@ -303,10 +319,12 @@ const btnLoading = ref(false)
 const tableLoading = ref(false)
 const formRef = ref(null)
 const userOptions = ref([])
+const categoryOptions = ref([])
 
 const form = reactive({
   name: '',
   illustrate: '',
+  parentId: null,
   showOnFront: true,
   visibilityScope: 1,
   visibleUserIds: []
@@ -333,6 +351,7 @@ const addCategoryBtnClick = () => {
     dialogVisible.value = true
     form.name = ''
     form.illustrate = ''
+    form.parentId = null
     form.showOnFront = true
     form.visibilityScope = 1
     form.visibleUserIds = []
@@ -434,6 +453,14 @@ const loadUserOptions = () => {
     })
 }
 
+const loadCategoryOptions = () => {
+    getCategorySelectList().then((res) => {
+        if (res.success) {
+            categoryOptions.value = res.data || []
+        }
+    })
+}
+
 const onSubmit = () => {
     formRef.value.validate((valid) => {
         if (!valid) {
@@ -443,6 +470,7 @@ const onSubmit = () => {
         addCategory({
             name: form.name,
             illustrate: form.illustrate,
+            parentId: form.parentId,
             showOnFront: form.showOnFront,
             visibilityScope: canConfigureVisibility() ? form.visibilityScope : 1,
             visibleUserIds: canConfigureVisibility() && form.visibilityScope === 2 ? form.visibleUserIds : []
@@ -515,6 +543,7 @@ const deleteCategorySubmit = (row) => {
 }
 
 loadUserOptions()
+loadCategoryOptions()
 </script>
 
 <style scoped>

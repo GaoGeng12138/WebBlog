@@ -33,4 +33,18 @@ public class AdminFileController {
     public Response uploadFile(@RequestParam("file") MultipartFile file) {
         return fileService.uploadFile(file);
     }
+
+    /**
+     * 解析上传的 Word 文档并返回 Markdown。
+     *
+     * @param file Word 文件
+     * @return Markdown 内容
+     */
+    @PostMapping("/word/parse")
+    @ApiOperation(value = "Word 文档解析")
+    @ApiOperationLog(description = "Word 文档解析")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','admin:article:list','admin:article:publish')")
+    public Response parseWordFile(@RequestParam("file") MultipartFile file) {
+        return fileService.parseWordFile(file);
+    }
 }

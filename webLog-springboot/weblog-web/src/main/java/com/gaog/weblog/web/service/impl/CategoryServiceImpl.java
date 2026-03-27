@@ -8,6 +8,7 @@ import com.gaog.weblog.common.domain.dos.CategoryDO;
 import com.gaog.weblog.common.domain.mapper.ArticleCategoryRelMapper;
 import com.gaog.weblog.common.domain.mapper.CategoryMapper;
 import com.gaog.weblog.common.service.ContentVisibilityService;
+import com.gaog.weblog.common.utils.CategoryTreeUtil;
 import com.gaog.weblog.common.utils.PageResponse;
 import com.gaog.weblog.common.utils.Response;
 import com.gaog.weblog.web.model.vo.category.FindCategoryArticleReqVO;
@@ -19,7 +20,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -56,21 +59,11 @@ public class CategoryServiceImpl implements CategoryService {
 
         Page<CategoryDO> categoryDOPage = categoryMapper.selectPage(page, wrapper);
         List<CategoryDO> categoryDOS = categoryDOPage.getRecords();
+        List<CategoryDO> allCategoryDOS = categoryMapper.selectList(null);
 
         List<FindCategoryPageListRspVO> vos = null;
         if (!CollectionUtils.isEmpty(categoryDOS)) {
-            List<Long> categoryIds = categoryDOS.stream()
-                    .map(CategoryDO::getId)
-                    .collect(Collectors.toList());
-
-            Map<Long, Integer> categoryArticleCountMap = articleCategoryRelMapper.selectList(
-                            new LambdaQueryWrapper<ArticleCategoryRelDO>()
-                                    .in(ArticleCategoryRelDO::getCategoryId, categoryIds))
-                    .stream()
-                    .collect(Collectors.groupingBy(
-                            ArticleCategoryRelDO::getCategoryId,
-                            Collectors.collectingAndThen(Collectors.counting(), Math::toIntExact)
-                    ));
+            Map<Long, Integer> categoryArticleCountMap = buildCategoryArticleCountMap(categoryDOS, allCategoryDOS);
 
             vos = categoryDOS.stream()
                     .map(categoryDO -> FindCategoryPageListRspVO.builder()
@@ -103,18 +96,8 @@ public class CategoryServiceImpl implements CategoryService {
 
         List<FindCategoryPageListRspVO> vos = null;
         if (!CollectionUtils.isEmpty(categoryDOS)) {
-            List<Long> categoryIds = categoryDOS.stream()
-                    .map(CategoryDO::getId)
-                    .collect(Collectors.toList());
-
-            Map<Long, Integer> categoryArticleCountMap = articleCategoryRelMapper.selectList(
-                            new LambdaQueryWrapper<ArticleCategoryRelDO>()
-                                    .in(ArticleCategoryRelDO::getCategoryId, categoryIds))
-                    .stream()
-                    .collect(Collectors.groupingBy(
-                            ArticleCategoryRelDO::getCategoryId,
-                            Collectors.collectingAndThen(Collectors.counting(), Math::toIntExact)
-                    ));
+            List<CategoryDO> allCategoryDOS = categoryMapper.selectList(null);
+            Map<Long, Integer> categoryArticleCountMap = buildCategoryArticleCountMap(categoryDOS, allCategoryDOS);
 
             vos = categoryDOS.stream()
                     .map(categoryDO -> FindCategoryPageListRspVO.builder()
@@ -158,5 +141,59 @@ public class CategoryServiceImpl implements CategoryService {
         wrapper.and(w -> w.eq(CategoryDO::getVisibilityScope, 1)
                 .or()
                 .inSql(CategoryDO::getId, "SELECT category_id FROM t_category_access_user WHERE user_id = " + currentUserId));
+    }
+
+    /**
+     * 递归收集分类及其子分类 ID。
+     */
+    private List<Long> collectCategoryIdsWithChildren(List<CategoryDO> categoryDOS, List<CategoryDO> allCategoryDOS) {
+        if (CollectionUtils.isEmpty(categoryDOS)) {
+            return java.util.Collections.emptyList();
+        }
+
+        List<Long> categoryIds = new java.util.ArrayList<>();
+        for (CategoryDO categoryDO : categoryDOS) {
+            categoryIds.addAll(CategoryTreeUtil.collectDescendantIds(categoryDO.getId(), allCategoryDOS));
+        }
+        return categoryIds.stream().distinct().collect(Collectors.toList());
+    }
+
+    /**
+     * 统计分类及其子分类的文章数量。
+     */
+    private Map<Long, Integer> buildCategoryArticleCountMap(List<CategoryDO> categoryDOS, List<CategoryDO> allCategoryDOS) {
+        if (CollectionUtils.isEmpty(categoryDOS)) {
+            return new HashMap<>();
+        }
+
+        List<Long> categoryIds = collectCategoryIdsWithChildren(categoryDOS, allCategoryDOS);
+        Map<Long, Integer> directCountMap = articleCategoryRelMapper.selectList(
+                        new LambdaQueryWrapper<ArticleCategoryRelDO>()
+                                .in(ArticleCategoryRelDO::getCategoryId, categoryIds))
+                .stream()
+                .collect(Collectors.groupingBy(
+                        ArticleCategoryRelDO::getCategoryId,
+                        Collectors.collectingAndThen(Collectors.counting(), Math::toIntExact)
+                ));
+
+        Map<Long, Integer> result = new HashMap<>();
+        for (CategoryDO categoryDO : categoryDOS) {
+            int count = collectArticleCountWithChildren(categoryDO.getId(), allCategoryDOS, directCountMap);
+            result.put(categoryDO.getId(), count);
+        }
+        return result;
+    }
+
+    /**
+     * 递归汇总当前分类及子分类的文章数量。
+     */
+    private int collectArticleCountWithChildren(Long categoryId, List<CategoryDO> allCategoryDOS, Map<Long, Integer> directCountMap) {
+        int total = directCountMap.getOrDefault(categoryId, 0);
+        for (CategoryDO categoryDO : allCategoryDOS) {
+            if (Objects.equals(categoryId, categoryDO.getParentId())) {
+                total += collectArticleCountWithChildren(categoryDO.getId(), allCategoryDOS, directCountMap);
+            }
+        }
+        return total;
     }
 }

@@ -3,3 +3,8 @@ import axios from '@/axios'
 export function uploadFile(data) {
     return axios.post("/admin/file/upload", data)
 }
+
+// 解析 Word 文档为 Markdown
+export function parseWordFile(data) {
+    return axios.post("/admin/file/word/parse", data)
+}

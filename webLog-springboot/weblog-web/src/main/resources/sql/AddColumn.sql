@@ -24,6 +24,12 @@ ALTER TABLE `t_category`
 ALTER TABLE `t_category`
     ADD COLUMN `visibility_scope` tinyint(1) NOT NULL DEFAULT '1' COMMENT '可见范围：1-公开，2-指定用户可见' AFTER `show_on_front`;
 
+ALTER TABLE `t_category`
+    ADD COLUMN `parent_id` bigint(20) unsigned DEFAULT NULL COMMENT '父级分类id' AFTER `illustrate`;
+
+ALTER TABLE `t_category`
+    ADD INDEX `idx_parent_id` (`parent_id`);
+
 -- 旧字段清理
 ALTER TABLE `t_blog_settings`
     DROP COLUMN `slogan`;

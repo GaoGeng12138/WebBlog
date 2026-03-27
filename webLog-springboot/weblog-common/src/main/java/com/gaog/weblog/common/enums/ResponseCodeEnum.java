@@ -57,6 +57,10 @@ public enum ResponseCodeEnum implements BaseExceptionInterface {
     USER_PUBLISH_DISABLED("20037", "用户发布文章功能已关闭！"),
     LIKE_DISABLED("20038", "点赞功能已关闭！"),
     TRANSPORT_DECRYPT_FAILED("20039", "传输数据解密失败，请刷新页面后重试！"),
+    CATEGORY_HAS_CHILDREN("20040", "该分类下存在子分类，不能删除！"),
+    CATEGORY_HAS_ARTICLES("20041", "该分类下存在文章，不能删除！"),
+    WORD_FILE_FORMAT_NOT_SUPPORTED("20042", "仅支持 doc / docx 格式的 Word 文档！"),
+    WORD_PARSE_FAILED("20043", "Word 文档解析失败，请检查文件内容后重试！"),
 
     // ----------- 业务异常状态码 -----------
     PRODUCT_NOT_FOUND("20000", "该产品不存在（测试使用）"),

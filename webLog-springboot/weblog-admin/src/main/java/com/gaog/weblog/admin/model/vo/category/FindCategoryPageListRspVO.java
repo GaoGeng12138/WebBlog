@@ -38,6 +38,16 @@ public class FindCategoryPageListRspVO {
     private String illustrate;
 
     /**
+     * 父级分类 ID
+     */
+    private Long parentId;
+
+    /**
+     * 父级分类名称
+     */
+    private String parentName;
+
+    /**
      * 是否在前台展示
      */
     private Boolean showOnFront;

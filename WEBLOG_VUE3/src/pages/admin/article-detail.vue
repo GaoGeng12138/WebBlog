@@ -92,6 +92,20 @@
                             </div>
                             <span class="admin-editor-shell__badge">后台发布</span>
                         </div>
+                        <div class="admin-editor-shell__toolbar">
+                            <el-upload
+                                :auto-upload="false"
+                                :show-file-list="false"
+                                accept=".doc,.docx"
+                                :before-upload="beforeWordImport"
+                                :on-change="handleWordImport"
+                            >
+                                <el-button :loading="wordImportLoading" class="admin-btn-secondary">
+                                    导入 Word
+                                </el-button>
+                            </el-upload>
+                            <el-text type="info" size="small">上传 doc / docx 文件后，会自动解析成 Markdown 并填充到正文。</el-text>
+                        </div>
                         <ArticleDualModeEditor
                             v-model="form.content"
                             v-model:editorType="form.editorType"
@@ -123,7 +137,7 @@
 <script setup>
 import { getArticleDetail, publishArticle, updateArticle } from '@/api/admin/article'
 import { getCategorySelectList } from '@/api/admin/category'
-import { uploadFile } from '@/api/admin/file'
+import { parseWordFile, uploadFile } from '@/api/admin/file'
 import { getTagSelectList } from '@/api/admin/tag'
 import { getUserSelectList } from '@/api/admin/user'
 import { useTagList } from '@/composables/useTagList'
@@ -151,6 +165,7 @@ const articleId = ref(null)
 
 const editorRef = shallowRef()
 const coverUploading = ref(false)
+const wordImportLoading = ref(false)
 const localCoverPreviewUrl = ref('')
 
 // 表单数据
@@ -435,6 +450,57 @@ const onUploadImg = async (files, callback) => {
         callback(urls)
     } catch (error) {
         showMessage(error.message || '图片上传失败', 'error')
+    }
+}
+
+// Word 文件导入前置校验
+const beforeWordImport = (file) => {
+    const extension = file.name?.split('.').pop()?.toLowerCase()
+    const isWordFile = ['doc', 'docx'].includes(extension)
+    const isLt10M = file.size / 1024 / 1024 < 10
+
+    if (!isWordFile) {
+        showMessage('只能导入 doc / docx 格式的 Word 文件', 'error')
+    }
+    if (!isLt10M) {
+        showMessage('Word 文件大小不能超过 10MB', 'error')
+    }
+    return isWordFile && isLt10M
+}
+
+// 导入 Word 文件并填充正文
+const handleWordImport = async (uploadFileInfo) => {
+    const rawFile = uploadFileInfo?.raw
+    if (!rawFile || !beforeWordImport(rawFile)) {
+        return
+    }
+
+    wordImportLoading.value = true
+    try {
+        const formData = new FormData()
+        formData.append('file', rawFile)
+        const res = await parseWordFile(formData)
+        if (!res?.success) {
+            showMessage(res?.message || 'Word 文档解析失败', 'error')
+            return
+        }
+
+        const markdownContent = res?.data?.content || ''
+        if (!markdownContent) {
+            showMessage('解析结果为空，请检查 Word 内容', 'warning')
+            return
+        }
+
+        form.editorType = 'markdown'
+        form.content = markdownContent
+        if (!form.title && res?.data?.title) {
+            form.title = res.data.title
+        }
+        showMessage('Word 文档已成功导入')
+    } catch (error) {
+        showMessage(error?.message || 'Word 文档导入失败', 'error')
+    } finally {
+        wordImportLoading.value = false
     }
 }
 
@@ -804,6 +870,16 @@ const loadArticleDetail = (id = articleId.value) => {
     padding: 1rem;
 }
 
+.admin-editor-shell__toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.9rem 1.25rem;
+    border-bottom: 1px solid rgba(226, 232, 240, 0.92);
+    background: rgba(248, 250, 252, 0.72);
+}
+
 .admin-mode-switch {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -966,6 +1042,11 @@ const loadArticleDetail = (id = articleId.value) => {
     }
 
     .admin-editor-shell__meta {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .admin-editor-shell__toolbar {
         flex-direction: column;
         align-items: flex-start;
     }

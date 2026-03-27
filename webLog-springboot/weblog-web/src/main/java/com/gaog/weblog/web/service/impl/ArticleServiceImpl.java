@@ -33,6 +33,7 @@ import com.gaog.weblog.common.enums.ResponseCodeEnum;
 import com.gaog.weblog.common.enums.VisibilityScopeEnum;
 import com.gaog.weblog.common.exception.BizException;
 import com.gaog.weblog.common.service.ContentVisibilityService;
+import com.gaog.weblog.common.utils.CategoryTreeUtil;
 import com.gaog.weblog.common.utils.IpUtil;
 import com.gaog.weblog.common.utils.PageResponse;
 import com.gaog.weblog.common.utils.Response;
@@ -157,7 +158,7 @@ public class ArticleServiceImpl implements ArticleService {
             // 查询所有分类
             List<CategoryDO> categoryDOS = categoryMapper.selectList(Wrappers.emptyWrapper());
             // 转 Map, 方便后续根据分类 ID 拿到对应的分类名称
-            Map<Long, String> categoryIdNameMap = categoryDOS.stream().collect(Collectors.toMap(CategoryDO::getId, CategoryDO::getName));
+            Map<Long, CategoryDO> categoryMap = categoryDOS.stream().collect(Collectors.toMap(CategoryDO::getId, item -> item, (left, right) -> left));
 
             // 根据文章 ID 批量查询所有关联记录
             List<ArticleCategoryRelDO> articleCategoryRelDOS = articleCategoryRelMapper.selectByArticleIds(articleIds);
@@ -171,7 +172,7 @@ public class ArticleServiceImpl implements ArticleService {
                 if (articleCategoryRelDO != null) {
                     Long categoryId = articleCategoryRelDO.getCategoryId();
                     // 通过分类 ID 从 map 中拿到对应的分类名称
-                    String categoryName = categoryIdNameMap.get(categoryId);
+                    String categoryName = CategoryTreeUtil.buildCategoryPathName(categoryId, categoryMap);
 
                     FindCategoryListRspVO findCategoryListRspVO = FindCategoryListRspVO.builder()
                             .id(categoryId)
@@ -238,10 +239,12 @@ public class ArticleServiceImpl implements ArticleService {
             return PageResponse.success(emptyPage, Lists.newArrayList());
         }
 
-        // 先查询该分类下所有的文章ID
+        // 先查询该分类及其子分类下所有的文章ID
+        List<CategoryDO> allCategories = categoryMapper.selectList(Wrappers.emptyWrapper());
+        List<Long> categoryIds = CategoryTreeUtil.collectDescendantIds(categoryId, allCategories);
         List<ArticleCategoryRelDO> articleCategoryRelDOS = articleCategoryRelMapper.selectList(
                 Wrappers.<ArticleCategoryRelDO>lambdaQuery()
-                        .eq(ArticleCategoryRelDO::getCategoryId, categoryId)
+                        .in(ArticleCategoryRelDO::getCategoryId, categoryIds)
         );
 
         if (CollectionUtils.isEmpty(articleCategoryRelDOS)) {
@@ -498,7 +501,7 @@ public class ArticleServiceImpl implements ArticleService {
             // 查询所有分类
             List<CategoryDO> categoryDOS = categoryMapper.selectList(Wrappers.emptyWrapper());
             // 转 Map, 方便后续根据分类 ID 拿到对应的分类名称
-            Map<Long, String> categoryIdNameMap = categoryDOS.stream().collect(Collectors.toMap(CategoryDO::getId, CategoryDO::getName));
+            Map<Long, CategoryDO> categoryMap = categoryDOS.stream().collect(Collectors.toMap(CategoryDO::getId, item -> item, (left, right) -> left));
 
             // 根据文章 ID 批量查询所有关联记录，并按文章 ID 分组，避免每篇文章重复遍历
             List<ArticleCategoryRelDO> currentPageArticleCategoryRelDOS = articleCategoryRelMapper.selectByArticleIds(currentPageArticleIds);
@@ -511,7 +514,7 @@ public class ArticleServiceImpl implements ArticleService {
                 if (articleCategoryRelDO != null) {
                     Long currCategoryId = articleCategoryRelDO.getCategoryId();
                     // 通过分类 ID 从 map 中拿到对应的分类名称
-                    String categoryName = categoryIdNameMap.get(currCategoryId);
+                    String categoryName = CategoryTreeUtil.buildCategoryPathName(currCategoryId, categoryMap);
 
                     FindCategoryListRspVO findCategoryListRspVO = FindCategoryListRspVO.builder()
                             .id(currCategoryId)

@@ -109,6 +109,7 @@ CREATE TABLE `t_category`
     `id`          bigint(20) unsigned NOT NULL AUTO_INCREMENT COMMENT '分类id',
     `name`        varchar(60)  NOT NULL DEFAULT '' COMMENT '分类名称',
     `illustrate`  varchar(120) NOT NULL DEFAULT '' COMMENT '分类描述',
+    `parent_id`   bigint(20) unsigned DEFAULT NULL COMMENT '父级分类id',
     `show_on_front` tinyint(1) NOT NULL DEFAULT '1' COMMENT '是否在前台导航展示：1-是，0-否',
     `visibility_scope` tinyint(1) NOT NULL DEFAULT '1' COMMENT '可见范围：1-公开，2-指定用户可见',
     `create_time` datetime     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -116,6 +117,7 @@ CREATE TABLE `t_category`
     `is_deleted`  tinyint(2) NOT NULL DEFAULT '0' COMMENT '逻辑删除标志位：0：未删除 1：已删除',
     PRIMARY KEY (`id`) USING BTREE,
     UNIQUE KEY `uk_name` (`name`) USING BTREE,
+    KEY           `idx_parent_id` (`parent_id`) USING BTREE,
     KEY           `idx_create_time` (`create_time`) USING BTREE
 ) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 ROW_FORMAT=DYNAMIC COMMENT='文章分类表';
 -- t_category_access_user ddl

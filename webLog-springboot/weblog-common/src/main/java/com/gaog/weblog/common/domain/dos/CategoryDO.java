@@ -38,6 +38,11 @@ public class CategoryDO {
     private String illustrate;
 
     /**
+     * 父级分类 ID，顶级分类时为 null
+     */
+    private Long parentId;
+
+    /**
      * 是否在前台导航展示
      */
     private Boolean showOnFront;

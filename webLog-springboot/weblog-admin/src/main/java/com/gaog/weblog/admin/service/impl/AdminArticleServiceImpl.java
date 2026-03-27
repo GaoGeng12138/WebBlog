@@ -33,6 +33,7 @@ import com.gaog.weblog.common.enums.VisibilityScopeEnum;
 import com.gaog.weblog.common.exception.BizException;
 import com.gaog.weblog.common.model.vo.SelectRspVO;
 import com.gaog.weblog.common.service.ContentVisibilityService;
+import com.gaog.weblog.common.utils.CategoryTreeUtil;
 import com.gaog.weblog.common.utils.FileUtil;
 import com.gaog.weblog.common.utils.PageResponse;
 import com.gaog.weblog.common.utils.Response;
@@ -325,6 +326,9 @@ public class AdminArticleServiceImpl implements AdminArticleService {
         Page<ArticleDO> articleDOPage = articleMapper.selectPage(page, wrapper);
 
         List<ArticleDO> articleDOS = articleDOPage.getRecords();
+        List<CategoryDO> categoryDOS = categoryMapper.selectList(null);
+        Map<Long, CategoryDO> categoryMap = categoryDOS.stream()
+                .collect(Collectors.toMap(CategoryDO::getId, item -> item, (left, right) -> left));
 
         // DO 转 VO
         List<FindArticlePageListRspVO> vos = null;
@@ -340,10 +344,7 @@ public class AdminArticleServiceImpl implements AdminArticleService {
 
                         String categoryName = null;
                         if (Objects.nonNull(articleCategoryRelDO)) {
-                            CategoryDO categoryDO = categoryMapper.selectById(articleCategoryRelDO.getCategoryId());
-                            if (Objects.nonNull(categoryDO)) {
-                                categoryName = categoryDO.getName();
-                            }
+                            categoryName = CategoryTreeUtil.buildCategoryPathName(articleCategoryRelDO.getCategoryId(), categoryMap);
                         }
 
                         // 查询文章标签列表

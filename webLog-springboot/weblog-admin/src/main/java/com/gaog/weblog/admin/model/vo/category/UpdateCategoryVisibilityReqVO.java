@@ -13,6 +13,9 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+/**
+ * 更新分类可见性请求对象。
+ */
 @ApiModel(value = "更新分类可见性 VO")
 public class UpdateCategoryVisibilityReqVO {
 

@@ -15,4 +15,12 @@ public interface AdminFileService {
      * @return
      */
     Response uploadFile(MultipartFile file);
+
+    /**
+     * 解析 Word 文档为 Markdown。
+     *
+     * @param file Word 文件
+     * @return 解析结果
+     */
+    Response parseWordFile(MultipartFile file);
 }

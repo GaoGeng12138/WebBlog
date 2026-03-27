@@ -32,6 +32,8 @@ public class AddCategoryReqVO {
     @Length(min = 1, max = 50, message = "标签描述字数限制 1 ~ 50 之间")
     private String illustrate;
 
+    private Long parentId;
+
     @NotNull(message = "请选择是否在前台展示")
     private Boolean showOnFront;
 
