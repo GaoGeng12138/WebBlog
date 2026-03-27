@@ -24,7 +24,7 @@
           </div>
 
           <div v-else>
-            <div v-if="categories.length === 0" class="flex flex-col items-center justify-center py-20 px-4 bg-white/60 backdrop-blur-md rounded-3xl border border-gray-100 shadow-sm">
+            <div v-if="pagedCategories.length === 0" class="flex flex-col items-center justify-center py-20 px-4 bg-white/60 backdrop-blur-md rounded-3xl border border-gray-100 shadow-sm">
               <div class="w-24 h-24 mb-6 bg-blue-50 rounded-full flex items-center justify-center">
                 <svg class="h-12 w-12 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
@@ -37,9 +37,9 @@
             <div v-else>
               <div class="grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4 xl:gap-6">
                 <div 
-                  v-for="(category, index) in categories" 
+                  v-for="(category, index) in pagedCategories" 
                   :key="category.id" 
-                  class="group bg-white rounded-[22px] p-4 sm:p-6 border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden relative min-h-[170px] sm:min-h-[210px]"
+                  class="group relative min-h-[170px] cursor-pointer overflow-visible rounded-[22px] border border-gray-100 bg-white p-4 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl sm:min-h-[210px] sm:p-6"
                   :class="[
                     index % 2 === 1 ? 'mt-4 sm:mt-0' : 'mt-0',
                     index % 4 === 3 ? 'sm:mt-0' : ''
@@ -69,6 +69,38 @@
                     
                     <h3 class="text-base sm:text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors mb-2 line-clamp-2">{{ category.name }}</h3>
                     <p class="text-[12px] sm:text-sm text-gray-500 line-clamp-2 mt-auto">包含有关 {{ category.name }} 的各类技术探讨和文章分享。</p>
+
+                    <div
+                      v-if="category.children && category.children.length"
+                      class="mt-3 inline-flex items-center gap-1.5 self-start rounded-full bg-blue-50 px-3 py-1 text-[11px] font-medium text-blue-600"
+                    >
+                      <span>含 {{ category.children.length }} 个子级分类</span>
+                      <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                      </svg>
+                    </div>
+                  </div>
+
+                  <div
+                    v-if="category.children && category.children.length"
+                    class="pointer-events-none absolute left-0 right-0 top-full z-20 pt-3 opacity-0 translate-y-2 transition-all duration-300 group-hover:pointer-events-auto group-hover:opacity-100 group-hover:translate-y-0"
+                    @click.stop
+                  >
+                    <div class="rounded-[20px] border border-[rgba(149,171,210,0.16)] bg-white/96 p-3 shadow-[0_20px_40px_rgba(120,146,186,0.18)] backdrop-blur-xl">
+                      <p class="mb-2 px-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-gray-400">子级分类</p>
+                      <div class="grid gap-2">
+                        <button
+                          v-for="child in category.children"
+                          :key="child.id"
+                          type="button"
+                          class="flex items-center justify-between rounded-xl bg-gray-50 px-3 py-2 text-left transition-colors hover:bg-blue-50"
+                          @click.stop="goToCategoryArticles(child)"
+                        >
+                          <span class="truncate text-sm font-medium text-gray-700 hover:text-blue-600">{{ child.name }}</span>
+                          <span class="ml-2 shrink-0 rounded-full bg-white px-2 py-0.5 text-[11px] font-semibold text-gray-400">{{ child.articleCount || 0 }}</span>
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -99,9 +131,9 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { computed, ref, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { getCategoryList } from '@/api/frontend/category'
+import { getAllCategoryList } from '@/api/frontend/category'
 import AppHeader from '@/components/frontend/AppHeader.vue'
 import AppFooter from '@/components/frontend/AppFooter.vue'
 import HomeSidebar from '@/pages/frontend/HomeSidebar.vue'
@@ -110,7 +142,7 @@ import Pagination from '@/components/frontend/Pagination.vue'
 
 const router = useRouter()
 const categories = ref([])
-const total = ref(0)
+const total = computed(() => filteredCategories.value.length)
 const page = ref(1)
 const size = ref(12)
 const loading = ref(false)
@@ -124,28 +156,19 @@ onMounted(() => {
 async function loadCategories() {
   loading.value = true
   try {
-    const res = await getCategoryList({ current: page.value, size: size.value, name: keyword.value })
+    const res = await getAllCategoryList()
     if (res && res.success) {
-      if (res.data && res.data.records) {
-        categories.value = res.data.records.map(category => ({
-          id: category.id,
-          name: category.name,
-          articleCount: category.articleCount || 0,
-          illustrate: category.illustrate || ''
-        }))
-        total.value = res.data.total
-      } else {
-        const dataArr = Array.isArray(res.data) ? res.data : (res.data ? [res.data] : [])
-        categories.value = dataArr.map(category => ({
-          id: category.id,
-          name: category.name,
-          articleCount: category.articleCount || 0,
-          illustrate: category.illustrate || ''
-        }))
-        page.value = res.current || page.value
-        size.value = res.size || size.value
-        total.value = res.total || categories.value.length
-      }
+      const dataArr = Array.isArray(res.data) ? res.data : (res.data ? [res.data] : [])
+      categories.value = buildCategoryTree(dataArr.map(category => ({
+        id: category.id,
+        name: category.name,
+        articleCount: category.articleCount || 0,
+        illustrate: category.illustrate || '',
+        parentId: category.parentId ?? null,
+        showOnFront: category.showOnFront !== false,
+        children: []
+      })))
+      clampCurrentPage()
     }
   } catch (error) {
     console.error('Failed to load categories:', error)
@@ -157,14 +180,20 @@ async function loadCategories() {
 function search(searchKeyword) {
   if (searchKeyword) keyword.value = searchKeyword
   page.value = 1
-  loadCategories()
+  clampCurrentPage()
 }
 
 function handlePageChange(newPage) {
   page.value = newPage
-  loadCategories()
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
+
+const filteredCategories = computed(() => filterCategoryTree(categories.value, keyword.value))
+
+const pagedCategories = computed(() => {
+  const start = (page.value - 1) * size.value
+  return filteredCategories.value.slice(start, start + size.value)
+})
 
 function goToCategoryArticles(category) {
   router.push({
@@ -174,6 +203,78 @@ function goToCategoryArticles(category) {
     }
   })
 }
+
+function buildCategoryTree(list) {
+  const nodeMap = new Map()
+  const roots = []
+
+  list.forEach((category, index) => {
+    if (!category.showOnFront) {
+      return
+    }
+
+    nodeMap.set(category.id, {
+      ...category,
+      order: index,
+      children: []
+    })
+  })
+
+  nodeMap.forEach((node) => {
+    const parentId = node.parentId
+    const hasParent = parentId !== null && parentId !== undefined && Number(parentId) !== 0
+    const parentNode = hasParent ? nodeMap.get(parentId) : null
+
+    if (parentNode) {
+      parentNode.children.push(node)
+    } else {
+      roots.push(node)
+    }
+  })
+
+  const sortTree = (nodes) => {
+    nodes.sort((left, right) => left.order - right.order)
+    nodes.forEach(item => sortTree(item.children))
+  }
+
+  sortTree(roots)
+  return roots
+}
+
+function filterCategoryTree(list, searchKeyword) {
+  const normalizedKeyword = (searchKeyword || '').trim().toLowerCase()
+  if (!normalizedKeyword) {
+    return list
+  }
+
+  return list.reduce((result, node) => {
+    const filteredChildren = filterCategoryTree(node.children || [], normalizedKeyword)
+    const matchedSelf = (node.name || '').toLowerCase().includes(normalizedKeyword)
+
+    if (matchedSelf || filteredChildren.length > 0) {
+      result.push({
+        ...node,
+        children: filteredChildren
+      })
+    }
+
+    return result
+  }, [])
+}
+
+function clampCurrentPage() {
+  const maxPage = Math.max(1, Math.ceil(total.value / size.value))
+  if (page.value > maxPage) {
+    page.value = maxPage
+  }
+}
+
+watch(
+  () => [filteredCategories.value.length, size.value],
+  () => {
+    clampCurrentPage()
+  }
+)
 
 </script>
 

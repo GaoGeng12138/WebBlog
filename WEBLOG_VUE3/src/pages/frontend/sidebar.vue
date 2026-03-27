@@ -68,16 +68,36 @@
           <span class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-4 bg-blue-500 rounded-full"></span>
           分类目录
         </h3>
-        <div class="space-y-1">
-          <a v-for="category in categories" :key="category.id" href="#"
-            class="flex items-center justify-between py-2.5 px-3 rounded-xl hover:bg-blue-50 transition-colors group"
-            @click.prevent="goToCategory(category.id)">
-            <span class="text-gray-600 font-medium group-hover:text-blue-600 transition-colors flex items-center gap-2">
-              <el-icon class="text-gray-400 group-hover:text-blue-500"><Folder /></el-icon>
-              {{ category.name }}
-            </span>
-            <span class="text-xs font-semibold bg-gray-100 text-gray-500 group-hover:bg-blue-100 group-hover:text-blue-600 rounded-full px-2.5 py-0.5 transition-colors">{{ category.count }}</span>
-          </a>
+        <div class="space-y-3">
+          <div v-for="category in categories" :key="category.id" class="space-y-2">
+            <button
+              type="button"
+              class="flex w-full items-center justify-between rounded-xl py-2.5 px-3 text-left transition-colors group hover:bg-blue-50"
+              @click="goToCategory(category.id)"
+            >
+              <span class="flex items-center gap-2 font-medium text-gray-600 transition-colors group-hover:text-blue-600">
+                <el-icon class="text-gray-400 group-hover:text-blue-500"><Folder /></el-icon>
+                {{ category.name }}
+              </span>
+              <span class="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-semibold text-gray-500 transition-colors group-hover:bg-blue-100 group-hover:text-blue-600">{{ category.count }}</span>
+            </button>
+
+            <div v-if="category.children && category.children.length" class="ml-3 space-y-1 border-l border-dashed border-blue-100 pl-3">
+              <button
+                v-for="child in category.children"
+                :key="child.id"
+                type="button"
+                class="flex w-full items-center justify-between rounded-xl px-3 py-2 text-left transition-colors group hover:bg-blue-50"
+                @click="goToCategory(child.id)"
+              >
+                <span class="flex items-center gap-2 text-sm font-medium text-gray-500 transition-colors group-hover:text-blue-600">
+                  <span class="h-1.5 w-1.5 rounded-full bg-blue-300"></span>
+                  {{ child.name }}
+                </span>
+                <span class="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-semibold text-gray-400 transition-colors group-hover:bg-blue-100 group-hover:text-blue-600">{{ child.count }}</span>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -152,17 +172,20 @@ async function loadCategories() {
   try {
     const res = await getAllCategoryList()
     if (res && res.success) {
-      // Transform the data to match the expected format
-      categories.value = res.data.map(category => ({
+      const data = Array.isArray(res.data) ? res.data : (res.data ? [res.data] : [])
+      categories.value = buildCategoryTree(data.map(category => ({
         id: category.id,
         name: category.name,
-        count: category.articleCount || 0
-      }))
+        count: category.articleCount || 0,
+        parentId: category.parentId ?? null,
+        showOnFront: category.showOnFront !== false,
+        children: []
+      })))
     }
   } catch (error) {
     console.error('Failed to load categories:', error)
     // Fallback to mock data if API fails
-    categories.value = [
+      categories.value = [
       { id: 1, name: 'Java', count: 12 },
       { id: 2, name: 'Postman', count: 8 },
       { id: 3, name: 'Vue.js', count: 15 },
@@ -187,6 +210,43 @@ async function loadTags() {
 
 function goToCategory(categoryId) {
   router.push(`/category/${categoryId}`)
+}
+
+function buildCategoryTree(list) {
+  const nodeMap = new Map()
+  const roots = []
+
+  list.forEach((category, index) => {
+    if (!category.showOnFront) {
+      return
+    }
+
+    nodeMap.set(category.id, {
+      ...category,
+      order: index,
+      children: []
+    })
+  })
+
+  nodeMap.forEach((node) => {
+    const parentId = node.parentId
+    const hasParent = parentId !== null && parentId !== undefined && Number(parentId) !== 0
+    const parentNode = hasParent ? nodeMap.get(parentId) : null
+
+    if (parentNode) {
+      parentNode.children.push(node)
+    } else {
+      roots.push(node)
+    }
+  })
+
+  const sortTree = (nodes) => {
+    nodes.sort((left, right) => left.order - right.order)
+    nodes.forEach(item => sortTree(item.children))
+  }
+
+  sortTree(roots)
+  return roots
 }
 
 function goToTag(tagName) {
